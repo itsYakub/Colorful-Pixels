@@ -68,6 +68,25 @@
         "utility": "cpp",
         "stop_token": "cpp",
         "thread": "cpp",
-        "cinttypes": "cpp"
+        "cinttypes": "cpp",
+        "__tree": "cpp",
+        "cfenv": "cpp",
+        "complex": "cpp",
+        "iostream": "cpp",
+        "istream": "cpp",
+        "map": "cpp",
+        "sstream": "cpp",
+        "any": "cpp",
+        "strstream": "cpp",
+        "barrier": "cpp",
+        "codecvt": "cpp",
+        "list": "cpp",
+        "set": "cpp",
+        "unordered_set": "cpp",
+        "regex": "cpp",
+        "fstream": "cpp",
+        "future": "cpp",
+        "shared_mutex": "cpp",
+        "valarray": "cpp"
     }
 }

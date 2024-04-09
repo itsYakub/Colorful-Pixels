@@ -4,7 +4,7 @@
 cmake_minimum_required(VERSION 3.14)
 
 project(
-    game 
+    program 
     VERSION 1.0
     DESCRIPTION "Template for C++ games in raylib" 
     HOMEPAGE_URL "https://github.com/itsYakub/RaylibGameTemplate"
