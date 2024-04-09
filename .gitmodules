@@ -1,0 +1,6 @@
+[submodule "lib/raylib"]
+	path = lib/raylib
+	url = https://github.com/raysan5/raylib.git
+[submodule "lib/emsdk"]
+	path = lib/emsdk
+	url = https://github.com/emscripten-core/emsdk
