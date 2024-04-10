@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "raylib.h"
+#include "raymath.h"
 
 #ifdef PLATFORM_WEB
     #include "emscripten.h"
@@ -11,19 +12,22 @@
 
 class Layer {
 private:
-    const Vector2 m_Size;
+    const Vector2 m_Count;
     std::vector<Color> m_LayerData;
     Texture2D m_LayerTexture;
     
 public:
-    Layer(const int WIDTH, const int HEIGHT) : m_Size((const Vector2) { static_cast<float>(WIDTH), static_cast<float>(HEIGHT) } ), m_LayerData(WIDTH * HEIGHT) {
-        for(int i = 0; i < WIDTH * HEIGHT; i++) {
-            m_LayerData[i] = BLANK;
-        }  
+    Layer(const int WIDTH, const int HEIGHT) : 
+        m_Count((const Vector2) { static_cast<float>(WIDTH), static_cast<float>(HEIGHT) } ), 
+        m_LayerData(WIDTH * HEIGHT) {
+            for(int i = 0; i < WIDTH * HEIGHT; i++) {
+                m_LayerData[i] = BLANK;
+            }  
 
-        Image image = GenImageColor(WIDTH, HEIGHT, BLANK);
-        m_LayerTexture = LoadTextureFromImage(image);
-        UnloadImage(image);  
+            Image image = GenImageColor(WIDTH, HEIGHT, BLANK);
+            m_LayerTexture = LoadTextureFromImage(image);
+            SetTextureFilter(m_LayerTexture, TEXTURE_FILTER_POINT);
+            UnloadImage(image);  
     }
 
     void Unload() {
@@ -39,7 +43,7 @@ public:
     }
 
     void SetPixelColor(int x, int y, Color color) {
-        m_LayerData.at(y * m_Size.y + x) = color;
+        m_LayerData.at(y * m_Count.y + x) = color;
     }
 
     void UpdateLayer() {
@@ -50,13 +54,19 @@ public:
 class Canvas {
 private:
     Vector2 m_Position;
-    const Vector2 m_Size;
-    float m_Scale;
+    const Vector2 SIZE;
+    const int CELL_COUNT_X;
+    const int CELL_COUNT_Y;
 
     Layer m_Layer;
 
 public:
-    Canvas(const int WIDTH, const int HEIGHT, float scale) : m_Position( (Vector2) { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f } ), m_Size( (const Vector2) { static_cast<float>(WIDTH), static_cast<float>(HEIGHT) } ), m_Scale(scale), m_Layer(WIDTH, HEIGHT) {
+    Canvas(const int CELL_COUNT_X, const int CELL_COUNT_Y) : 
+        m_Position( (Vector2) { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f } ), 
+        SIZE( (const Vector2) { 512.0f, 512.0f } ),
+        CELL_COUNT_X(CELL_COUNT_X), 
+        CELL_COUNT_Y(CELL_COUNT_Y),
+        m_Layer(Clamp(CELL_COUNT_X, 2, 512), Clamp(CELL_COUNT_Y, 2, 512)) {
 
     }
 
@@ -65,55 +75,66 @@ public:
     }
 
     void Update() {
-        int canvasMouseRelationX = (GetMousePosition().x - m_Position.x + m_Layer.GetTexture().width * m_Scale / 2.0f) / m_Scale;
-        int canvasMouseRelationY = (GetMousePosition().y - m_Position.y + m_Layer.GetTexture().height * m_Scale / 2.0f) / m_Scale;
-
-        bool canvasMouseRelationValid = 
-            (canvasMouseRelationX >= 0 && canvasMouseRelationX < m_Size.x) &&
-            (canvasMouseRelationY >= 0 && canvasMouseRelationY < m_Size.y); 
-
-
         if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-            if(canvasMouseRelationValid) {
-                m_Layer.SetPixelColor(canvasMouseRelationX, canvasMouseRelationY, WHITE);
+            if(IsMouseCanvasIndexValid()) {
+                m_Layer.SetPixelColor(GetMouseCanvasIndex().x, GetMouseCanvasIndex().y, WHITE);
             }
         }
 
         if(IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
-            if(canvasMouseRelationValid) {
-                m_Layer.SetPixelColor(canvasMouseRelationX, canvasMouseRelationY, BLANK);
+            if(IsMouseCanvasIndexValid()) {
+                m_Layer.SetPixelColor(GetMouseCanvasIndex().x, GetMouseCanvasIndex().y, BLANK);
             }
         }
-
-        m_Scale += GetMouseWheelMove();
 
         m_Layer.UpdateLayer();
     }
 
     void Render() {
+        float originOffsetX = SIZE.x / 2.0f;
+        float originOffsetY = SIZE.y / 2.0f;
+
         DrawTexturePro(
             m_Layer.GetTexture(),
             (Rectangle) { 0.0f, 0.0f, static_cast<float>(m_Layer.GetTexture().width), static_cast<float>(m_Layer.GetTexture().height) },
-            (Rectangle) { m_Position.x, m_Position.y, static_cast<float>(m_Layer.GetTexture().width) * m_Scale, static_cast<float>(m_Layer.GetTexture().height) * m_Scale },
-            (Vector2) { m_Layer.GetTexture().width * m_Scale / 2.0f, m_Layer.GetTexture().height * m_Scale / 2.0f },
+            (Rectangle) { m_Position.x, m_Position.y, SIZE.x, SIZE.y },
+            (Vector2) { originOffsetX, originOffsetY },
             0.0f,
             WHITE
         );
 
-        for(int y = 0; y < m_Size.y; y++) {
-            for(int x = 0; x < m_Size.x; x++) {
+        for(int y = 0; y < CELL_COUNT_Y; y++) {
+            for(int x = 0; x < CELL_COUNT_X; x++) {
                 DrawRectangleLinesEx(
                     (Rectangle) { 
-                        x * m_Scale + m_Position.x - m_Layer.GetTexture().width * m_Scale / 2.0f,
-                        y * m_Scale + m_Position.y - m_Layer.GetTexture().height * m_Scale / 2.0f, 
-                        m_Layer.GetTexture().width * m_Scale / m_Size.x, 
-                        m_Layer.GetTexture().height * m_Scale / m_Size.y 
+                        m_Position.x - originOffsetX + x * (SIZE.x / CELL_COUNT_X),
+                        m_Position.y - originOffsetY + y * (SIZE.y / CELL_COUNT_Y),
+                        SIZE.x / CELL_COUNT_X, 
+                        SIZE.y / CELL_COUNT_Y 
                     }, 
                     1.0f, 
                     Fade(LIGHTGRAY, 0.5f)
                 );
             }
         }
+    }
+
+private:
+    Vector2 GetMouseCanvasIndex() {
+        float originOffsetX = SIZE.x / 2.0f;
+        float originOffsetY = SIZE.y / 2.0f;
+
+        int canvasMouseRelationX = (GetMousePosition().x - m_Position.x + originOffsetX) / SIZE.x * CELL_COUNT_X;
+        int canvasMouseRelationY = (GetMousePosition().y - m_Position.y + originOffsetY) / SIZE.y * CELL_COUNT_Y;
+
+        return { static_cast<float>(canvasMouseRelationX), static_cast<float>(canvasMouseRelationY) };
+    }
+
+    bool IsMouseCanvasIndexValid() {
+        Vector2 mouseCavasInput = GetMouseCanvasIndex();
+
+        return (mouseCavasInput.x >= 0 && mouseCavasInput.x < CELL_COUNT_X) &&
+            (mouseCavasInput.y >= 0 && mouseCavasInput.y < CELL_COUNT_Y); 
     }
 };
 
@@ -138,7 +159,7 @@ public:
         InitAudioDevice();
         InitWindow(WIDTH, HEIGHT, TITLE.c_str());
 
-        canvas = std::make_unique<Canvas>(32, 32, 16);
+        canvas = std::make_unique<Canvas>(9, 9);
 
 #ifdef PLATFORM_WEB
         // Passing the `UpdateRenderFrame` function with the argument `this` for this `Game` class instance.
@@ -174,7 +195,7 @@ public:
     // This function is called on every game's cycle.
     // Purpose: render game's elements, components, text, etc.
     void Render() {
-        ClearBackground(BLACK);
+        ClearBackground(DARKBLUE);
         canvas->Render();
     }
 };
