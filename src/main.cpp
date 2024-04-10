@@ -117,6 +117,8 @@ public:
     }
 };
 
+// TODO(yakub):
+// - Add the option to create the grid of a non-square shape (ex. 10x8, 32x16 etc.);
 class Canvas {
 private:
     Vector2 m_Position;
@@ -124,15 +126,18 @@ private:
     const int CELL_COUNT_X;
     const int CELL_COUNT_Y;
 
+    float m_Scale;
+
     std::vector<std::unique_ptr<Layer>> m_LayerList;
     int m_CurrentLayerID;
 
 public:
     Canvas() : 
         m_Position( (Vector2) { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f } ), 
-        SIZE( (const Vector2) { 512.0f, 512.0f } ),
+        SIZE(GetCanvasResolution(16, 16)),
         CELL_COUNT_X(16), 
         CELL_COUNT_Y(16),
+        m_Scale(1.0f),
         m_LayerList(0),
         m_CurrentLayerID(0) {
             m_LayerList.push_back(std::make_unique<Layer>(CELL_COUNT_X, CELL_COUNT_Y, true, false));
@@ -140,9 +145,10 @@ public:
 
     Canvas(const int CELL_COUNT) : 
         m_Position( (Vector2) { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f } ), 
-        SIZE( (const Vector2) { 512.0f, 512.0f } ),
+        SIZE(GetCanvasResolution(CELL_COUNT, CELL_COUNT)),
         CELL_COUNT_X(CELL_COUNT), 
         CELL_COUNT_Y(CELL_COUNT),
+        m_Scale(1.0f),
         m_LayerList(0),
         m_CurrentLayerID(0) {
             m_LayerList.push_back(std::make_unique<Layer>(CELL_COUNT, true, false));
@@ -150,9 +156,10 @@ public:
 
     Canvas(const int CELL_COUNT_X, const int CELL_COUNT_Y) : 
         m_Position( (Vector2) { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f } ), 
-        SIZE( (const Vector2) { 512.0f, 512.0f } ),
+        SIZE(GetCanvasResolution(CELL_COUNT_X, CELL_COUNT_Y)),
         CELL_COUNT_X(CELL_COUNT_X), 
         CELL_COUNT_Y(CELL_COUNT_Y),
+        m_Scale(1.0f),
         m_LayerList(0),
         m_CurrentLayerID(0) {
             m_LayerList.push_back(std::make_unique<Layer>(CELL_COUNT_X, CELL_COUNT_Y, true, false));
@@ -177,12 +184,15 @@ public:
             }
         }
 
+        m_Scale += GetMouseWheelMove() / 10.0f;
+        m_Scale = Clamp(m_Scale, 0.5f, 5.0f);
+
         m_LayerList.at(m_CurrentLayerID)->UpdateLayer();
     }
 
     void Render() {
-        float originOffsetX = SIZE.x / 2.0f;
-        float originOffsetY = SIZE.y / 2.0f;
+        float originOffsetX = SIZE.x * m_Scale / 2.0f;
+        float originOffsetY = SIZE.y * m_Scale / 2.0f;
     
         for(const auto& layer : m_LayerList) {
             if(!layer->IsVisible()) {
@@ -200,8 +210,8 @@ public:
                 (Rectangle) { 
                     m_Position.x, 
                     m_Position.y, 
-                    SIZE.x, 
-                    SIZE.y 
+                    SIZE.x * m_Scale, 
+                    SIZE.y * m_Scale 
                 },
                 (Vector2) { 
                     originOffsetX, 
@@ -216,10 +226,10 @@ public:
             for(int x = 0; x < CELL_COUNT_X; x++) {
                 DrawRectangleLinesEx(
                     (Rectangle) { 
-                        m_Position.x - originOffsetX + x * (SIZE.x / CELL_COUNT_X),
-                        m_Position.y - originOffsetY + y * (SIZE.y / CELL_COUNT_Y),
-                        SIZE.x / CELL_COUNT_X, 
-                        SIZE.y / CELL_COUNT_Y 
+                        m_Position.x - originOffsetX + x * (SIZE.x * m_Scale / CELL_COUNT_X),
+                        m_Position.y - originOffsetY + y * (SIZE.y * m_Scale / CELL_COUNT_Y),
+                        SIZE.x * m_Scale / CELL_COUNT_X, 
+                        SIZE.y * m_Scale / CELL_COUNT_Y 
                     }, 
                     1.0f, 
                     Fade(LIGHTGRAY, 0.5f)
@@ -228,13 +238,33 @@ public:
         }
     }
 
-private:
-    Vector2 GetMouseCanvasIndex() {
-        float originOffsetX = SIZE.x / 2.0f;
-        float originOffsetY = SIZE.y / 2.0f;
+    std::unique_ptr<Layer>& GetLayer() {
+        return m_LayerList.at(m_CurrentLayerID);
+    }
 
-        int canvasMouseRelationX = (GetMousePosition().x - m_Position.x + originOffsetX) / SIZE.x * CELL_COUNT_X;
-        int canvasMouseRelationY = (GetMousePosition().y - m_Position.y + originOffsetY) / SIZE.y * CELL_COUNT_Y;
+    std::unique_ptr<Layer>& GetLayer(int index) {
+        return m_LayerList.at(index);
+    }
+
+private:
+    Vector2 GetCanvasResolution(const int COUNT_X, const int COUNT_Y) {
+        const float defaultResolutionValue = 512.0f;
+
+        if(COUNT_X > COUNT_Y) {
+            return { defaultResolutionValue / COUNT_X, defaultResolutionValue / COUNT_X * COUNT_Y };
+        } else if(COUNT_X < COUNT_Y) {
+            return { defaultResolutionValue / COUNT_Y * COUNT_X, defaultResolutionValue / COUNT_Y };
+        } else {
+            return { defaultResolutionValue, defaultResolutionValue };
+        }
+    }
+
+    Vector2 GetMouseCanvasIndex() {
+        float originOffsetX = SIZE.x * m_Scale / 2.0f;
+        float originOffsetY = SIZE.y * m_Scale / 2.0f;
+
+        int canvasMouseRelationX = (((GetMousePosition().x - m_Position.x + originOffsetX) / SIZE.x) / m_Scale) * CELL_COUNT_X;
+        int canvasMouseRelationY = (((GetMousePosition().y - m_Position.y + originOffsetY) / SIZE.y) / m_Scale) * CELL_COUNT_Y;
 
         return { 
             static_cast<float>(canvasMouseRelationX), 
@@ -266,12 +296,12 @@ private:
 
 public:
     // `Game` class constructor.
-    Game() : WIDTH(1024), HEIGHT(768), TITLE(TextFormat("Raylib %s - Pixel Editor %s", RAYLIB_VERSION, "1.0")) {
+    Game() : WIDTH(1024), HEIGHT(768), TITLE(TextFormat("Raylib %s - Colorful Pixels %s", RAYLIB_VERSION, "1.0")) {
         // Initializing the Audio Device and creating a Window.
         InitAudioDevice();
         InitWindow(WIDTH, HEIGHT, TITLE.c_str());
 
-        canvas = std::make_unique<Canvas>(16);
+        canvas = std::make_unique<Canvas>(17);
 
 #ifdef PLATFORM_WEB
         // Passing the `UpdateRenderFrame` function with the argument `this` for this `Game` class instance.
