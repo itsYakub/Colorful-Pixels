@@ -12,22 +12,72 @@
 
 class Layer {
 private:
-    const Vector2 m_Count;
+    const Vector2 COUNT;
+
     std::vector<Color> m_LayerData;
     Texture2D m_LayerTexture;
+
+    bool m_LayerVisible;
+    bool m_LayerLocked;
     
 public:
-    Layer(const int WIDTH, const int HEIGHT) : 
-        m_Count((const Vector2) { static_cast<float>(WIDTH), static_cast<float>(HEIGHT) } ), 
-        m_LayerData(WIDTH * HEIGHT) {
-            for(int i = 0; i < WIDTH * HEIGHT; i++) {
-                m_LayerData[i] = BLANK;
-            }  
+    Layer(const int CELL_COUNT) : 
+        COUNT((const Vector2) { static_cast<float>(CELL_COUNT), static_cast<float>(CELL_COUNT) } ), 
+        m_LayerData(pow(CELL_COUNT, 2)),
+        m_LayerVisible(true),
+        m_LayerLocked(false) {
+            Load();
+    }
 
-            Image image = GenImageColor(WIDTH, HEIGHT, BLANK);
-            m_LayerTexture = LoadTextureFromImage(image);
-            SetTextureFilter(m_LayerTexture, TEXTURE_FILTER_POINT);
-            UnloadImage(image);  
+    Layer(const int CELL_COUNT, bool visibility) : 
+        COUNT((const Vector2) { static_cast<float>(CELL_COUNT), static_cast<float>(CELL_COUNT) } ), 
+        m_LayerData(pow(CELL_COUNT, 2)),
+        m_LayerVisible(visibility),
+        m_LayerLocked(false) {
+            Load();
+    }
+
+    Layer(const int CELL_COUNT, bool visibility, bool lock) : 
+        COUNT((const Vector2) { static_cast<float>(CELL_COUNT), static_cast<float>(CELL_COUNT) } ), 
+        m_LayerData(pow(CELL_COUNT, 2)),
+        m_LayerVisible(visibility),
+        m_LayerLocked(lock) {
+            Load();
+    }
+
+    Layer(const int CELL_COUNT_X, const int CELL_COUNT_Y) : 
+        COUNT((const Vector2) { static_cast<float>(CELL_COUNT_X), static_cast<float>(CELL_COUNT_Y) } ), 
+        m_LayerData(CELL_COUNT_X * CELL_COUNT_Y),
+        m_LayerVisible(true),
+        m_LayerLocked(false) {
+            Load();
+    }
+
+    Layer(const int CELL_COUNT_X, const int CELL_COUNT_Y, bool visibility) : 
+        COUNT((const Vector2) { static_cast<float>(CELL_COUNT_X), static_cast<float>(CELL_COUNT_Y) } ), 
+        m_LayerData(CELL_COUNT_X * CELL_COUNT_Y),
+        m_LayerVisible(visibility),
+        m_LayerLocked(false) {
+            Load();
+    }
+
+    Layer(const int CELL_COUNT_X, const int CELL_COUNT_Y, bool visibility, bool lock) : 
+        COUNT((const Vector2) { static_cast<float>(CELL_COUNT_X), static_cast<float>(CELL_COUNT_Y) } ), 
+        m_LayerData(CELL_COUNT_X * CELL_COUNT_Y),
+        m_LayerVisible(visibility),
+        m_LayerLocked(lock) {
+            Load();
+    }
+
+    void Load() {
+        for(int i = 0; i < COUNT.x * COUNT.y; i++) {
+            m_LayerData[i] = BLANK;
+        }  
+
+        Image image = GenImageColor(COUNT.x, COUNT.y, BLANK);
+        m_LayerTexture = LoadTextureFromImage(image);
+        SetTextureFilter(m_LayerTexture, TEXTURE_FILTER_POINT);
+        UnloadImage(image);     
     }
 
     void Unload() {
@@ -42,8 +92,24 @@ public:
         return m_LayerData;
     }
 
+    bool IsVisible() {
+        return m_LayerVisible;
+    }
+
+    void SetVisibility(bool visibility) {
+        m_LayerVisible = visibility;
+    }
+
+    bool IsLocked() {
+        return m_LayerLocked;
+    }
+
+    void SetLock(bool lock) {
+        m_LayerLocked = lock;
+    }
+
     void SetPixelColor(int x, int y, Color color) {
-        m_LayerData.at(y * m_Count.y + x) = color;
+        m_LayerData.at(y * COUNT.y + x) = color;
     }
 
     void UpdateLayer() {
@@ -58,50 +124,93 @@ private:
     const int CELL_COUNT_X;
     const int CELL_COUNT_Y;
 
-    Layer m_Layer;
+    std::vector<std::unique_ptr<Layer>> m_LayerList;
+    int m_CurrentLayerID;
 
 public:
+    Canvas() : 
+        m_Position( (Vector2) { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f } ), 
+        SIZE( (const Vector2) { 512.0f, 512.0f } ),
+        CELL_COUNT_X(16), 
+        CELL_COUNT_Y(16),
+        m_LayerList(0),
+        m_CurrentLayerID(0) {
+            m_LayerList.push_back(std::make_unique<Layer>(CELL_COUNT_X, CELL_COUNT_Y, true, false));
+    }
+
+    Canvas(const int CELL_COUNT) : 
+        m_Position( (Vector2) { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f } ), 
+        SIZE( (const Vector2) { 512.0f, 512.0f } ),
+        CELL_COUNT_X(CELL_COUNT), 
+        CELL_COUNT_Y(CELL_COUNT),
+        m_LayerList(0),
+        m_CurrentLayerID(0) {
+            m_LayerList.push_back(std::make_unique<Layer>(CELL_COUNT, true, false));
+    }
+
     Canvas(const int CELL_COUNT_X, const int CELL_COUNT_Y) : 
         m_Position( (Vector2) { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f } ), 
         SIZE( (const Vector2) { 512.0f, 512.0f } ),
         CELL_COUNT_X(CELL_COUNT_X), 
         CELL_COUNT_Y(CELL_COUNT_Y),
-        m_Layer(Clamp(CELL_COUNT_X, 2, 512), Clamp(CELL_COUNT_Y, 2, 512)) {
-
+        m_LayerList(0),
+        m_CurrentLayerID(0) {
+            m_LayerList.push_back(std::make_unique<Layer>(CELL_COUNT_X, CELL_COUNT_Y, true, false));
     }
 
     void Unload() {
-        m_Layer.Unload();
+        for(auto& i : m_LayerList) {
+            i->Unload();
+        }
     }
 
     void Update() {
         if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-            if(IsMouseCanvasIndexValid()) {
-                m_Layer.SetPixelColor(GetMouseCanvasIndex().x, GetMouseCanvasIndex().y, WHITE);
+            if(IsMouseCanvasIndexValid() && !m_LayerList.at(m_CurrentLayerID)->IsLocked()) {
+                m_LayerList.at(m_CurrentLayerID)->SetPixelColor(GetMouseCanvasIndex().x, GetMouseCanvasIndex().y, WHITE);
             }
         }
 
         if(IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
-            if(IsMouseCanvasIndexValid()) {
-                m_Layer.SetPixelColor(GetMouseCanvasIndex().x, GetMouseCanvasIndex().y, BLANK);
+            if(IsMouseCanvasIndexValid() && !m_LayerList.at(m_CurrentLayerID)->IsLocked()) {
+                m_LayerList.at(m_CurrentLayerID)->SetPixelColor(GetMouseCanvasIndex().x, GetMouseCanvasIndex().y, BLANK);
             }
         }
 
-        m_Layer.UpdateLayer();
+        m_LayerList.at(m_CurrentLayerID)->UpdateLayer();
     }
 
     void Render() {
         float originOffsetX = SIZE.x / 2.0f;
         float originOffsetY = SIZE.y / 2.0f;
+    
+        for(const auto& layer : m_LayerList) {
+            if(!layer->IsVisible()) {
+                continue;
+            }
 
-        DrawTexturePro(
-            m_Layer.GetTexture(),
-            (Rectangle) { 0.0f, 0.0f, static_cast<float>(m_Layer.GetTexture().width), static_cast<float>(m_Layer.GetTexture().height) },
-            (Rectangle) { m_Position.x, m_Position.y, SIZE.x, SIZE.y },
-            (Vector2) { originOffsetX, originOffsetY },
-            0.0f,
-            WHITE
-        );
+            DrawTexturePro(
+                layer->GetTexture(),
+                (Rectangle) { 
+                    0.0f, 
+                    0.0f, 
+                    static_cast<float>(CELL_COUNT_X), 
+                    static_cast<float>(CELL_COUNT_Y) 
+                },
+                (Rectangle) { 
+                    m_Position.x, 
+                    m_Position.y, 
+                    SIZE.x, 
+                    SIZE.y 
+                },
+                (Vector2) { 
+                    originOffsetX, 
+                    originOffsetY 
+                },
+                0.0f,
+                WHITE
+            );
+        }
 
         for(int y = 0; y < CELL_COUNT_Y; y++) {
             for(int x = 0; x < CELL_COUNT_X; x++) {
@@ -127,7 +236,10 @@ private:
         int canvasMouseRelationX = (GetMousePosition().x - m_Position.x + originOffsetX) / SIZE.x * CELL_COUNT_X;
         int canvasMouseRelationY = (GetMousePosition().y - m_Position.y + originOffsetY) / SIZE.y * CELL_COUNT_Y;
 
-        return { static_cast<float>(canvasMouseRelationX), static_cast<float>(canvasMouseRelationY) };
+        return { 
+            static_cast<float>(canvasMouseRelationX), 
+            static_cast<float>(canvasMouseRelationY) 
+        };
     }
 
     bool IsMouseCanvasIndexValid() {
@@ -159,7 +271,7 @@ public:
         InitAudioDevice();
         InitWindow(WIDTH, HEIGHT, TITLE.c_str());
 
-        canvas = std::make_unique<Canvas>(9, 9);
+        canvas = std::make_unique<Canvas>(16);
 
 #ifdef PLATFORM_WEB
         // Passing the `UpdateRenderFrame` function with the argument `this` for this `Game` class instance.
