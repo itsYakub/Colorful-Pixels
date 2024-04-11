@@ -5,6 +5,7 @@
 
 #include "raylib.h"
 #include "raymath.h"
+#include "rlgl.h"
 
 #ifdef PLATFORM_WEB
     #include "emscripten.h"
@@ -109,7 +110,7 @@ public:
     }
 
     void SetPixelColor(int x, int y, Color color) {
-        m_LayerData.at(y * COUNT.y + x) = color;
+        m_LayerData.at(y * COUNT.x + x) = color;
     }
 
     void UpdateLayer() {
@@ -117,12 +118,14 @@ public:
     }
 };
 
-// TODO(yakub):
-// - Add the option to create the grid of a non-square shape (ex. 10x8, 32x16 etc.);
 class Canvas {
 private:
+    Camera2D m_Camera;
+    const Vector2 m_CameraOffset;
+
     Vector2 m_Position;
     const Vector2 SIZE;
+
     const int CELL_COUNT_X;
     const int CELL_COUNT_Y;
 
@@ -133,36 +136,66 @@ private:
 
 public:
     Canvas() : 
-        m_Position( (Vector2) { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f } ), 
-        SIZE(GetCanvasResolution(16, 16)),
+        m_Camera( (Camera2D) { 0 }),
+        m_CameraOffset( (const Vector2) { static_cast<float>(GetScreenWidth()) / 2.0f, static_cast<float>(GetScreenHeight()) / 2.0f } ),
+
+        m_Position( (Vector2) { 0.0f, 0.0f } ), 
+        SIZE(GetCanvasSize(16, 16)),
+
         CELL_COUNT_X(16), 
         CELL_COUNT_Y(16),
+
         m_Scale(1.0f),
+
         m_LayerList(0),
         m_CurrentLayerID(0) {
             m_LayerList.push_back(std::make_unique<Layer>(CELL_COUNT_X, CELL_COUNT_Y, true, false));
+
+            m_Camera.target = m_Position;
+            m_Camera.offset = m_CameraOffset;
+            m_Camera.zoom = m_Scale;
     }
 
     Canvas(const int CELL_COUNT) : 
-        m_Position( (Vector2) { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f } ), 
-        SIZE(GetCanvasResolution(CELL_COUNT, CELL_COUNT)),
+        m_Camera( (Camera2D) { 0 }),
+        m_CameraOffset( (const Vector2) { static_cast<float>(GetScreenWidth()) / 2.0f, static_cast<float>(GetScreenHeight()) / 2.0f } ),
+
+        m_Position( (Vector2) { 0.0f, 0.0f } ), 
+        SIZE(GetCanvasSize(CELL_COUNT, CELL_COUNT)),
+
         CELL_COUNT_X(CELL_COUNT), 
         CELL_COUNT_Y(CELL_COUNT),
+
         m_Scale(1.0f),
+
         m_LayerList(0),
         m_CurrentLayerID(0) {
             m_LayerList.push_back(std::make_unique<Layer>(CELL_COUNT, true, false));
+
+            m_Camera.target = m_Position;
+            m_Camera.offset = m_CameraOffset;
+            m_Camera.zoom = m_Scale;
     }
 
     Canvas(const int CELL_COUNT_X, const int CELL_COUNT_Y) : 
-        m_Position( (Vector2) { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f } ), 
-        SIZE(GetCanvasResolution(CELL_COUNT_X, CELL_COUNT_Y)),
+        m_Camera( (Camera2D) { 0 }),
+        m_CameraOffset( (const Vector2) { static_cast<float>(GetScreenWidth()) / 2.0f, static_cast<float>(GetScreenHeight()) / 2.0f } ),
+
+        m_Position( (Vector2) { 0.0f, 0.0f } ), 
+        SIZE(GetCanvasSize(CELL_COUNT_X, CELL_COUNT_Y)),
+
         CELL_COUNT_X(CELL_COUNT_X), 
         CELL_COUNT_Y(CELL_COUNT_Y),
+
         m_Scale(1.0f),
+
         m_LayerList(0),
         m_CurrentLayerID(0) {
             m_LayerList.push_back(std::make_unique<Layer>(CELL_COUNT_X, CELL_COUNT_Y, true, false));
+
+            m_Camera.target = m_Position;
+            m_Camera.offset = m_CameraOffset;
+            m_Camera.zoom = m_Scale;
     }
 
     void Unload() {
@@ -184,16 +217,28 @@ public:
             }
         }
 
-        m_Scale += GetMouseWheelMove() / 10.0f;
-        m_Scale = Clamp(m_Scale, 0.5f, 5.0f);
+        if(IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
+            Vector2 delta = GetMouseDelta();
+			delta = Vector2Scale(delta, -1.0f / m_Camera.zoom);
+
+			m_Camera.target = Vector2Add(m_Camera.target, delta);
+        }
+
+        if(GetMouseWheelMove() != 0.0f) {
+            m_Scale += GetMouseWheelMove() / 10.0f;
+            m_Scale = Clamp(m_Scale, 0.5f, 2.0f);
+			
+            m_Camera.target = GetScreenToWorld2D(GetMousePosition(), m_Camera);
+			m_Camera.offset = GetMousePosition();
+            m_Camera.zoom = m_Scale;
+        }
 
         m_LayerList.at(m_CurrentLayerID)->UpdateLayer();
     }
 
-    void Render() {
-        float originOffsetX = SIZE.x * m_Scale / 2.0f;
-        float originOffsetY = SIZE.y * m_Scale / 2.0f;
-    
+    void Render() {    
+        BeginMode2D(m_Camera);
+
         for(const auto& layer : m_LayerList) {
             if(!layer->IsVisible()) {
                 continue;
@@ -213,10 +258,7 @@ public:
                     SIZE.x * m_Scale, 
                     SIZE.y * m_Scale 
                 },
-                (Vector2) { 
-                    originOffsetX, 
-                    originOffsetY 
-                },
+                GetCanvasOriginOffset(),
                 0.0f,
                 WHITE
             );
@@ -226,8 +268,8 @@ public:
             for(int x = 0; x < CELL_COUNT_X; x++) {
                 DrawRectangleLinesEx(
                     (Rectangle) { 
-                        m_Position.x - originOffsetX + x * (SIZE.x * m_Scale / CELL_COUNT_X),
-                        m_Position.y - originOffsetY + y * (SIZE.y * m_Scale / CELL_COUNT_Y),
+                        m_Position.x - GetCanvasOriginOffset().x + x * (SIZE.x * m_Scale / CELL_COUNT_X),
+                        m_Position.y - GetCanvasOriginOffset().y + y * (SIZE.y * m_Scale / CELL_COUNT_Y),
                         SIZE.x * m_Scale / CELL_COUNT_X, 
                         SIZE.y * m_Scale / CELL_COUNT_Y 
                     }, 
@@ -236,6 +278,19 @@ public:
                 );
             }
         }
+
+        DrawRectangleLinesEx(
+            (Rectangle) {
+                m_Position.x - GetCanvasOriginOffset().x,
+                m_Position.y - GetCanvasOriginOffset().y,
+                SIZE.x * m_Scale,
+                SIZE.y * m_Scale
+            },
+            2.0f,
+            BLACK
+        );
+
+        EndMode2D();
     }
 
     std::unique_ptr<Layer>& GetLayer() {
@@ -247,24 +302,59 @@ public:
     }
 
 private:
-    Vector2 GetCanvasResolution(const int COUNT_X, const int COUNT_Y) {
+    Vector2 GetCanvasSize(const int COUNT_X, const int COUNT_Y) {
         const float defaultResolutionValue = 512.0f;
 
         if(COUNT_X > COUNT_Y) {
-            return { defaultResolutionValue / COUNT_X, defaultResolutionValue / COUNT_X * COUNT_Y };
+            Vector2 result = { 
+                defaultResolutionValue, 
+                (defaultResolutionValue / COUNT_X) * COUNT_Y 
+            };
+
+            TraceLog(LOG_INFO, TextFormat("Canvas size: %f / %f", result.x, result.y));
+
+            return result;
+
         } else if(COUNT_X < COUNT_Y) {
-            return { defaultResolutionValue / COUNT_Y * COUNT_X, defaultResolutionValue / COUNT_Y };
+            Vector2 result = { 
+                (defaultResolutionValue / COUNT_Y) * COUNT_X, 
+                defaultResolutionValue 
+            };
+
+            TraceLog(LOG_INFO, TextFormat("Canvas size: %f / %f", result.x, result.y));
+
+            return result;
+
         } else {
-            return { defaultResolutionValue, defaultResolutionValue };
+            Vector2 result = { 
+                defaultResolutionValue, 
+                defaultResolutionValue 
+            };
+            
+            TraceLog(LOG_INFO, TextFormat("Canvas size: %f / %f", result.x, result.y));
+
+            return result;
         }
     }
 
-    Vector2 GetMouseCanvasIndex() {
+    Vector2 GetCanvasOriginOffset() {
         float originOffsetX = SIZE.x * m_Scale / 2.0f;
         float originOffsetY = SIZE.y * m_Scale / 2.0f;
 
-        int canvasMouseRelationX = (((GetMousePosition().x - m_Position.x + originOffsetX) / SIZE.x) / m_Scale) * CELL_COUNT_X;
-        int canvasMouseRelationY = (((GetMousePosition().y - m_Position.y + originOffsetY) / SIZE.y) / m_Scale) * CELL_COUNT_Y;
+        return {
+            originOffsetX,
+            originOffsetY
+        };
+    }
+
+    Vector2 GetMouseCanvasIndex() {
+        Vector2 mousePositionInTheWorld {
+            GetScreenToWorld2D(GetMousePosition(), m_Camera).x + GetCanvasOriginOffset().x,
+            GetScreenToWorld2D(GetMousePosition(), m_Camera).y + GetCanvasOriginOffset().y
+        };
+
+        int canvasMouseRelationX = (mousePositionInTheWorld.x / m_Scale) / SIZE.x * CELL_COUNT_X;
+        int canvasMouseRelationY = (mousePositionInTheWorld.y / m_Scale) / SIZE.y * CELL_COUNT_Y;
 
         return { 
             static_cast<float>(canvasMouseRelationX), 
@@ -301,7 +391,7 @@ public:
         InitAudioDevice();
         InitWindow(WIDTH, HEIGHT, TITLE.c_str());
 
-        canvas = std::make_unique<Canvas>(17);
+        canvas = std::make_unique<Canvas>(9);
 
 #ifdef PLATFORM_WEB
         // Passing the `UpdateRenderFrame` function with the argument `this` for this `Game` class instance.
@@ -311,7 +401,6 @@ public:
 #else   
         // Caping the FPS to 60.
         // You can also use the `SetConfigFlag(FLAG_VSYNC_HINT)` before creating the window to cap the framerate to your monitor's refresh rate.
-        SetTargetFPS(60);
         while(!WindowShouldClose()) {
             UpdateRenderFrame(this);
         }
