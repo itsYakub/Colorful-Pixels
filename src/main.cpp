@@ -134,21 +134,25 @@ private:
     std::vector<std::unique_ptr<Layer>> m_LayerList;
     int m_CurrentLayerID;
 
+    Color m_CurrentColor;
+
 public:
     Canvas() : 
         m_Camera( (Camera2D) { 0 }),
-        m_CameraOffset( (const Vector2) { static_cast<float>(GetScreenWidth()) / 2.0f, static_cast<float>(GetScreenHeight()) / 2.0f } ),
+        m_CameraOffset( (const Vector2) { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f } ),
 
         m_Position( (Vector2) { 0.0f, 0.0f } ), 
         SIZE(GetCanvasSize(16, 16)),
 
-        CELL_COUNT_X(16), 
-        CELL_COUNT_Y(16),
+        CELL_COUNT_X(32), 
+        CELL_COUNT_Y(32),
 
         m_Scale(1.0f),
 
         m_LayerList(0),
-        m_CurrentLayerID(0) {
+        m_CurrentLayerID(0),
+        
+        m_CurrentColor(RAYWHITE) {
             m_LayerList.push_back(std::make_unique<Layer>(CELL_COUNT_X, CELL_COUNT_Y, true, false));
 
             m_Camera.target = m_Position;
@@ -158,7 +162,7 @@ public:
 
     Canvas(const int CELL_COUNT) : 
         m_Camera( (Camera2D) { 0 }),
-        m_CameraOffset( (const Vector2) { static_cast<float>(GetScreenWidth()) / 2.0f, static_cast<float>(GetScreenHeight()) / 2.0f } ),
+        m_CameraOffset( (const Vector2) { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f } ),
 
         m_Position( (Vector2) { 0.0f, 0.0f } ), 
         SIZE(GetCanvasSize(CELL_COUNT, CELL_COUNT)),
@@ -169,7 +173,9 @@ public:
         m_Scale(1.0f),
 
         m_LayerList(0),
-        m_CurrentLayerID(0) {
+        m_CurrentLayerID(0),
+        
+        m_CurrentColor(RAYWHITE) {
             m_LayerList.push_back(std::make_unique<Layer>(CELL_COUNT, true, false));
 
             m_Camera.target = m_Position;
@@ -179,7 +185,7 @@ public:
 
     Canvas(const int CELL_COUNT_X, const int CELL_COUNT_Y) : 
         m_Camera( (Camera2D) { 0 }),
-        m_CameraOffset( (const Vector2) { static_cast<float>(GetScreenWidth()) / 2.0f, static_cast<float>(GetScreenHeight()) / 2.0f } ),
+        m_CameraOffset( (const Vector2) { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f } ),
 
         m_Position( (Vector2) { 0.0f, 0.0f } ), 
         SIZE(GetCanvasSize(CELL_COUNT_X, CELL_COUNT_Y)),
@@ -190,7 +196,9 @@ public:
         m_Scale(1.0f),
 
         m_LayerList(0),
-        m_CurrentLayerID(0) {
+        m_CurrentLayerID(0),
+        
+        m_CurrentColor(RAYWHITE) {
             m_LayerList.push_back(std::make_unique<Layer>(CELL_COUNT_X, CELL_COUNT_Y, true, false));
 
             m_Camera.target = m_Position;
@@ -207,7 +215,7 @@ public:
     void Update() {
         if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
             if(IsMouseCanvasIndexValid() && !m_LayerList.at(m_CurrentLayerID)->IsLocked()) {
-                m_LayerList.at(m_CurrentLayerID)->SetPixelColor(GetMouseCanvasIndex().x, GetMouseCanvasIndex().y, WHITE);
+                m_LayerList.at(m_CurrentLayerID)->SetPixelColor(GetMouseCanvasIndex().x, GetMouseCanvasIndex().y, m_CurrentColor);
             }
         }
 
@@ -225,7 +233,7 @@ public:
         }
 
         if(GetMouseWheelMove() != 0.0f) {
-            m_Scale += GetMouseWheelMove() / 10.0f;
+            m_Scale += GetMouseWheelMove() / 5.0f;
             m_Scale = Clamp(m_Scale, 0.5f, 2.0f);
 			
             m_Camera.target = GetScreenToWorld2D(GetMousePosition(), m_Camera);
@@ -239,56 +247,13 @@ public:
     void Render() {    
         BeginMode2D(m_Camera);
 
-        for(const auto& layer : m_LayerList) {
-            if(!layer->IsVisible()) {
-                continue;
+            for(auto& layer : m_LayerList) {
+                DrawLayer(layer->IsVisible(), *layer);
             }
 
-            DrawTexturePro(
-                layer->GetTexture(),
-                (Rectangle) { 
-                    0.0f, 
-                    0.0f, 
-                    static_cast<float>(CELL_COUNT_X), 
-                    static_cast<float>(CELL_COUNT_Y) 
-                },
-                (Rectangle) { 
-                    m_Position.x, 
-                    m_Position.y, 
-                    SIZE.x * m_Scale, 
-                    SIZE.y * m_Scale 
-                },
-                GetCanvasOriginOffset(),
-                0.0f,
-                WHITE
-            );
-        }
-
-        for(int y = 0; y < CELL_COUNT_Y; y++) {
-            for(int x = 0; x < CELL_COUNT_X; x++) {
-                DrawRectangleLinesEx(
-                    (Rectangle) { 
-                        m_Position.x - GetCanvasOriginOffset().x + x * (SIZE.x * m_Scale / CELL_COUNT_X),
-                        m_Position.y - GetCanvasOriginOffset().y + y * (SIZE.y * m_Scale / CELL_COUNT_Y),
-                        SIZE.x * m_Scale / CELL_COUNT_X, 
-                        SIZE.y * m_Scale / CELL_COUNT_Y 
-                    }, 
-                    1.0f, 
-                    Fade(LIGHTGRAY, 0.5f)
-                );
-            }
-        }
-
-        DrawRectangleLinesEx(
-            (Rectangle) {
-                m_Position.x - GetCanvasOriginOffset().x,
-                m_Position.y - GetCanvasOriginOffset().y,
-                SIZE.x * m_Scale,
-                SIZE.y * m_Scale
-            },
-            2.0f,
-            BLACK
-        );
+            DrawCanvasGrid(true, CELL_COUNT_X, CELL_COUNT_Y);
+            DrawCanvasCursor(true);
+            DrawCanvasFrame(true);
 
         EndMode2D();
     }
@@ -302,71 +267,169 @@ public:
     }
 
 private:
+    // `GetCanvasSize()` - This function returns the size of the canvas based on the count of the cells in X and Y axis (default resolution is 512px)
     Vector2 GetCanvasSize(const int COUNT_X, const int COUNT_Y) {
         const float defaultResolutionValue = 512.0f;
+        Vector2 result = { 0.0f, 0.0f };
 
         if(COUNT_X > COUNT_Y) {
-            Vector2 result = { 
+            result = { 
                 defaultResolutionValue, 
                 (defaultResolutionValue / COUNT_X) * COUNT_Y 
             };
-
-            TraceLog(LOG_INFO, TextFormat("Canvas size: %f / %f", result.x, result.y));
-
-            return result;
-
         } else if(COUNT_X < COUNT_Y) {
-            Vector2 result = { 
+            result = { 
                 (defaultResolutionValue / COUNT_Y) * COUNT_X, 
                 defaultResolutionValue 
             };
-
-            TraceLog(LOG_INFO, TextFormat("Canvas size: %f / %f", result.x, result.y));
-
-            return result;
-
         } else {
-            Vector2 result = { 
+            result = { 
                 defaultResolutionValue, 
                 defaultResolutionValue 
             };
-            
-            TraceLog(LOG_INFO, TextFormat("Canvas size: %f / %f", result.x, result.y));
-
-            return result;
         }
+
+        TraceLog(LOG_INFO, TextFormat("Canvas size: %0.1f / %0.1f (%ix%i)", result.x, result.y, COUNT_X, COUNT_Y));
+
+        return result;
     }
 
+    // `GetCanvasOriginOffset()` - This function returns the origin offset from the center of the canvas
     Vector2 GetCanvasOriginOffset() {
-        float originOffsetX = SIZE.x * m_Scale / 2.0f;
-        float originOffsetY = SIZE.y * m_Scale / 2.0f;
-
         return {
-            originOffsetX,
-            originOffsetY
+            SIZE.x * m_Scale / 2.0f,
+            SIZE.y * m_Scale / 2.0f
         };
     }
 
-    Vector2 GetMouseCanvasIndex() {
-        Vector2 mousePositionInTheWorld {
+    // `GetMouseWorldPosition()` - This function returns the position of the mouse cursor in the 2D World space ( `GetScreenToWorld2D()` )
+    Vector2 GetMouseWorldPosition() {
+        return {
             GetScreenToWorld2D(GetMousePosition(), m_Camera).x + GetCanvasOriginOffset().x,
             GetScreenToWorld2D(GetMousePosition(), m_Camera).y + GetCanvasOriginOffset().y
         };
+    }
 
-        int canvasMouseRelationX = (mousePositionInTheWorld.x / m_Scale) / SIZE.x * CELL_COUNT_X;
-        int canvasMouseRelationY = (mousePositionInTheWorld.y / m_Scale) / SIZE.y * CELL_COUNT_Y;
-
-        return { 
-            static_cast<float>(canvasMouseRelationX), 
-            static_cast<float>(canvasMouseRelationY) 
+    // `GetMouseWorldPositionScaled()` - This function returns the position of the mouse cursor in the 2D World space divided by the scale factor ( `m_Scale` )
+    Vector2 GetMouseWorldPositionScaled() {
+        return {
+            GetMouseWorldPosition().x / m_Scale,
+            GetMouseWorldPosition().y / m_Scale
         };
     }
 
-    bool IsMouseCanvasIndexValid() {
-        Vector2 mouseCavasInput = GetMouseCanvasIndex();
+    // `GetMouseWorldCanvasPosition()` - This function returns the position of the cell in the canvas, based on the current mouse position in the 2D World ( `GetMouseWorldPosition()` )
+    Vector2 GetMouseToCanvasCellPosition() {
+        return {
+            m_Position.x - GetCanvasOriginOffset().x + GetMouseCanvasIndex().x * (SIZE.x * m_Scale / CELL_COUNT_X),
+            m_Position.y - GetCanvasOriginOffset().y + GetMouseCanvasIndex().y * (SIZE.y * m_Scale / CELL_COUNT_Y)
+        };
+    }
 
-        return (mouseCavasInput.x >= 0 && mouseCavasInput.x < CELL_COUNT_X) &&
-            (mouseCavasInput.y >= 0 && mouseCavasInput.y < CELL_COUNT_Y); 
+    // `GetMouseCanvasIndex()` - This function returns the cell index of the canvas that the cursor is currently hovering above
+    Vector2 GetMouseCanvasIndex() {
+        return { 
+            floor(GetMouseWorldPositionScaled().x / SIZE.x * CELL_COUNT_X),
+            floor(GetMouseWorldPositionScaled().y / SIZE.y * CELL_COUNT_Y)
+        };
+    }
+
+    // `IsMouseCanvasIndexValid()` - This function check's if `GetMouseCanvasIndex()` returns a valid index
+    bool IsMouseCanvasIndexValid() {
+        return (GetMouseCanvasIndex().x >= 0 && GetMouseCanvasIndex().x < CELL_COUNT_X) &&
+            (GetMouseCanvasIndex().y >= 0 && GetMouseCanvasIndex().y < CELL_COUNT_Y); 
+    }
+
+    void DrawLayer(bool visible, Layer& layer) {
+        if(!visible) {
+            return;
+        }
+
+        DrawTexturePro(
+            layer.GetTexture(),
+            (Rectangle) { 
+                0.0f, 
+                0.0f, 
+                static_cast<float>(CELL_COUNT_X), 
+                static_cast<float>(CELL_COUNT_Y) 
+            },
+            (Rectangle) { 
+                m_Position.x, 
+                m_Position.y, 
+                SIZE.x * m_Scale, 
+                SIZE.y * m_Scale 
+            },
+            GetCanvasOriginOffset(),
+            0.0f,
+            WHITE
+        );    
+    }
+
+    void DrawCanvasGrid(bool visible, const int WIDTH, const int HEIGHT) {
+        if(!visible) {
+            return;
+        }
+
+        for(int y = 0; y < HEIGHT; y++) {
+            for(int x = 0; x < WIDTH; x++) {
+                DrawRectangleLinesEx(
+                    (Rectangle) { 
+                        m_Position.x - GetCanvasOriginOffset().x + (x * (SIZE.x * m_Scale / WIDTH)),
+                        m_Position.y - GetCanvasOriginOffset().y + (y * (SIZE.y * m_Scale / HEIGHT)),
+                        SIZE.x * m_Scale / WIDTH, 
+                        SIZE.y * m_Scale / HEIGHT 
+                    }, 
+                    0.5f / m_Scale, 
+                    Fade(LIGHTGRAY, 0.5f)
+                );
+            }
+        }        
+    }
+
+    void DrawCanvasCursor(bool visible) {
+        if(!visible) {
+            return;
+        }
+
+        if(IsMouseCanvasIndexValid()) {
+            DrawRectangleRec(
+                (Rectangle) {
+                    GetMouseToCanvasCellPosition().x,
+                    GetMouseToCanvasCellPosition().y,
+                    SIZE.x * m_Scale / CELL_COUNT_X, 
+                    SIZE.y * m_Scale / CELL_COUNT_Y 
+                },
+                m_CurrentColor
+            );
+        } else {
+            DrawRectangleLinesEx(
+                (Rectangle) {
+                    GetMouseToCanvasCellPosition().x,
+                    GetMouseToCanvasCellPosition().y,
+                    SIZE.x * m_Scale / CELL_COUNT_X, 
+                    SIZE.y * m_Scale / CELL_COUNT_Y 
+                },
+                1.0f / m_Scale,
+                WHITE
+            );
+        }
+    }
+
+    void DrawCanvasFrame(bool visible) {
+        if(!visible) {
+            return;
+        }
+
+        DrawRectangleLinesEx(
+            (Rectangle) {
+                m_Position.x - GetCanvasOriginOffset().x,
+                m_Position.y - GetCanvasOriginOffset().y,
+                SIZE.x * m_Scale,
+                SIZE.y * m_Scale
+            },
+            2.0f / m_Scale,
+            BLACK
+        );
     }
 };
 
@@ -391,7 +454,7 @@ public:
         InitAudioDevice();
         InitWindow(WIDTH, HEIGHT, TITLE.c_str());
 
-        canvas = std::make_unique<Canvas>(9);
+        canvas = std::make_unique<Canvas>(32);
 
 #ifdef PLATFORM_WEB
         // Passing the `UpdateRenderFrame` function with the argument `this` for this `Game` class instance.
