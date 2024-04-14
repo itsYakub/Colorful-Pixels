@@ -4,3 +4,9 @@
 [submodule "lib/emsdk"]
 	path = lib/emsdk
 	url = https://github.com/emscripten-core/emsdk
+[submodule "lib/rlImGui"]
+	path = lib/rlImGui
+	url = https://github.com/raylib-extras/rlImGui.git
+[submodule "lib/imgui"]
+	path = lib/imgui
+	url = https://github.com/ocornut/imgui.git

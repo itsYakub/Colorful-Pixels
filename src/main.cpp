@@ -5,7 +5,9 @@
 
 #include "raylib.h"
 #include "raymath.h"
-#include "rlgl.h"
+
+#include "imgui.h"
+#include "rlImGui.h"
 
 #ifdef PLATFORM_WEB
     #include "emscripten.h"
@@ -18,57 +20,24 @@ private:
     std::vector<Color> m_LayerData;
     Texture2D m_LayerTexture;
 
-    bool m_LayerVisible;
-    bool m_LayerLocked;
+public:
+    bool layerVisible;
+    bool layerLocked;
     
 public:
-    Layer(const int CELL_COUNT) : 
-        COUNT((const Vector2) { static_cast<float>(CELL_COUNT), static_cast<float>(CELL_COUNT) } ), 
-        m_LayerData(pow(CELL_COUNT, 2)),
-        m_LayerVisible(true),
-        m_LayerLocked(false) {
-            Load();
-    }
-
-    Layer(const int CELL_COUNT, bool visibility) : 
-        COUNT((const Vector2) { static_cast<float>(CELL_COUNT), static_cast<float>(CELL_COUNT) } ), 
-        m_LayerData(pow(CELL_COUNT, 2)),
-        m_LayerVisible(visibility),
-        m_LayerLocked(false) {
-            Load();
-    }
-
-    Layer(const int CELL_COUNT, bool visibility, bool lock) : 
-        COUNT((const Vector2) { static_cast<float>(CELL_COUNT), static_cast<float>(CELL_COUNT) } ), 
-        m_LayerData(pow(CELL_COUNT, 2)),
-        m_LayerVisible(visibility),
-        m_LayerLocked(lock) {
-            Load();
-    }
-
-    Layer(const int CELL_COUNT_X, const int CELL_COUNT_Y) : 
-        COUNT((const Vector2) { static_cast<float>(CELL_COUNT_X), static_cast<float>(CELL_COUNT_Y) } ), 
-        m_LayerData(CELL_COUNT_X * CELL_COUNT_Y),
-        m_LayerVisible(true),
-        m_LayerLocked(false) {
-            Load();
-    }
-
-    Layer(const int CELL_COUNT_X, const int CELL_COUNT_Y, bool visibility) : 
-        COUNT((const Vector2) { static_cast<float>(CELL_COUNT_X), static_cast<float>(CELL_COUNT_Y) } ), 
-        m_LayerData(CELL_COUNT_X * CELL_COUNT_Y),
-        m_LayerVisible(visibility),
-        m_LayerLocked(false) {
-            Load();
-    }
-
     Layer(const int CELL_COUNT_X, const int CELL_COUNT_Y, bool visibility, bool lock) : 
         COUNT((const Vector2) { static_cast<float>(CELL_COUNT_X), static_cast<float>(CELL_COUNT_Y) } ), 
         m_LayerData(CELL_COUNT_X * CELL_COUNT_Y),
-        m_LayerVisible(visibility),
-        m_LayerLocked(lock) {
+        layerVisible(visibility),
+        layerLocked(lock) {
             Load();
     }
+
+    Layer(const int CELL_COUNT) : Layer(CELL_COUNT, CELL_COUNT, true, false) { }
+    Layer(const int CELL_COUNT, bool visibility) : Layer(CELL_COUNT, CELL_COUNT, visibility, false) { }
+    Layer(const int CELL_COUNT, bool visibility, bool lock) : Layer(CELL_COUNT, CELL_COUNT, visibility, lock) { }
+    Layer(const int CELL_COUNT_X, const int CELL_COUNT_Y) : Layer(CELL_COUNT_X, CELL_COUNT_Y, true, false) { }
+    Layer(const int CELL_COUNT_X, const int CELL_COUNT_Y, bool visibility) : Layer(CELL_COUNT_X, CELL_COUNT_Y, visibility, false) { }
 
     void Load() {
         for(int i = 0; i < COUNT.x * COUNT.y; i++) {
@@ -94,19 +63,19 @@ public:
     }
 
     bool IsVisible() {
-        return m_LayerVisible;
+        return layerVisible;
     }
 
     void SetVisibility(bool visibility) {
-        m_LayerVisible = visibility;
+        layerVisible = visibility;
     }
 
     bool IsLocked() {
-        return m_LayerLocked;
+        return layerLocked;
     }
 
     void SetLock(bool lock) {
-        m_LayerLocked = lock;
+        layerLocked = lock;
     }
 
     void SetPixelColor(int x, int y, Color color) {
@@ -136,53 +105,12 @@ private:
 
     Color m_CurrentColor;
 
+    bool m_ColorPanelGUI;
+    bool m_LayerPanelGUI;
+
+    bool m_MouseOnGuiWidget;
+
 public:
-    Canvas() : 
-        m_Camera( (Camera2D) { 0 }),
-        m_CameraOffset( (const Vector2) { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f } ),
-
-        m_Position( (Vector2) { 0.0f, 0.0f } ), 
-        SIZE(GetCanvasSize(16, 16)),
-
-        CELL_COUNT_X(32), 
-        CELL_COUNT_Y(32),
-
-        m_Scale(1.0f),
-
-        m_LayerList(0),
-        m_CurrentLayerID(0),
-        
-        m_CurrentColor(RAYWHITE) {
-            m_LayerList.push_back(std::make_unique<Layer>(CELL_COUNT_X, CELL_COUNT_Y, true, false));
-
-            m_Camera.target = m_Position;
-            m_Camera.offset = m_CameraOffset;
-            m_Camera.zoom = m_Scale;
-    }
-
-    Canvas(const int CELL_COUNT) : 
-        m_Camera( (Camera2D) { 0 }),
-        m_CameraOffset( (const Vector2) { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f } ),
-
-        m_Position( (Vector2) { 0.0f, 0.0f } ), 
-        SIZE(GetCanvasSize(CELL_COUNT, CELL_COUNT)),
-
-        CELL_COUNT_X(CELL_COUNT), 
-        CELL_COUNT_Y(CELL_COUNT),
-
-        m_Scale(1.0f),
-
-        m_LayerList(0),
-        m_CurrentLayerID(0),
-        
-        m_CurrentColor(RAYWHITE) {
-            m_LayerList.push_back(std::make_unique<Layer>(CELL_COUNT, true, false));
-
-            m_Camera.target = m_Position;
-            m_Camera.offset = m_CameraOffset;
-            m_Camera.zoom = m_Scale;
-    }
-
     Canvas(const int CELL_COUNT_X, const int CELL_COUNT_Y) : 
         m_Camera( (Camera2D) { 0 }),
         m_CameraOffset( (const Vector2) { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f } ),
@@ -198,12 +126,25 @@ public:
         m_LayerList(0),
         m_CurrentLayerID(0),
         
-        m_CurrentColor(RAYWHITE) {
+        m_CurrentColor(RAYWHITE),
+        
+        m_ColorPanelGUI(true),
+        m_LayerPanelGUI(true),
+        
+        m_MouseOnGuiWidget(false) {
             m_LayerList.push_back(std::make_unique<Layer>(CELL_COUNT_X, CELL_COUNT_Y, true, false));
 
             m_Camera.target = m_Position;
             m_Camera.offset = m_CameraOffset;
             m_Camera.zoom = m_Scale;
+    }
+
+    Canvas() : Canvas(32, 32) { 
+
+    }
+
+    Canvas(const int CELL_COUNT) : Canvas(CELL_COUNT, CELL_COUNT) { 
+
     }
 
     void Unload() {
@@ -213,26 +154,26 @@ public:
     }
 
     void Update() {
-        if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+        if(IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !m_MouseOnGuiWidget) {
             if(IsMouseCanvasIndexValid() && !m_LayerList.at(m_CurrentLayerID)->IsLocked()) {
                 m_LayerList.at(m_CurrentLayerID)->SetPixelColor(GetMouseCanvasIndex().x, GetMouseCanvasIndex().y, m_CurrentColor);
             }
         }
 
-        if(IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
+        if(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) && !m_MouseOnGuiWidget) {
             if(IsMouseCanvasIndexValid() && !m_LayerList.at(m_CurrentLayerID)->IsLocked()) {
                 m_LayerList.at(m_CurrentLayerID)->SetPixelColor(GetMouseCanvasIndex().x, GetMouseCanvasIndex().y, BLANK);
             }
         }
 
-        if(IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
+        if(IsMouseButtonDown(MOUSE_BUTTON_MIDDLE) && !m_MouseOnGuiWidget) {
             Vector2 delta = GetMouseDelta();
 			delta = Vector2Scale(delta, -1.0f / m_Camera.zoom);
 
 			m_Camera.target = Vector2Add(m_Camera.target, delta);
         }
 
-        if(GetMouseWheelMove() != 0.0f) {
+        if(GetMouseWheelMove() != 0.0f && !m_MouseOnGuiWidget) {
             m_Scale += GetMouseWheelMove() / 5.0f;
             m_Scale = Clamp(m_Scale, 0.5f, 2.0f);
 			
@@ -256,6 +197,80 @@ public:
             DrawCanvasFrame(true);
 
         EndMode2D();
+
+        if(m_ColorPanelGUI) {
+            ImGui::Begin(
+                "Color", 
+                NULL, 
+                ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse
+            );
+
+            ImGui::SetWindowPos(ImVec2(0.0f, 0.0f));
+            ImGui::SetWindowSize(ImVec2(192.0f, 512.0f));
+
+            m_MouseOnGuiWidget = ImGui::IsWindowHovered();
+
+            float colorArray[4] = { m_CurrentColor.r / 255.0f, m_CurrentColor.g / 255.0f, m_CurrentColor.b / 255.0f, m_CurrentColor.a / 255.0f };
+
+            ImGui::PushItemWidth(160.0f);
+            ImGui::ColorPicker4(
+                "Color Picker", 
+                colorArray, 
+                ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoLabel
+            );
+
+
+            m_CurrentColor.r = colorArray[0] * 255;
+            m_CurrentColor.g = colorArray[1] * 255;
+            m_CurrentColor.b = colorArray[2] * 255;
+            m_CurrentColor.a = colorArray[3] * 255;
+
+            ImGui::End();
+        }
+
+        if(m_LayerPanelGUI) {
+            ImGui::Begin(
+                "Layer", 
+                NULL, 
+                ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse
+            );
+
+            ImGui::SetWindowPos(ImVec2(0.0f, GetScreenHeight() - 256.0f));
+            ImGui::SetWindowSize(ImVec2(192.0f, 256.0f));
+
+
+            m_MouseOnGuiWidget = ImGui::IsWindowHovered();
+
+            if(ImGui::Button("Add layer")) {
+                m_LayerList.push_back(std::make_unique<Layer>(CELL_COUNT_X, CELL_COUNT_Y, true, false));
+                m_CurrentLayerID++;
+            }
+
+            ImGui::SameLine();
+
+            if(ImGui::Button("Remove layer") && m_LayerList.size() > 1) {
+                m_LayerList.erase(m_LayerList.begin() + m_CurrentLayerID);
+
+                if(m_CurrentLayerID < 0) {
+                    m_CurrentLayerID++;
+                } else if(m_CurrentLayerID >= m_LayerList.size()) {
+                    m_CurrentLayerID--;
+                }
+            }
+
+            for(int i = 0; i < m_LayerList.size(); i++) {
+                if(ImGui::Button(m_CurrentLayerID == i ? TextFormat("Cur. Layer") : TextFormat("Layer no.%i", i + 1))) {
+                    m_CurrentLayerID = i;
+                }
+
+                ImGui::SameLine();
+                ImGui::Checkbox("V.", &m_LayerList.at(i)->layerVisible);
+                ImGui::SameLine();
+                ImGui::Checkbox("L.", &m_LayerList.at(i)->layerLocked);
+            }
+
+            ImGui::End();
+        }
     }
 
     std::unique_ptr<Layer>& GetLayer() {
@@ -387,7 +402,7 @@ private:
     }
 
     void DrawCanvasCursor(bool visible) {
-        if(!visible) {
+        if(!visible || m_MouseOnGuiWidget) {
             return;
         }
 
@@ -454,6 +469,8 @@ public:
         InitAudioDevice();
         InitWindow(WIDTH, HEIGHT, TITLE.c_str());
 
+        rlImGuiSetup(true);
+
         canvas = std::make_unique<Canvas>(32);
 
 #ifdef PLATFORM_WEB
@@ -463,6 +480,7 @@ public:
         emscripten_set_main_loop_arg(UpdateRenderFrame, this, 0, 1);
 #else   
         // Caping the FPS to 60.
+        SetTargetFPS(60);
         // You can also use the `SetConfigFlag(FLAG_VSYNC_HINT)` before creating the window to cap the framerate to your monitor's refresh rate.
         while(!WindowShouldClose()) {
             UpdateRenderFrame(this);
@@ -476,6 +494,8 @@ public:
         canvas->Unload();
 
         // Deinitializing the game's resources.
+        rlImGuiShutdown();
+
         CloseAudioDevice();
         CloseWindow();
     }
@@ -489,8 +509,12 @@ public:
     // This function is called on every game's cycle.
     // Purpose: render game's elements, components, text, etc.
     void Render() {
+        rlImGuiBegin();
+
         ClearBackground(DARKBLUE);
         canvas->Render();
+
+        rlImGuiEnd();
     }
 };
 

@@ -41,6 +41,14 @@ include(FetchContent)
 set(
     SOURCES
     ${CMAKE_SOURCE_DIR}/src/main.cpp
+
+    ${CMAKE_SOURCE_DIR}/lib/rlImGui/rlImGui.cpp
+    
+    ${CMAKE_SOURCE_DIR}/lib/imgui/imgui.cpp
+    ${CMAKE_SOURCE_DIR}/lib/imgui/imgui_demo.cpp
+    ${CMAKE_SOURCE_DIR}/lib/imgui/imgui_draw.cpp
+    ${CMAKE_SOURCE_DIR}/lib/imgui/imgui_tables.cpp
+    ${CMAKE_SOURCE_DIR}/lib/imgui/imgui_widgets.cpp
 )
 
 # Project's include directories:
@@ -48,15 +56,17 @@ set(
 
 set(
     INCLUDE_DIRECTORIES
-    -I${CMAKE_SOURCE_DIR}/include # default project include directory
-    -I${CMAKE_SOURCE_DIR}/lib/raylib/src # raysan5/raylib
-    -I${CMAKE_SOURCE_DIR}/lib/emsdk/upstream/emscripten/system/include # emscripten-core/emsdk
+    ${CMAKE_SOURCE_DIR}/include # default project include directory
+    ${CMAKE_SOURCE_DIR}/lib/raylib/src # raysan5/raylib
+    ${CMAKE_SOURCE_DIR}/lib/emsdk/upstream/emscripten/system/include # emscripten-core/emsdk
+    ${CMAKE_SOURCE_DIR}/lib/imgui
+    ${CMAKE_SOURCE_DIR}/lib/rlImGui
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 #set(raylib_VERBOSE 1)
 target_link_libraries(${PROJECT_NAME} raylib)
-target_include_directories(${PROJECT_NAME} PRIVATE ${INCLUDE_DIRECTORIES})
+target_include_directories(${PROJECT_NAME} PUBLIC ${INCLUDE_DIRECTORIES})
 
 # Web Configurations
 if (${PLATFORM} STREQUAL "Web")
