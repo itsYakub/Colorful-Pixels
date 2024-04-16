@@ -13,6 +13,74 @@
     #include "emscripten.h"
 #endif
 
+class Viewport {
+private:
+    RenderTexture2D m_RenderTexture;
+
+    Vector2 m_Position;
+    Vector2 m_Size;
+
+public:
+    Viewport(const Vector2 position, const Vector2 size) :
+        m_RenderTexture(LoadRenderTexture(size.x, size.y)),
+        m_Position(position), m_Size(size) { }
+
+    void Unload() {
+        UnloadRenderTexture(m_RenderTexture);
+    }
+
+   void ViewportGuiPanel(const char* name, ImVec2 position) {
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+
+        ImGui::Begin(
+            name, 
+            NULL, 
+            ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration
+        );
+
+        ImGui::SetWindowPos(position);
+        ImGui::SetWindowSize(ImVec2(m_Size.x, m_Size.y));
+
+        rlImGuiImageRenderTextureFit(&m_RenderTexture, true);
+
+        ImGui::PopStyleVar(1);
+
+        ImGui::End();
+   }
+
+    void Begin() {
+        BeginTextureMode(m_RenderTexture);
+    }
+
+    void Clear(Color color) {
+        ClearBackground(color);
+    }
+
+    void End() {
+        EndTextureMode();
+    }
+
+    Vector2 GetPosition() {
+        return m_Position;
+    }
+
+    Vector2 GetSize() {
+        return m_Size;
+    }
+
+    bool IsMouseHovering() {
+        return CheckCollisionPointRec(
+            GetMousePosition(), 
+            (Rectangle) {
+                m_Position.x,
+                m_Position.y,
+                m_Size.x,
+                m_Size.y
+            }
+        );
+    }
+};
+
 class Layer {
 private:
     const Vector2 COUNT;
@@ -89,6 +157,7 @@ public:
 
 class Canvas {
 private:
+    Viewport* m_Viewport;
     Camera2D m_Camera;
     const Vector2 m_CameraOffset;
 
@@ -105,15 +174,11 @@ private:
 
     Color m_CurrentColor;
 
-    bool m_ColorPanelGUI;
-    bool m_LayerPanelGUI;
-
-    bool m_MouseOnGuiWidget;
-
 public:
-    Canvas(const int CELL_COUNT_X, const int CELL_COUNT_Y) : 
+    Canvas(Viewport* viewport, const int CELL_COUNT_X, const int CELL_COUNT_Y) : 
+        m_Viewport(viewport),
         m_Camera( (Camera2D) { 0 }),
-        m_CameraOffset( (const Vector2) { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f } ),
+        m_CameraOffset( (const Vector2) { viewport->GetSize().x / 2.0f, viewport->GetSize().y / 2.0f } ),
 
         m_Position( (Vector2) { 0.0f, 0.0f } ), 
         SIZE(GetCanvasSize(CELL_COUNT_X, CELL_COUNT_Y)),
@@ -121,17 +186,12 @@ public:
         CELL_COUNT_X(CELL_COUNT_X), 
         CELL_COUNT_Y(CELL_COUNT_Y),
 
-        m_Scale(1.0f),
+        m_Scale(0.8f),
 
         m_LayerList(0),
         m_CurrentLayerID(0),
         
-        m_CurrentColor(RAYWHITE),
-        
-        m_ColorPanelGUI(true),
-        m_LayerPanelGUI(true),
-        
-        m_MouseOnGuiWidget(false) {
+        m_CurrentColor(RAYWHITE) {
             m_LayerList.push_back(std::make_unique<Layer>(CELL_COUNT_X, CELL_COUNT_Y, true, false));
 
             m_Camera.target = m_Position;
@@ -139,13 +199,8 @@ public:
             m_Camera.zoom = m_Scale;
     }
 
-    Canvas() : Canvas(32, 32) { 
-
-    }
-
-    Canvas(const int CELL_COUNT) : Canvas(CELL_COUNT, CELL_COUNT) { 
-
-    }
+    Canvas(Viewport* viewport) : Canvas(viewport, 32, 32) { }
+    Canvas(Viewport* viewport, const int CELL_COUNT) : Canvas(viewport, CELL_COUNT, CELL_COUNT) { }
 
     void Unload() {
         for(auto& i : m_LayerList) {
@@ -154,28 +209,28 @@ public:
     }
 
     void Update() {
-        if(IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !m_MouseOnGuiWidget) {
+        if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
             if(IsMouseCanvasIndexValid() && !m_LayerList.at(m_CurrentLayerID)->IsLocked()) {
                 m_LayerList.at(m_CurrentLayerID)->SetPixelColor(GetMouseCanvasIndex().x, GetMouseCanvasIndex().y, m_CurrentColor);
             }
         }
 
-        if(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) && !m_MouseOnGuiWidget) {
+        if(IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
             if(IsMouseCanvasIndexValid() && !m_LayerList.at(m_CurrentLayerID)->IsLocked()) {
                 m_LayerList.at(m_CurrentLayerID)->SetPixelColor(GetMouseCanvasIndex().x, GetMouseCanvasIndex().y, BLANK);
             }
         }
 
-        if(IsMouseButtonDown(MOUSE_BUTTON_MIDDLE) && !m_MouseOnGuiWidget) {
+        if(IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
             Vector2 delta = GetMouseDelta();
 			delta = Vector2Scale(delta, -1.0f / m_Camera.zoom);
 
 			m_Camera.target = Vector2Add(m_Camera.target, delta);
         }
 
-        if(GetMouseWheelMove() != 0.0f && !m_MouseOnGuiWidget) {
-            m_Scale += GetMouseWheelMove() / 5.0f;
-            m_Scale = Clamp(m_Scale, 0.5f, 2.0f);
+        if(GetMouseWheelMove() != 0.0f) {
+            m_Scale += GetMouseWheelMove() / 10.0f;
+            m_Scale = Clamp(m_Scale, 0.5f, 4.0f);
 			
             m_Camera.target = GetScreenToWorld2D(GetMousePosition(), m_Camera);
 			m_Camera.offset = GetMousePosition();
@@ -188,90 +243,103 @@ public:
     void Render() {    
         BeginMode2D(m_Camera);
 
-            for(auto& layer : m_LayerList) {
-                DrawLayer(layer->IsVisible(), *layer);
+            for(int i = m_LayerList.size() - 1; i >= 0; i--) {
+                DrawLayer(m_LayerList.at(i)->IsVisible(), *m_LayerList.at(i));
             }
 
-            DrawCanvasGrid(true, CELL_COUNT_X, CELL_COUNT_Y);
             DrawCanvasCursor(true);
+            DrawCanvasGrid(true, CELL_COUNT_X, CELL_COUNT_Y);
             DrawCanvasFrame(true);
 
         EndMode2D();
+    }
 
-        if(m_ColorPanelGUI) {
-            ImGui::Begin(
-                "Color", 
-                NULL, 
-                ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse
-            );
+    void ColorGuiPanel(const char* name, ImVec2 position, ImVec2 size) {
+        ImGui::Begin(
+            name, 
+            NULL, 
+            ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse
+        );
 
-            ImGui::SetWindowPos(ImVec2(0.0f, 0.0f));
-            ImGui::SetWindowSize(ImVec2(192.0f, 512.0f));
+        ImGui::SetWindowPos(position);
+        ImGui::SetWindowSize(size);
 
-            m_MouseOnGuiWidget = ImGui::IsWindowHovered();
+        float colorArray[4] = { m_CurrentColor.r / 255.0f, m_CurrentColor.g / 255.0f, m_CurrentColor.b / 255.0f, m_CurrentColor.a / 255.0f };
 
-            float colorArray[4] = { m_CurrentColor.r / 255.0f, m_CurrentColor.g / 255.0f, m_CurrentColor.b / 255.0f, m_CurrentColor.a / 255.0f };
+        ImGui::SeparatorText("Color Picker");
 
-            ImGui::PushItemWidth(160.0f);
-            ImGui::ColorPicker4(
-                "Color Picker", 
-                colorArray, 
-                ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoLabel
-            );
+        ImGui::PushItemWidth(172.0f);
+        ImGui::ColorPicker4(
+            "Color Picker", 
+            colorArray, 
+            ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoLabel
+        );
 
+        ImGui::SeparatorText("Color Palette");
 
-            m_CurrentColor.r = colorArray[0] * 255;
-            m_CurrentColor.g = colorArray[1] * 255;
-            m_CurrentColor.b = colorArray[2] * 255;
-            m_CurrentColor.a = colorArray[3] * 255;
+        m_CurrentColor.r = colorArray[0] * 255;
+        m_CurrentColor.g = colorArray[1] * 255;
+        m_CurrentColor.b = colorArray[2] * 255;
+        m_CurrentColor.a = colorArray[3] * 255;
 
-            ImGui::End();
+        ImGui::End();
+
+    }
+
+    void LayersGuiPanel(const char* name, ImVec2 position, ImVec2 size) {
+        ImGui::Begin(
+            name, 
+            NULL, 
+            ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse
+        );
+
+        ImGui::SetWindowPos(position);
+        ImGui::SetWindowSize(size);
+
+        if(ImGui::Button("Add layer")) {
+            m_LayerList.push_back(std::make_unique<Layer>(CELL_COUNT_X, CELL_COUNT_Y, true, false));
+            m_CurrentLayerID++;
         }
 
-        if(m_LayerPanelGUI) {
-            ImGui::Begin(
-                "Layer", 
-                NULL, 
-                ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse
-            );
+        ImGui::SameLine();
 
-            ImGui::SetWindowPos(ImVec2(0.0f, GetScreenHeight() - 256.0f));
-            ImGui::SetWindowSize(ImVec2(192.0f, 256.0f));
+        if(ImGui::Button("Remove layer") && m_LayerList.size() > 1) {
+            m_LayerList.erase(m_LayerList.begin() + m_CurrentLayerID);
 
-
-            m_MouseOnGuiWidget = ImGui::IsWindowHovered();
-
-            if(ImGui::Button("Add layer")) {
-                m_LayerList.push_back(std::make_unique<Layer>(CELL_COUNT_X, CELL_COUNT_Y, true, false));
+            if(m_CurrentLayerID < 0) {
                 m_CurrentLayerID++;
+            } else if(m_CurrentLayerID >= m_LayerList.size()) {
+                m_CurrentLayerID--;
+            }
+        }
+
+        for(int i = 0; i < m_LayerList.size(); i++) {
+            if(ImGui::Button(m_CurrentLayerID == i ? TextFormat("Cur. Layer") : TextFormat("Layer no.%i", i + 1), ImVec2(128.0f, 20.0f))) {
+                m_CurrentLayerID = i;
             }
 
             ImGui::SameLine();
-
-            if(ImGui::Button("Remove layer") && m_LayerList.size() > 1) {
-                m_LayerList.erase(m_LayerList.begin() + m_CurrentLayerID);
-
-                if(m_CurrentLayerID < 0) {
-                    m_CurrentLayerID++;
-                } else if(m_CurrentLayerID >= m_LayerList.size()) {
-                    m_CurrentLayerID--;
-                }
-            }
-
-            for(int i = 0; i < m_LayerList.size(); i++) {
-                if(ImGui::Button(m_CurrentLayerID == i ? TextFormat("Cur. Layer") : TextFormat("Layer no.%i", i + 1))) {
-                    m_CurrentLayerID = i;
-                }
-
-                ImGui::SameLine();
-                ImGui::Checkbox("V.", &m_LayerList.at(i)->layerVisible);
-                ImGui::SameLine();
-                ImGui::Checkbox("L.", &m_LayerList.at(i)->layerLocked);
-            }
-
-            ImGui::End();
+            ImGui::Checkbox(" ", &m_LayerList.at(i)->layerVisible);
+            ImGui::SameLine();
+            ImGui::Checkbox(" ", &m_LayerList.at(i)->layerLocked);
         }
+
+        ImGui::End();    
     }
+
+    void ToolsGuiPanel(const char* name, ImVec2 position, ImVec2 size) {
+        ImGui::Begin(
+            name, 
+            NULL, 
+            ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse
+        );
+
+        ImGui::SetWindowPos(position);
+        ImGui::SetWindowSize(size);
+
+        ImGui::End(); 
+    }
+
 
     std::unique_ptr<Layer>& GetLayer() {
         return m_LayerList.at(m_CurrentLayerID);
@@ -320,8 +388,8 @@ private:
     // `GetMouseWorldPosition()` - This function returns the position of the mouse cursor in the 2D World space ( `GetScreenToWorld2D()` )
     Vector2 GetMouseWorldPosition() {
         return {
-            GetScreenToWorld2D(GetMousePosition(), m_Camera).x + GetCanvasOriginOffset().x,
-            GetScreenToWorld2D(GetMousePosition(), m_Camera).y + GetCanvasOriginOffset().y
+            GetScreenToWorld2D(GetMousePosition(), m_Camera).x + GetCanvasOriginOffset().x - (m_Viewport->GetPosition().x / m_Scale),
+            GetScreenToWorld2D(GetMousePosition(), m_Camera).y + GetCanvasOriginOffset().y - (m_Viewport->GetPosition().y / m_Scale) 
         };
     }
 
@@ -352,7 +420,8 @@ private:
     // `IsMouseCanvasIndexValid()` - This function check's if `GetMouseCanvasIndex()` returns a valid index
     bool IsMouseCanvasIndexValid() {
         return (GetMouseCanvasIndex().x >= 0 && GetMouseCanvasIndex().x < CELL_COUNT_X) &&
-            (GetMouseCanvasIndex().y >= 0 && GetMouseCanvasIndex().y < CELL_COUNT_Y); 
+            (GetMouseCanvasIndex().y >= 0 && GetMouseCanvasIndex().y < CELL_COUNT_Y) &&
+            m_Viewport->IsMouseHovering(); 
     }
 
     void DrawLayer(bool visible, Layer& layer) {
@@ -394,7 +463,7 @@ private:
                         SIZE.x * m_Scale / WIDTH, 
                         SIZE.y * m_Scale / HEIGHT 
                     }, 
-                    0.5f / m_Scale, 
+                    1.0f / m_Scale, 
                     Fade(LIGHTGRAY, 0.5f)
                 );
             }
@@ -402,7 +471,7 @@ private:
     }
 
     void DrawCanvasCursor(bool visible) {
-        if(!visible || m_MouseOnGuiWidget) {
+        if(!visible && m_Viewport->IsMouseHovering()) {
             return;
         }
 
@@ -424,7 +493,7 @@ private:
                     SIZE.x * m_Scale / CELL_COUNT_X, 
                     SIZE.y * m_Scale / CELL_COUNT_Y 
                 },
-                1.0f / m_Scale,
+                2.0f / m_Scale,
                 WHITE
             );
         }
@@ -460,6 +529,7 @@ private:
     const int HEIGHT; // Window width
     const std::string TITLE; // Window title.
 
+    std::unique_ptr<Viewport> viewport;
     std::unique_ptr<Canvas> canvas;
 
 public:
@@ -471,7 +541,8 @@ public:
 
         rlImGuiSetup(true);
 
-        canvas = std::make_unique<Canvas>(32);
+        viewport = std::make_unique<Viewport>((const Vector2) { 192, 0 }, (const Vector2) { 736, 512 });
+        canvas = std::make_unique<Canvas>(viewport.get());
 
 #ifdef PLATFORM_WEB
         // Passing the `UpdateRenderFrame` function with the argument `this` for this `Game` class instance.
@@ -491,6 +562,7 @@ public:
 
     // `Game` class destructor.
     ~Game() {
+        viewport->Unload();
         canvas->Unload();
 
         // Deinitializing the game's resources.
@@ -509,10 +581,25 @@ public:
     // This function is called on every game's cycle.
     // Purpose: render game's elements, components, text, etc.
     void Render() {
-        rlImGuiBegin();
+        viewport->Begin();
+        viewport->Clear(DARKBLUE);
 
-        ClearBackground(DARKBLUE);
         canvas->Render();
+
+        viewport->End();
+    }
+
+    // This function is called on every game's cycle.
+    // Purpose: render game's user interface
+    void RenderGUI() {
+        rlImGuiBegin();
+        ClearBackground(BLACK);
+
+        viewport->ViewportGuiPanel("Panel: Viewport", ImVec2(192.0f, 0.0f));
+
+        canvas->ColorGuiPanel("Panel: Colors", ImVec2(0.0f, 0.0f), ImVec2(192.0f, 512.0f));
+        canvas->LayersGuiPanel("Panel: Layers", ImVec2(0.0f, 512.0f), ImVec2(1024.0f, 256.0f));
+        canvas->ToolsGuiPanel("Panel: Tools", ImVec2(928.0f, 0.0f), ImVec2(96.0f, 512.0f));
 
         rlImGuiEnd();
     }
@@ -526,6 +613,7 @@ void UpdateRenderFrame(void* args) {
 
     BeginDrawing();
     static_cast<Game*>(args)->Render();
+    static_cast<Game*>(args)->RenderGUI();
     EndDrawing();
 }
 
