@@ -29,7 +29,7 @@ public:
         UnloadRenderTexture(m_RenderTexture);
     }
 
-   void ViewportGuiPanel(const char* name, ImVec2 position) {
+   void ViewportGuiPanel(const char* name, ImVec2 position, ImVec2 size) {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 
         ImGui::Begin(
@@ -39,7 +39,7 @@ public:
         );
 
         ImGui::SetWindowPos(position);
-        ImGui::SetWindowSize(ImVec2(m_Size.x, m_Size.y));
+        ImGui::SetWindowSize(size);
 
         rlImGuiImageRenderTextureFit(&m_RenderTexture, true);
 
@@ -67,24 +67,13 @@ public:
     Vector2 GetSize() {
         return m_Size;
     }
-
-    bool IsMouseHovering() {
-        return CheckCollisionPointRec(
-            GetMousePosition(), 
-            (Rectangle) {
-                m_Position.x,
-                m_Position.y,
-                m_Size.x,
-                m_Size.y
-            }
-        );
-    }
 };
 
 class Layer {
 private:
     const Vector2 COUNT;
 
+    std::string m_Name;
     std::vector<Color> m_LayerData;
     Texture2D m_LayerTexture;
 
@@ -96,6 +85,7 @@ public:
     Layer(const int CELL_COUNT_X, const int CELL_COUNT_Y, bool visibility, bool lock) : 
         COUNT((const Vector2) { static_cast<float>(CELL_COUNT_X), static_cast<float>(CELL_COUNT_Y) } ), 
         m_LayerData(CELL_COUNT_X * CELL_COUNT_Y),
+        m_Name(),
         layerVisible(visibility),
         layerLocked(lock) {
             Load();
@@ -120,6 +110,14 @@ public:
 
     void Unload() {
         UnloadTexture(m_LayerTexture);
+    }
+
+    std::string& GetName() {
+        return m_Name;
+    }
+
+    void SetName(const std::string name) {
+        m_Name = name;
     }
 
     Texture2D& GetTexture() {
@@ -147,6 +145,9 @@ public:
     }
 
     void SetPixelColor(int x, int y, Color color) {
+        x = Clamp(x, 0, COUNT.x - 1);
+        y = Clamp(y, 0, COUNT.y - 1);
+
         m_LayerData.at(y * COUNT.x + x) = color;
     }
 
@@ -161,6 +162,7 @@ private:
     Camera2D m_Camera;
     const Vector2 m_CameraOffset;
 
+    Vector2 m_PreviousFrameMousePosition;
     Vector2 m_Position;
     const Vector2 SIZE;
 
@@ -174,19 +176,21 @@ private:
 
     Color m_CurrentColor;
 
+
 public:
     Canvas(Viewport* viewport, const int CELL_COUNT_X, const int CELL_COUNT_Y) : 
         m_Viewport(viewport),
         m_Camera( (Camera2D) { 0 }),
         m_CameraOffset( (const Vector2) { viewport->GetSize().x / 2.0f, viewport->GetSize().y / 2.0f } ),
 
+        m_PreviousFrameMousePosition(MouseWorldPosition()),
         m_Position( (Vector2) { 0.0f, 0.0f } ), 
         SIZE(GetCanvasSize(CELL_COUNT_X, CELL_COUNT_Y)),
 
         CELL_COUNT_X(CELL_COUNT_X), 
         CELL_COUNT_Y(CELL_COUNT_Y),
 
-        m_Scale(0.8f),
+        m_Scale(1.0f),
 
         m_LayerList(0),
         m_CurrentLayerID(0),
@@ -209,35 +213,48 @@ public:
     }
 
     void Update() {
-        if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-            if(IsMouseCanvasIndexValid() && !m_LayerList.at(m_CurrentLayerID)->IsLocked()) {
-                m_LayerList.at(m_CurrentLayerID)->SetPixelColor(GetMouseCanvasIndex().x, GetMouseCanvasIndex().y, m_CurrentColor);
+        // Check if mouse cursor is placed on the viewport...
+        if(MouseViewportHover()) {
+            // ...Check if mouse cursor is placed on the canvas...
+            if(IsMouseCanvasIndexValid(MouseWorldPositionScaled()) && IsMouseCanvasIndexValid(PreviousFrameMousePositionScaled()) && !m_LayerList.at(m_CurrentLayerID)->IsLocked()) {
+                int ax = GetMouseCanvasIndex(MouseWorldPositionScaled()).x;
+                int ay = GetMouseCanvasIndex(MouseWorldPositionScaled()).y;
+
+                int bx = GetMouseCanvasIndex(PreviousFrameMousePositionScaled()).x;
+                int by = GetMouseCanvasIndex(PreviousFrameMousePositionScaled()).y;
+
+                // ...Check if left mouse button is pressed
+                if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+                    DigitalDifferentialAnalyzer(ax, ay, bx, by, m_CurrentColor);
+                }
+
+                // ...Check if right mouse button is pressed
+                if(IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
+                    DigitalDifferentialAnalyzer(ax, ay, bx, by, BLANK);
+                }
             }
-        }
 
-        if(IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
-            if(IsMouseCanvasIndexValid() && !m_LayerList.at(m_CurrentLayerID)->IsLocked()) {
-                m_LayerList.at(m_CurrentLayerID)->SetPixelColor(GetMouseCanvasIndex().x, GetMouseCanvasIndex().y, BLANK);
+            // ...Check if scroll is pressed
+            if(IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
+                Vector2 delta = GetMouseDelta();
+                delta = Vector2Scale(delta, -1.0f / m_Camera.zoom);
+
+                m_Camera.target = Vector2Add(m_Camera.target, delta);
             }
-        }
 
-        if(IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
-            Vector2 delta = GetMouseDelta();
-			delta = Vector2Scale(delta, -1.0f / m_Camera.zoom);
-
-			m_Camera.target = Vector2Add(m_Camera.target, delta);
-        }
-
-        if(GetMouseWheelMove() != 0.0f) {
-            m_Scale += GetMouseWheelMove() / 10.0f;
-            m_Scale = Clamp(m_Scale, 0.5f, 4.0f);
-			
-            m_Camera.target = GetScreenToWorld2D(GetMousePosition(), m_Camera);
-			m_Camera.offset = GetMousePosition();
-            m_Camera.zoom = m_Scale;
+            // ...Check if scroll accelerates
+            if(GetMouseWheelMove() != 0.0f) {
+                m_Scale += GetMouseWheelMove() / 10.0f;
+                m_Scale = Clamp(m_Scale, 0.5f, 4.0f);
+                
+                m_Camera.target = GetScreenToWorld2D(GetMousePosition(), m_Camera);
+                m_Camera.offset = GetMousePosition();
+                m_Camera.zoom = m_Scale;
+            }
         }
 
         m_LayerList.at(m_CurrentLayerID)->UpdateLayer();
+        m_PreviousFrameMousePosition = MouseWorldPosition();
     }
 
     void Render() {    
@@ -314,14 +331,41 @@ public:
         }
 
         for(int i = 0; i < m_LayerList.size(); i++) {
-            if(ImGui::Button(m_CurrentLayerID == i ? TextFormat("Cur. Layer") : TextFormat("Layer no.%i", i + 1), ImVec2(128.0f, 20.0f))) {
+            if(ImGui::Button(m_CurrentLayerID == i ? TextFormat("Layer no.%i (Current)", i + 1) : TextFormat("Layer no.%i", i + 1), ImVec2(256.0f, 20.0f))) {
                 m_CurrentLayerID = i;
             }
 
             ImGui::SameLine();
-            ImGui::Checkbox(" ", &m_LayerList.at(i)->layerVisible);
+            ImGui::PushID(i);
+                ImGui::Checkbox("##visible", &m_LayerList.at(i)->layerVisible);
+            ImGui::PopID();
+
             ImGui::SameLine();
-            ImGui::Checkbox(" ", &m_LayerList.at(i)->layerLocked);
+            ImGui::PushID(i);
+                ImGui::Checkbox("##locked", &m_LayerList.at(i)->layerLocked);
+            ImGui::PopID();
+
+            ImGui::SameLine();
+            ImGui::PushID(i);
+
+                if(ImGui::Button("Up")) {
+                    if(i - 1 >= 0) {
+                        std::swap(m_LayerList.at(i), m_LayerList.at(i - 1));
+                    }
+                }
+
+            ImGui::PopID();
+
+            ImGui::SameLine();
+            ImGui::PushID(i);
+            
+                if(ImGui::Button("Down")) {
+                    if(i + 1 < m_LayerList.size()) {
+                        std::swap(m_LayerList.at(i), m_LayerList.at(i + 1));
+                    }
+                }
+
+            ImGui::PopID();
         }
 
         ImGui::End();    
@@ -331,7 +375,7 @@ public:
         ImGui::Begin(
             name, 
             NULL, 
-            ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse
+            ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration
         );
 
         ImGui::SetWindowPos(position);
@@ -339,7 +383,6 @@ public:
 
         ImGui::End(); 
     }
-
 
     std::unique_ptr<Layer>& GetLayer() {
         return m_LayerList.at(m_CurrentLayerID);
@@ -385,43 +428,66 @@ private:
         };
     }
 
-    // `GetMouseWorldPosition()` - This function returns the position of the mouse cursor in the 2D World space ( `GetScreenToWorld2D()` )
-    Vector2 GetMouseWorldPosition() {
-        return {
-            GetScreenToWorld2D(GetMousePosition(), m_Camera).x + GetCanvasOriginOffset().x - (m_Viewport->GetPosition().x / m_Scale),
-            GetScreenToWorld2D(GetMousePosition(), m_Camera).y + GetCanvasOriginOffset().y - (m_Viewport->GetPosition().y / m_Scale) 
-        };
-    }
-
-    // `GetMouseWorldPositionScaled()` - This function returns the position of the mouse cursor in the 2D World space divided by the scale factor ( `m_Scale` )
-    Vector2 GetMouseWorldPositionScaled() {
-        return {
-            GetMouseWorldPosition().x / m_Scale,
-            GetMouseWorldPosition().y / m_Scale
-        };
-    }
-
     // `GetMouseWorldCanvasPosition()` - This function returns the position of the cell in the canvas, based on the current mouse position in the 2D World ( `GetMouseWorldPosition()` )
-    Vector2 GetMouseToCanvasCellPosition() {
+    Vector2 GetMouseToCanvasCellPosition(Vector2 mouseCanvasIndex) {
         return {
-            m_Position.x - GetCanvasOriginOffset().x + GetMouseCanvasIndex().x * (SIZE.x * m_Scale / CELL_COUNT_X),
-            m_Position.y - GetCanvasOriginOffset().y + GetMouseCanvasIndex().y * (SIZE.y * m_Scale / CELL_COUNT_Y)
+            m_Position.x - GetCanvasOriginOffset().x + mouseCanvasIndex.x * (SIZE.x * m_Scale / CELL_COUNT_X),
+            m_Position.y - GetCanvasOriginOffset().y + mouseCanvasIndex.y * (SIZE.y * m_Scale / CELL_COUNT_Y)
         };
     }
 
     // `GetMouseCanvasIndex()` - This function returns the cell index of the canvas that the cursor is currently hovering above
-    Vector2 GetMouseCanvasIndex() {
+    Vector2 GetMouseCanvasIndex(Vector2 mousePositionScaled) {
         return { 
-            floor(GetMouseWorldPositionScaled().x / SIZE.x * CELL_COUNT_X),
-            floor(GetMouseWorldPositionScaled().y / SIZE.y * CELL_COUNT_Y)
+            floor(mousePositionScaled.x / SIZE.x * CELL_COUNT_X),
+            floor(mousePositionScaled.y / SIZE.y * CELL_COUNT_Y)
         };
     }
 
-    // `IsMouseCanvasIndexValid()` - This function check's if `GetMouseCanvasIndex()` returns a valid index
-    bool IsMouseCanvasIndexValid() {
-        return (GetMouseCanvasIndex().x >= 0 && GetMouseCanvasIndex().x < CELL_COUNT_X) &&
-            (GetMouseCanvasIndex().y >= 0 && GetMouseCanvasIndex().y < CELL_COUNT_Y) &&
-            m_Viewport->IsMouseHovering(); 
+    // `IsMouseCanvasIndexValid()` - This function check's if `GetMouseCanvasIndex()` returns a valid index for the `positionScaled` mouse position
+    bool IsMouseCanvasIndexValid(Vector2 positionScaled) {
+        return (GetMouseCanvasIndex(positionScaled).x >= 0 && GetMouseCanvasIndex(positionScaled).x < CELL_COUNT_X) &&
+            (GetMouseCanvasIndex(positionScaled).y >= 0 && GetMouseCanvasIndex(positionScaled).y < CELL_COUNT_Y) &&
+            MouseViewportHover();
+    }
+
+    // `GetMouseWorldPosition()` - This function returns the position of the mouse cursor in the 2D World space ( `GetScreenToWorld2D()` )
+    Vector2 MouseWorldPosition() {
+        return {
+            GetScreenToWorld2D(GetMousePosition(), m_Camera).x + GetCanvasOriginOffset().x - m_Viewport->GetPosition().x / m_Scale,
+            GetScreenToWorld2D(GetMousePosition(), m_Camera).y + GetCanvasOriginOffset().y - m_Viewport->GetPosition().y / m_Scale 
+        };
+    }
+
+    // `GetMouseWorldPositionScaled()` - This function returns the position of the mouse cursor in the 2D World space divided by the scale factor ( `scale` )
+    Vector2 MouseWorldPositionScaled() {
+        return {
+            MouseWorldPosition().x / m_Scale,
+            MouseWorldPosition().y / m_Scale
+        };
+    }
+
+    bool MouseViewportHover() {
+        return CheckCollisionPointRec(
+            GetMousePosition(), 
+            (Rectangle) {
+                m_Viewport->GetPosition().x,
+                m_Viewport->GetPosition().y,
+                m_Viewport->GetSize().x,
+                m_Viewport->GetSize().y
+            }
+        );
+    }
+
+    Vector2& PreviousFrameMousePosition() {
+        return m_PreviousFrameMousePosition;
+    }
+
+    Vector2 PreviousFrameMousePositionScaled() {
+        return {
+            m_PreviousFrameMousePosition.x / m_Scale,
+            m_PreviousFrameMousePosition.y / m_Scale
+        };
     }
 
     void DrawLayer(bool visible, Layer& layer) {
@@ -463,7 +529,7 @@ private:
                         SIZE.x * m_Scale / WIDTH, 
                         SIZE.y * m_Scale / HEIGHT 
                     }, 
-                    1.0f / m_Scale, 
+                    0.5f / m_Scale, 
                     Fade(LIGHTGRAY, 0.5f)
                 );
             }
@@ -471,32 +537,20 @@ private:
     }
 
     void DrawCanvasCursor(bool visible) {
-        if(!visible && m_Viewport->IsMouseHovering()) {
+        if(!visible && MouseViewportHover()) {
             return;
         }
 
-        if(IsMouseCanvasIndexValid()) {
-            DrawRectangleRec(
-                (Rectangle) {
-                    GetMouseToCanvasCellPosition().x,
-                    GetMouseToCanvasCellPosition().y,
-                    SIZE.x * m_Scale / CELL_COUNT_X, 
-                    SIZE.y * m_Scale / CELL_COUNT_Y 
-                },
-                m_CurrentColor
-            );
-        } else {
-            DrawRectangleLinesEx(
-                (Rectangle) {
-                    GetMouseToCanvasCellPosition().x,
-                    GetMouseToCanvasCellPosition().y,
-                    SIZE.x * m_Scale / CELL_COUNT_X, 
-                    SIZE.y * m_Scale / CELL_COUNT_Y 
-                },
-                2.0f / m_Scale,
-                WHITE
-            );
-        }
+        DrawRectangleLinesEx(
+            (Rectangle) {
+                GetMouseToCanvasCellPosition(GetMouseCanvasIndex(MouseWorldPositionScaled())).x,
+                GetMouseToCanvasCellPosition(GetMouseCanvasIndex(MouseWorldPositionScaled())).y,
+                SIZE.x * m_Scale / CELL_COUNT_X, 
+                SIZE.y * m_Scale / CELL_COUNT_Y 
+            },
+            2.0f / m_Scale,
+            WHITE
+        );
     }
 
     void DrawCanvasFrame(bool visible) {
@@ -515,6 +569,104 @@ private:
             BLACK
         );
     }
+
+    // `DigitalDifferentialAnalyzer()` - algorithm for drawing lines in between two points on the 2D Raster.
+    // Algorithm fill-up the blanks between points (`ax`, `ay`) and (`bx`, `by`) with the specified `color`
+    //
+    // NOTE: This function MUST use the index coordinates on the 2D grid; it fills the 2D grid based on the cell positions, not based on the mouse positions.
+    // Example: 
+    // Grid: 16x16
+    // ax = 0, ay = 4
+    // bx = 3, by = 15
+    // These are the valid grid positions.
+    void DigitalDifferentialAnalyzer(int ax, int ay, int bx, int by, Color color) {
+        // source: https://en.wikipedia.org/wiki/Digital_differential_analyzer_(graphics_algorithm)
+
+        float dx = bx - ax;
+        float dy = by - ay;
+        float steps = 0;
+        float i = 0;
+
+        float x = 0;
+        float y = 0;
+
+        if (abs(dx) >= abs(dy)) {
+            steps = abs(dx);
+        } else {
+            steps = abs(dy);
+        }
+
+        dx = dx / steps;
+        dy = dy / steps;
+        x = ax;
+        y = ay;
+
+        while (i <= steps) {
+            m_LayerList.at(m_CurrentLayerID)->SetPixelColor(std::floor(x), std::floor(y), color);
+            x += dx;
+            y += dy;
+            i++;
+        }
+    }
+};
+
+class ColorfulPixels {
+private:
+    std::unique_ptr<Viewport> m_Viewport;
+    std::unique_ptr<Canvas> m_Canvas;
+
+public:
+    ColorfulPixels() { }
+
+    void Load() {
+        m_Viewport = std::make_unique<Viewport>(
+            (const Vector2) { 
+                192, 
+                0 
+            }, (const Vector2) { 
+                768, 
+                512 
+            }
+        );
+
+        m_Canvas = std::make_unique<Canvas>(m_Viewport.get());
+
+        rlImGuiSetup(true);
+    }
+
+    void Unload() {
+        rlImGuiShutdown();
+
+        m_Viewport->Unload();
+        m_Canvas->Unload();
+    }
+
+    void Update() {
+        m_Canvas->Update();
+    }
+
+    void Render() {
+        m_Viewport->Begin();
+        m_Viewport->Clear(DARKBLUE);
+
+            m_Canvas->Render();
+
+        m_Viewport->End();
+    }
+
+    void RenderGUI() {
+        ClearBackground(BLACK);
+
+        rlImGuiBegin();
+
+            m_Viewport->ViewportGuiPanel("Panel: Viewport", ImVec2(192.0f, 0.0f), ImVec2(768.0f, 512.0f));
+
+            m_Canvas->ColorGuiPanel("Panel: Colors", ImVec2(0.0f, 0.0f), ImVec2(192.0f, 512.0f));
+            m_Canvas->LayersGuiPanel("Panel: Layers", ImVec2(0.0f, 512.0f), ImVec2(1024.0f, 256.0f));
+            m_Canvas->ToolsGuiPanel("Panel: Tools", ImVec2(960.0f, 0.0f), ImVec2(64.0f, 512.0f));
+
+        rlImGuiEnd();    
+    }
 };
 
 // Function called on every frame. Handles the basic updating and rendering of the current game frame.
@@ -529,20 +681,16 @@ private:
     const int HEIGHT; // Window width
     const std::string TITLE; // Window title.
 
-    std::unique_ptr<Viewport> viewport;
-    std::unique_ptr<Canvas> canvas;
+    ColorfulPixels colorfulPixels;
 
 public:
     // `Game` class constructor.
-    Game() : WIDTH(1024), HEIGHT(768), TITLE(TextFormat("Raylib %s - Colorful Pixels %s", RAYLIB_VERSION, "1.0")) {
+    Game() : WIDTH(1024), HEIGHT(768), TITLE(TextFormat("Raylib %s - Colorful Pixels %s", RAYLIB_VERSION, "1.0")), colorfulPixels() {
         // Initializing the Audio Device and creating a Window.
         InitAudioDevice();
         InitWindow(WIDTH, HEIGHT, TITLE.c_str());
 
-        rlImGuiSetup(true);
-
-        viewport = std::make_unique<Viewport>((const Vector2) { 192, 0 }, (const Vector2) { 736, 512 });
-        canvas = std::make_unique<Canvas>(viewport.get());
+        colorfulPixels.Load();
 
 #ifdef PLATFORM_WEB
         // Passing the `UpdateRenderFrame` function with the argument `this` for this `Game` class instance.
@@ -562,11 +710,8 @@ public:
 
     // `Game` class destructor.
     ~Game() {
-        viewport->Unload();
-        canvas->Unload();
-
         // Deinitializing the game's resources.
-        rlImGuiShutdown();
+        colorfulPixels.Unload();
 
         CloseAudioDevice();
         CloseWindow();
@@ -575,33 +720,14 @@ public:
     // This function is called on every game's cycle.
     // Purpose: update the internal components, logic, etc.
     void Update() {
-        canvas->Update();
+        colorfulPixels.Update();
     }
 
     // This function is called on every game's cycle.
     // Purpose: render game's elements, components, text, etc.
     void Render() {
-        viewport->Begin();
-        viewport->Clear(DARKBLUE);
-
-        canvas->Render();
-
-        viewport->End();
-    }
-
-    // This function is called on every game's cycle.
-    // Purpose: render game's user interface
-    void RenderGUI() {
-        rlImGuiBegin();
-        ClearBackground(BLACK);
-
-        viewport->ViewportGuiPanel("Panel: Viewport", ImVec2(192.0f, 0.0f));
-
-        canvas->ColorGuiPanel("Panel: Colors", ImVec2(0.0f, 0.0f), ImVec2(192.0f, 512.0f));
-        canvas->LayersGuiPanel("Panel: Layers", ImVec2(0.0f, 512.0f), ImVec2(1024.0f, 256.0f));
-        canvas->ToolsGuiPanel("Panel: Tools", ImVec2(928.0f, 0.0f), ImVec2(96.0f, 512.0f));
-
-        rlImGuiEnd();
+        colorfulPixels.Render();
+        colorfulPixels.RenderGUI();
     }
 };
 
@@ -613,7 +739,6 @@ void UpdateRenderFrame(void* args) {
 
     BeginDrawing();
     static_cast<Game*>(args)->Render();
-    static_cast<Game*>(args)->RenderGUI();
     EndDrawing();
 }
 
