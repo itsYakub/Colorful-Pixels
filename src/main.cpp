@@ -69,11 +69,53 @@ public:
     }
 };
 
+class ColorPalette {
+private:
+    std::vector<Color> m_ColorList;
+
+public:
+    ColorPalette() : m_ColorList() {
+        m_ColorList.push_back(LIGHTGRAY);
+        m_ColorList.push_back(GRAY);
+        m_ColorList.push_back(DARKGRAY);
+        m_ColorList.push_back(YELLOW);
+        m_ColorList.push_back(GOLD);
+        m_ColorList.push_back(ORANGE);
+        m_ColorList.push_back(PINK);
+        m_ColorList.push_back(RED);
+        m_ColorList.push_back(MAROON);
+        m_ColorList.push_back(GREEN);
+        m_ColorList.push_back(LIME);
+        m_ColorList.push_back(DARKGREEN);
+        m_ColorList.push_back(SKYBLUE);
+        m_ColorList.push_back(BLUE);
+        m_ColorList.push_back(DARKBLUE);
+        m_ColorList.push_back(PURPLE);
+        m_ColorList.push_back(VIOLET);
+        m_ColorList.push_back(DARKPURPLE);
+        m_ColorList.push_back(BEIGE);
+        m_ColorList.push_back(BROWN);
+        m_ColorList.push_back(DARKBROWN);
+        m_ColorList.push_back(WHITE);
+        m_ColorList.push_back(BLACK);
+        m_ColorList.push_back(MAGENTA);
+        m_ColorList.push_back(RAYWHITE);
+    }
+
+    int Size() {
+        return m_ColorList.size();
+    }
+
+    Color GetColor(int index) {
+        return m_ColorList.at(Clamp(index, 0, m_ColorList.size() - 1));
+    }
+};
+
 class Layer {
 private:
     const Vector2 COUNT;
+    const int ID;
 
-    std::string m_Name;
     std::vector<Color> m_LayerData;
     Texture2D m_LayerTexture;
 
@@ -82,20 +124,20 @@ public:
     bool layerLocked;
     
 public:
-    Layer(const int CELL_COUNT_X, const int CELL_COUNT_Y, bool visibility, bool lock) : 
+    Layer(const int CELL_COUNT_X, const int CELL_COUNT_Y, int ID, bool visibility, bool lock) : 
         COUNT((const Vector2) { static_cast<float>(CELL_COUNT_X), static_cast<float>(CELL_COUNT_Y) } ), 
+        ID(ID),
         m_LayerData(CELL_COUNT_X * CELL_COUNT_Y),
-        m_Name(),
         layerVisible(visibility),
         layerLocked(lock) {
             Load();
     }
 
-    Layer(const int CELL_COUNT) : Layer(CELL_COUNT, CELL_COUNT, true, false) { }
-    Layer(const int CELL_COUNT, bool visibility) : Layer(CELL_COUNT, CELL_COUNT, visibility, false) { }
-    Layer(const int CELL_COUNT, bool visibility, bool lock) : Layer(CELL_COUNT, CELL_COUNT, visibility, lock) { }
-    Layer(const int CELL_COUNT_X, const int CELL_COUNT_Y) : Layer(CELL_COUNT_X, CELL_COUNT_Y, true, false) { }
-    Layer(const int CELL_COUNT_X, const int CELL_COUNT_Y, bool visibility) : Layer(CELL_COUNT_X, CELL_COUNT_Y, visibility, false) { }
+    Layer(const int CELL_COUNT, int ID) : Layer(CELL_COUNT, CELL_COUNT, ID, true, false) { }
+    Layer(const int CELL_COUNT, int ID, bool visibility) : Layer(CELL_COUNT, CELL_COUNT, ID, visibility, false) { }
+    Layer(const int CELL_COUNT, int ID, bool visibility, bool lock) : Layer(CELL_COUNT, CELL_COUNT, ID, visibility, lock) { }
+    Layer(const int CELL_COUNT_X, const int CELL_COUNT_Y, int ID) : Layer(CELL_COUNT_X, CELL_COUNT_Y, ID, true, false) { }
+    Layer(const int CELL_COUNT_X, const int CELL_COUNT_Y, int ID, bool visibility) : Layer(CELL_COUNT_X, CELL_COUNT_Y, ID, visibility, false) { }
 
     void Load() {
         for(int i = 0; i < COUNT.x * COUNT.y; i++) {
@@ -105,19 +147,15 @@ public:
         Image image = GenImageColor(COUNT.x, COUNT.y, BLANK);
         m_LayerTexture = LoadTextureFromImage(image);
         SetTextureFilter(m_LayerTexture, TEXTURE_FILTER_POINT);
-        UnloadImage(image);     
+        UnloadImage(image);  
     }
 
     void Unload() {
         UnloadTexture(m_LayerTexture);
     }
 
-    std::string& GetName() {
-        return m_Name;
-    }
-
-    void SetName(const std::string name) {
-        m_Name = name;
+    int GetID() {
+        return ID;
     }
 
     Texture2D& GetTexture() {
@@ -174,6 +212,7 @@ private:
     std::vector<std::unique_ptr<Layer>> m_LayerList;
     int m_CurrentLayerID;
 
+    ColorPalette m_ColorPalette;
     Color m_CurrentColor;
 
 
@@ -195,8 +234,9 @@ public:
         m_LayerList(0),
         m_CurrentLayerID(0),
         
+        m_ColorPalette(),
         m_CurrentColor(RAYWHITE) {
-            m_LayerList.push_back(std::make_unique<Layer>(CELL_COUNT_X, CELL_COUNT_Y, true, false));
+            m_LayerList.push_back(std::make_unique<Layer>(CELL_COUNT_X, CELL_COUNT_Y, 0, true, false));
 
             m_Camera.target = m_Position;
             m_Camera.offset = m_CameraOffset;
@@ -275,7 +315,7 @@ public:
         ImGui::Begin(
             name, 
             NULL, 
-            ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse
+            ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration
         );
 
         ImGui::SetWindowPos(position);
@@ -285,19 +325,44 @@ public:
 
         ImGui::SeparatorText("Color Picker");
 
-        ImGui::PushItemWidth(172.0f);
+        ImGui::PushItemWidth(size.x - 16.0f);
         ImGui::ColorPicker4(
             "Color Picker", 
             colorArray, 
             ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoLabel
         );
 
-        ImGui::SeparatorText("Color Palette");
-
         m_CurrentColor.r = colorArray[0] * 255;
         m_CurrentColor.g = colorArray[1] * 255;
         m_CurrentColor.b = colorArray[2] * 255;
         m_CurrentColor.a = colorArray[3] * 255;
+
+        ImGui::SeparatorText("Color Palette");
+
+        ImGui::BeginChild(1);
+
+        for(int i = 0, colorsInARow = 4; i < m_ColorPalette.Size(); i += colorsInARow) {
+            ImGui::NewLine();
+
+            for(int j = 0; j < colorsInARow; j++) {
+                if(i + j >= m_ColorPalette.Size()) {
+                    break;
+                }
+
+                Color colorPaletteColor = m_ColorPalette.GetColor(i + j);
+
+                ImGui::SameLine();
+                ImGui::PushID(i + j);
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(colorPaletteColor.r / 255.0f, colorPaletteColor.g / 255.0f, colorPaletteColor.b / 255.0f, 1.0f));
+                if(ImGui::Button("##color_button", ImVec2(32, 32))) {
+                    m_CurrentColor = colorPaletteColor;
+                }
+                ImGui::PopStyleColor();
+                ImGui::PopID();
+            }
+        }
+
+        ImGui::EndChild();
 
         ImGui::End();
 
@@ -314,7 +379,7 @@ public:
         ImGui::SetWindowSize(size);
 
         if(ImGui::Button("Add layer")) {
-            m_LayerList.push_back(std::make_unique<Layer>(CELL_COUNT_X, CELL_COUNT_Y, true, false));
+            m_LayerList.push_back(std::make_unique<Layer>(CELL_COUNT_X, CELL_COUNT_Y, m_LayerList.size(), true, false));
             m_CurrentLayerID++;
         }
 
@@ -330,8 +395,12 @@ public:
             }
         }
 
+        ImGui::Separator();
+
+        ImGui::BeginChild(1);
+
         for(int i = 0; i < m_LayerList.size(); i++) {
-            if(ImGui::Button(m_CurrentLayerID == i ? TextFormat("Layer no.%i (Current)", i + 1) : TextFormat("Layer no.%i", i + 1), ImVec2(256.0f, 20.0f))) {
+            if(ImGui::Button(m_CurrentLayerID == i ? TextFormat("Layer no.%i (Current)", m_LayerList.at(i)->GetID()) : TextFormat("Layer no.%i", m_LayerList.at(i)->GetID()), ImVec2(256.0f, 20.0f))) {
                 m_CurrentLayerID = i;
             }
 
@@ -368,6 +437,7 @@ public:
             ImGui::PopID();
         }
 
+        ImGui::EndChild();
         ImGui::End();    
     }
 
@@ -381,6 +451,14 @@ public:
         ImGui::SetWindowPos(position);
         ImGui::SetWindowSize(size);
 
+        if(ImGui::Button("##Brush", ImVec2(size.x - 16, size.x - 16))) {
+            TraceLog(LOG_INFO, "Brush button!");
+        }
+
+        if(ImGui::Button("##Eraser", ImVec2(size.x - 16, size.x - 16))) {
+            TraceLog(LOG_INFO, "Eraser button!");
+        }
+
         ImGui::End(); 
     }
 
@@ -390,6 +468,88 @@ public:
 
     std::unique_ptr<Layer>& GetLayer(int index) {
         return m_LayerList.at(index);
+    }
+
+    Color GetColor() {
+        return m_CurrentColor;
+    }
+
+    void SetColor(Color color) {
+        m_CurrentColor = color;
+    }
+
+    // `GetMouseCanvasIndex()` - This function returns the cell index of the canvas that the cursor is currently hovering above
+    Vector2 GetMouseCanvasIndex(Vector2 mousePositionScaled) {
+        return { 
+            floor(mousePositionScaled.x / SIZE.x * CELL_COUNT_X),
+            floor(mousePositionScaled.y / SIZE.y * CELL_COUNT_Y)
+        };
+    }
+
+    // `GetMouseWorldPosition()` - This function returns the position of the mouse cursor in the 2D World space ( `GetScreenToWorld2D()` )
+    Vector2 MouseWorldPosition() {
+        return {
+            GetScreenToWorld2D(GetMousePosition(), m_Camera).x + GetCanvasOriginOffset().x - m_Viewport->GetPosition().x / m_Scale,
+            GetScreenToWorld2D(GetMousePosition(), m_Camera).y + GetCanvasOriginOffset().y - m_Viewport->GetPosition().y / m_Scale 
+        };
+    }
+
+    // `GetMouseWorldPositionScaled()` - This function returns the position of the mouse cursor in the 2D World space divided by the scale factor ( `scale` )
+    Vector2 MouseWorldPositionScaled() {
+        return {
+            MouseWorldPosition().x / m_Scale,
+            MouseWorldPosition().y / m_Scale
+        };
+    }
+
+    Vector2& PreviousFrameMousePosition() {
+        return m_PreviousFrameMousePosition;
+    }
+
+    Vector2 PreviousFrameMousePositionScaled() {
+        return {
+            m_PreviousFrameMousePosition.x / m_Scale,
+            m_PreviousFrameMousePosition.y / m_Scale
+        };
+    }
+
+    // `DigitalDifferentialAnalyzer()` - algorithm for drawing lines in between two points on the 2D Raster.
+    // Algorithm fill-up the blanks between points (`ax`, `ay`) and (`bx`, `by`) with the specified `color`
+    //
+    // NOTE: This function MUST use the index coordinates on the 2D grid; it fills the 2D grid based on the cell positions, not based on the mouse positions.
+    // Example: 
+    // Grid: 16x16
+    // ax = 0, ay = 4
+    // bx = 3, by = 15
+    // These are the valid grid positions.
+    void DigitalDifferentialAnalyzer(int ax, int ay, int bx, int by, Color color) {
+        // source: https://en.wikipedia.org/wiki/Digital_differential_analyzer_(graphics_algorithm)
+
+        float dx = bx - ax;
+        float dy = by - ay;
+        float steps = 0;
+        float i = 0;
+
+        float x = 0;
+        float y = 0;
+
+        if (abs(dx) >= abs(dy)) {
+            steps = abs(dx);
+        } else {
+            steps = abs(dy);
+        }
+
+        dx = dx / steps;
+        dy = dy / steps;
+        x = ax;
+        y = ay;
+
+        while (i <= steps) {
+            m_LayerList.at(m_CurrentLayerID)->SetPixelColor(std::floor(x), std::floor(y), color);
+            x += dx;
+            y += dy;
+            i++;
+        }
     }
 
 private:
@@ -436,35 +596,11 @@ private:
         };
     }
 
-    // `GetMouseCanvasIndex()` - This function returns the cell index of the canvas that the cursor is currently hovering above
-    Vector2 GetMouseCanvasIndex(Vector2 mousePositionScaled) {
-        return { 
-            floor(mousePositionScaled.x / SIZE.x * CELL_COUNT_X),
-            floor(mousePositionScaled.y / SIZE.y * CELL_COUNT_Y)
-        };
-    }
-
     // `IsMouseCanvasIndexValid()` - This function check's if `GetMouseCanvasIndex()` returns a valid index for the `positionScaled` mouse position
     bool IsMouseCanvasIndexValid(Vector2 positionScaled) {
         return (GetMouseCanvasIndex(positionScaled).x >= 0 && GetMouseCanvasIndex(positionScaled).x < CELL_COUNT_X) &&
             (GetMouseCanvasIndex(positionScaled).y >= 0 && GetMouseCanvasIndex(positionScaled).y < CELL_COUNT_Y) &&
             MouseViewportHover();
-    }
-
-    // `GetMouseWorldPosition()` - This function returns the position of the mouse cursor in the 2D World space ( `GetScreenToWorld2D()` )
-    Vector2 MouseWorldPosition() {
-        return {
-            GetScreenToWorld2D(GetMousePosition(), m_Camera).x + GetCanvasOriginOffset().x - m_Viewport->GetPosition().x / m_Scale,
-            GetScreenToWorld2D(GetMousePosition(), m_Camera).y + GetCanvasOriginOffset().y - m_Viewport->GetPosition().y / m_Scale 
-        };
-    }
-
-    // `GetMouseWorldPositionScaled()` - This function returns the position of the mouse cursor in the 2D World space divided by the scale factor ( `scale` )
-    Vector2 MouseWorldPositionScaled() {
-        return {
-            MouseWorldPosition().x / m_Scale,
-            MouseWorldPosition().y / m_Scale
-        };
     }
 
     bool MouseViewportHover() {
@@ -477,17 +613,6 @@ private:
                 m_Viewport->GetSize().y
             }
         );
-    }
-
-    Vector2& PreviousFrameMousePosition() {
-        return m_PreviousFrameMousePosition;
-    }
-
-    Vector2 PreviousFrameMousePositionScaled() {
-        return {
-            m_PreviousFrameMousePosition.x / m_Scale,
-            m_PreviousFrameMousePosition.y / m_Scale
-        };
     }
 
     void DrawLayer(bool visible, Layer& layer) {
@@ -569,44 +694,51 @@ private:
             BLACK
         );
     }
+};
 
-    // `DigitalDifferentialAnalyzer()` - algorithm for drawing lines in between two points on the 2D Raster.
-    // Algorithm fill-up the blanks between points (`ax`, `ay`) and (`bx`, `by`) with the specified `color`
-    //
-    // NOTE: This function MUST use the index coordinates on the 2D grid; it fills the 2D grid based on the cell positions, not based on the mouse positions.
-    // Example: 
-    // Grid: 16x16
-    // ax = 0, ay = 4
-    // bx = 3, by = 15
-    // These are the valid grid positions.
-    void DigitalDifferentialAnalyzer(int ax, int ay, int bx, int by, Color color) {
-        // source: https://en.wikipedia.org/wiki/Digital_differential_analyzer_(graphics_algorithm)
+// TODO(yakub):
+// I think it's time to finally separate all the classes to their respective header and source files.
+// To go further we need file inclusion, we need more flexibility then what we have right now. 
 
-        float dx = bx - ax;
-        float dy = by - ay;
-        float steps = 0;
-        float i = 0;
+class Tool {
+protected:
+    Canvas* m_Canvas;
 
-        float x = 0;
-        float y = 0;
+public:
+    Tool(Canvas* canvas) : m_Canvas(canvas) { }
 
-        if (abs(dx) >= abs(dy)) {
-            steps = abs(dx);
-        } else {
-            steps = abs(dy);
-        }
+    virtual void OnButtonPress();
+    virtual void OnButtonDown();
+    virtual void OnButtonRelease();
+};
 
-        dx = dx / steps;
-        dy = dy / steps;
-        x = ax;
-        y = ay;
+class Brush : protected Tool {
+public:
+    Brush(Canvas* canvas) : Tool(canvas) { }
 
-        while (i <= steps) {
-            m_LayerList.at(m_CurrentLayerID)->SetPixelColor(std::floor(x), std::floor(y), color);
-            x += dx;
-            y += dy;
-            i++;
-        }
+    void OnButtonDown() override {
+        int ax = m_Canvas->GetMouseCanvasIndex(m_Canvas->MouseWorldPositionScaled()).x;
+        int ay = m_Canvas->GetMouseCanvasIndex(m_Canvas->MouseWorldPositionScaled()).y;
+
+        int bx = m_Canvas->GetMouseCanvasIndex(m_Canvas->PreviousFrameMousePositionScaled()).x;
+        int by = m_Canvas->GetMouseCanvasIndex(m_Canvas->PreviousFrameMousePositionScaled()).y;
+
+        m_Canvas->DigitalDifferentialAnalyzer(ax, ay, bx, by, m_Canvas->GetColor());
+    }
+};
+
+class Eraser : protected Tool {
+public:
+    Eraser(Canvas* canvas) : Tool(canvas) { }
+
+    void OnButtonDown() override {
+        int ax = m_Canvas->GetMouseCanvasIndex(m_Canvas->MouseWorldPositionScaled()).x;
+        int ay = m_Canvas->GetMouseCanvasIndex(m_Canvas->MouseWorldPositionScaled()).y;
+
+        int bx = m_Canvas->GetMouseCanvasIndex(m_Canvas->PreviousFrameMousePositionScaled()).x;
+        int by = m_Canvas->GetMouseCanvasIndex(m_Canvas->PreviousFrameMousePositionScaled()).y;
+
+        m_Canvas->DigitalDifferentialAnalyzer(ax, ay, bx, by, BLANK);
     }
 };
 
@@ -629,7 +761,7 @@ public:
             }
         );
 
-        m_Canvas = std::make_unique<Canvas>(m_Viewport.get());
+        m_Canvas = std::make_unique<Canvas>(m_Viewport.get(), 16);
 
         rlImGuiSetup(true);
     }
@@ -743,7 +875,7 @@ void UpdateRenderFrame(void* args) {
 }
 
 int main(int, char**) {
-    // Creating the game instnace
+    // Creating the game instance
     Game game;
 
     return 0;
