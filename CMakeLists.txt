@@ -41,6 +41,13 @@ include(FetchContent)
 set(
     SOURCES
     ${CMAKE_SOURCE_DIR}/src/main.cpp
+    ${CMAKE_SOURCE_DIR}/src/Viewport.cpp
+    ${CMAKE_SOURCE_DIR}/src/Layer.cpp
+    ${CMAKE_SOURCE_DIR}/src/Eraser.cpp
+    ${CMAKE_SOURCE_DIR}/src/ColorPalette.cpp
+    ${CMAKE_SOURCE_DIR}/src/ColorfulPixels.cpp
+    ${CMAKE_SOURCE_DIR}/src/Canvas.cpp
+    ${CMAKE_SOURCE_DIR}/src/Brush.cpp
 
     ${CMAKE_SOURCE_DIR}/lib/rlImGui/rlImGui.cpp
     
