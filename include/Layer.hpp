@@ -38,6 +38,7 @@ public:
     bool IsLocked();
     void SetLock(bool lock);
 
+    Color GetPixelColor(int x, int y);
     void SetPixelColor(int x, int y, Color color);
 
     void UpdateLayer();

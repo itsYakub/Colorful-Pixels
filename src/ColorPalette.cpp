@@ -1,8 +1,5 @@
 #include "ColorPalette.hpp"
 
-#include "raylib.h"
-#include "raymath.h"
-
 ColorPalette::ColorPalette() : m_ColorList() {
     m_ColorList.push_back(LIGHTGRAY);
     m_ColorList.push_back(GRAY);

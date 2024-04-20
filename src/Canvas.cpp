@@ -15,15 +15,7 @@ Canvas::Canvas(Viewport* viewport, const int CELL_COUNT_X, const int CELL_COUNT_
 
     m_Scale(1.0f),
 
-    m_LayerList(0),
-    m_CurrentLayerID(0),
-    
-    m_ColorPalette(),
-    m_CurrentColor(RAYWHITE),
-    
-    m_CurrentTool(std::make_unique<Brush>(*this)) {
-        m_LayerList.push_back(std::make_unique<Layer>(CELL_COUNT_X, CELL_COUNT_Y, 0, true, false));
-
+    m_LayerSystem(this) {
         m_Camera.target = m_Position;
         m_Camera.offset = m_CameraOffset;
         m_Camera.zoom = m_Scale;
@@ -33,50 +25,19 @@ Canvas::Canvas(Viewport* viewport) : Canvas(viewport, 32, 32) { }
 Canvas::Canvas(Viewport* viewport, const int CELL_COUNT) : Canvas(viewport, CELL_COUNT, CELL_COUNT) { }
 
 void Canvas::Unload() {
-    for(auto& i : m_LayerList) {
-        i->Unload();
-    }
+    m_LayerSystem.Unload();
 }
 
 void Canvas::Update() {
-    // Check if mouse cursor is placed on the viewport...
-    if(MouseViewportHover()) {
-        // ...Check if mouse cursor is placed on the canvas...
-        if(IsMouseCanvasIndexValid(MouseWorldPositionScaled()) && IsMouseCanvasIndexValid(PreviousFrameMousePositionScaled()) && !m_LayerList.at(m_CurrentLayerID)->IsLocked()) {
-            // ...Check if left mouse button is pressed
-            if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-                m_CurrentTool->OnButtonDown();
-            }
-        }
-
-        // ...Check if scroll is pressed
-        if(IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
-            Vector2 delta = GetMouseDelta();
-            delta = Vector2Scale(delta, -1.0f / m_Camera.zoom);
-
-            m_Camera.target = Vector2Add(m_Camera.target, delta);
-        }
-
-        // ...Check if scroll accelerates
-        if(GetMouseWheelMove() != 0.0f) {
-            m_Scale += GetMouseWheelMove() / 10.0f;
-            m_Scale = Clamp(m_Scale, 0.5f, 4.0f);
-            
-            m_Camera.target = GetScreenToWorld2D(GetMousePosition(), m_Camera);
-            m_Camera.offset = GetMousePosition();
-            m_Camera.zoom = m_Scale;
-        }
-    }
-
-    m_LayerList.at(m_CurrentLayerID)->UpdateLayer();
+    m_LayerSystem.UpdateLayer();
     m_PreviousFrameMousePosition = MouseWorldPosition();
 }
 
 void Canvas::Render() {    
     BeginMode2D(m_Camera);
 
-        for(int i = m_LayerList.size() - 1; i >= 0; i--) {
-            DrawLayer(m_LayerList.at(i)->IsVisible(), *m_LayerList.at(i));
+        for(int i = m_LayerSystem.GetCount() - 1; i >= 0; i--) {
+            DrawLayer(m_LayerSystem.GetLayer(i)->IsVisible(), *m_LayerSystem.GetLayer(i));
         }
 
         DrawCanvasCursor(true);
@@ -86,178 +47,34 @@ void Canvas::Render() {
     EndMode2D();
 }
 
-void Canvas::ColorGuiPanel(const char* name, ImVec2 position, ImVec2 size) {
-    ImGui::Begin(
-        name, 
-        NULL, 
-        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration
-    );
-
-    ImGui::SetWindowPos(position);
-    ImGui::SetWindowSize(size);
-
-    float colorArray[4] = { m_CurrentColor.r / 255.0f, m_CurrentColor.g / 255.0f, m_CurrentColor.b / 255.0f, m_CurrentColor.a / 255.0f };
-
-    ImGui::SeparatorText("Color Picker");
-
-    ImGui::PushItemWidth(size.x - 16.0f);
-    ImGui::ColorPicker4(
-        "Color Picker", 
-        colorArray, 
-        ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoLabel
-    );
-
-    m_CurrentColor.r = colorArray[0] * 255;
-    m_CurrentColor.g = colorArray[1] * 255;
-    m_CurrentColor.b = colorArray[2] * 255;
-    m_CurrentColor.a = colorArray[3] * 255;
-
-    ImGui::SeparatorText("Color Palette");
-
-    ImGui::BeginChild(1);
-
-    for(int i = 0, colorsInARow = 4; i < m_ColorPalette.Size(); i += colorsInARow) {
-        ImGui::NewLine();
-
-        for(int j = 0; j < colorsInARow; j++) {
-            if(i + j >= m_ColorPalette.Size()) {
-                break;
-            }
-
-            Color colorPaletteColor = m_ColorPalette.GetColor(i + j);
-
-            ImGui::SameLine();
-            ImGui::PushID(i + j);
-            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(colorPaletteColor.r / 255.0f, colorPaletteColor.g / 255.0f, colorPaletteColor.b / 255.0f, 1.0f));
-            if(ImGui::Button("##color_button", ImVec2(32, 32))) {
-                m_CurrentColor = colorPaletteColor;
-            }
-            ImGui::PopStyleColor();
-            ImGui::PopID();
-        }
-    }
-
-    ImGui::EndChild();
-
-    ImGui::End();
-
+LayerSystem& Canvas::GetLayerSystem() {
+    return m_LayerSystem;
 }
 
-void Canvas::LayersGuiPanel(const char* name, ImVec2 position, ImVec2 size) {
-    ImGui::Begin(
-        name, 
-        NULL, 
-        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse
-    );
-
-    ImGui::SetWindowPos(position);
-    ImGui::SetWindowSize(size);
-
-    if(ImGui::Button("Add layer")) {
-        m_LayerList.push_back(std::make_unique<Layer>(CELL_COUNT_X, CELL_COUNT_Y, m_LayerList.size(), true, false));
-        m_CurrentLayerID++;
-    }
-
-    ImGui::SameLine();
-
-    if(ImGui::Button("Remove layer") && m_LayerList.size() > 1) {
-        m_LayerList.erase(m_LayerList.begin() + m_CurrentLayerID);
-
-        if(m_CurrentLayerID < 0) {
-            m_CurrentLayerID++;
-        } else if(m_CurrentLayerID >= m_LayerList.size()) {
-            m_CurrentLayerID--;
-        }
-    }
-
-    ImGui::Separator();
-
-    ImGui::BeginChild(1);
-
-    for(int i = 0; i < m_LayerList.size(); i++) {
-        if(ImGui::Button(m_CurrentLayerID == i ? TextFormat("Layer no.%i (Current)", m_LayerList.at(i)->GetID()) : TextFormat("Layer no.%i", m_LayerList.at(i)->GetID()), ImVec2(256.0f, 20.0f))) {
-            m_CurrentLayerID = i;
-        }
-
-        ImGui::SameLine();
-        ImGui::PushID(i);
-            ImGui::Checkbox("##visible", &m_LayerList.at(i)->layerVisible);
-        ImGui::PopID();
-
-        ImGui::SameLine();
-        ImGui::PushID(i);
-            ImGui::Checkbox("##locked", &m_LayerList.at(i)->layerLocked);
-        ImGui::PopID();
-
-        ImGui::SameLine();
-        ImGui::PushID(i);
-
-            if(ImGui::Button("Up")) {
-                if(i - 1 >= 0) {
-                    std::swap(m_LayerList.at(i), m_LayerList.at(i - 1));
-                }
-            }
-
-        ImGui::PopID();
-
-        ImGui::SameLine();
-        ImGui::PushID(i);
-        
-            if(ImGui::Button("Down")) {
-                if(i + 1 < m_LayerList.size()) {
-                    std::swap(m_LayerList.at(i), m_LayerList.at(i + 1));
-                }
-            }
-
-        ImGui::PopID();
-    }
-
-    ImGui::EndChild();
-    ImGui::End();    
+const int Canvas::CellCountX() {
+    return CELL_COUNT_X;
 }
 
-void Canvas::ToolsGuiPanel(const char* name, ImVec2 position, ImVec2 size) {
-    ImGui::Begin(
-        name, 
-        NULL, 
-        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration
-    );
-
-    ImGui::SetWindowPos(position);
-    ImGui::SetWindowSize(size);
-
-    if(ImGui::Button("##Brush", ImVec2(size.x - 16, size.x - 16))) {
-        m_CurrentTool.release();
-        m_CurrentTool = std::make_unique<Brush>(*this);
-
-        TraceLog(LOG_INFO, "Current tool: BRUSH");
-    }
-
-    if(ImGui::Button("##Eraser", ImVec2(size.x - 16, size.x - 16))) {
-        m_CurrentTool.release();
-        m_CurrentTool = std::make_unique<Eraser>(*this);
-
-        TraceLog(LOG_INFO, "Current tool: ERASER");
-    }
-
-    ImGui::End(); 
+const int Canvas::CellCountY() {
+    return CELL_COUNT_Y;
 }
 
-std::unique_ptr<Layer>& Canvas::GetLayer() {
-    return m_LayerList.at(m_CurrentLayerID);
+void Canvas::Pan() {
+    Vector2 delta = GetMouseDelta();
+    delta = Vector2Scale(delta, -1.0f / m_Camera.zoom);
+
+    m_Camera.target = Vector2Add(m_Camera.target, delta);
 }
 
-std::unique_ptr<Layer>& Canvas::GetLayer(int index) {
-    return m_LayerList.at(index);
+void Canvas::Zoom() {
+    m_Scale += GetMouseWheelMove() / 10.0f;
+    m_Scale = Clamp(m_Scale, 0.5f, 4.0f);
+    
+    m_Camera.target = GetScreenToWorld2D(GetMousePosition(), m_Camera);
+    m_Camera.offset = GetMousePosition();
+    m_Camera.zoom = m_Scale;
 }
 
-Color Canvas::GetColor() {
-    return m_CurrentColor;
-}
-
-void Canvas::SetColor(Color color) {
-    m_CurrentColor = color;
-}
 
 // `GetMouseCanvasIndex()` - This function returns the cell index of the canvas that the cursor is currently hovering above
 Vector2 Canvas::GetMouseCanvasIndex(Vector2 mousePositionScaled) {
@@ -326,7 +143,7 @@ void Canvas::DigitalDifferentialAnalyzer(int ax, int ay, int bx, int by, Color c
     y = ay;
 
     while (i <= steps) {
-        m_LayerList.at(m_CurrentLayerID)->SetPixelColor(std::floor(x), std::floor(y), color);
+        m_LayerSystem.GetLayer()->SetPixelColor(std::floor(x), std::floor(y), color);
         x += dx;
         y += dy;
         i++;

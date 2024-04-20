@@ -24,7 +24,7 @@ private:
 
 public:
     // `Game` class constructor.
-    Game() : WIDTH(1024), HEIGHT(768), TITLE(TextFormat("Raylib %s - Colorful Pixels %s", RAYLIB_VERSION, "1.0")), colorfulPixels() {
+    Game() : WIDTH(1024), HEIGHT(768), TITLE(TextFormat("Raylib %s - Colorful Pixels %s", RAYLIB_VERSION, COLORFUL_PIXELS_VERSION)), colorfulPixels() {
         // Initializing the Audio Device and creating a Window.
         InitAudioDevice();
         InitWindow(WIDTH, HEIGHT, TITLE.c_str());
@@ -72,7 +72,7 @@ public:
 
 // Function called on every frame. Handles the basic updating and rendering of the current game frame.
 // (NOTE: c-style function is necessary for the emscritpen; it won't accept c++ methods)
-// - viod* args - the `Game` class instance.
+// - void* args - the `Game` class instance.
 void UpdateRenderFrame(void* args) {
     static_cast<Game*>(args)->Update();
 
