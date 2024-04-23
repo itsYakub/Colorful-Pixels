@@ -34,3 +34,6 @@
 # Binary directories
 /bin/
 /build/
+
+/bin_web/
+/build_web/

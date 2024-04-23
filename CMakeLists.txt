@@ -38,28 +38,12 @@ include(FetchContent)
 # Project's source files:
 # Edit this variable to include all the source files (*.c, *.cpp, *.cc etc.) that the project requires
 
-set(
-    SOURCES
-    ${CMAKE_SOURCE_DIR}/src/main.cpp
-    ${CMAKE_SOURCE_DIR}/src/Viewport.cpp
-    ${CMAKE_SOURCE_DIR}/src/Layer.cpp
-    ${CMAKE_SOURCE_DIR}/src/EraserTool.cpp
-    ${CMAKE_SOURCE_DIR}/src/ColorPalette.cpp
-    ${CMAKE_SOURCE_DIR}/src/ColorfulPixels.cpp
-    ${CMAKE_SOURCE_DIR}/src/Canvas.cpp
-    ${CMAKE_SOURCE_DIR}/src/BrushTool.cpp
-    ${CMAKE_SOURCE_DIR}/src/ColorSystem.cpp
-    ${CMAKE_SOURCE_DIR}/src/ToolSystem.cpp
-    ${CMAKE_SOURCE_DIR}/src/LayerSystem.cpp
-    ${CMAKE_SOURCE_DIR}/src/ColorPickerTool.cpp
+file(
+    GLOB SOURCES 
 
-    ${CMAKE_SOURCE_DIR}/lib/rlImGui/rlImGui.cpp
-    
-    ${CMAKE_SOURCE_DIR}/lib/imgui/imgui.cpp
-    ${CMAKE_SOURCE_DIR}/lib/imgui/imgui_demo.cpp
-    ${CMAKE_SOURCE_DIR}/lib/imgui/imgui_draw.cpp
-    ${CMAKE_SOURCE_DIR}/lib/imgui/imgui_tables.cpp
-    ${CMAKE_SOURCE_DIR}/lib/imgui/imgui_widgets.cpp
+    ${CMAKE_SOURCE_DIR}/src/*.cpp
+    ${CMAKE_SOURCE_DIR}/lib/rlImGui/*.cpp
+    ${CMAKE_SOURCE_DIR}/lib/imgui/*.cpp
 )
 
 # Project's include directories:
@@ -69,7 +53,6 @@ set(
     INCLUDE_DIRECTORIES
     ${CMAKE_SOURCE_DIR}/include # default project include directory
     ${CMAKE_SOURCE_DIR}/lib/raylib/src # raysan5/raylib
-    ${CMAKE_SOURCE_DIR}/lib/emsdk/upstream/emscripten/system/include # emscripten-core/emsdk
     ${CMAKE_SOURCE_DIR}/lib/imgui
     ${CMAKE_SOURCE_DIR}/lib/rlImGui
 )
@@ -85,7 +68,7 @@ if (${PLATFORM} STREQUAL "Web")
     # Tell Emscripten to build a final executable
     set(
         CMAKE_EXE_LINKER_FLAGS 
-        "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s WASM=1 -s TOTAL_MEMORY=67108864 -s FORCE_FILESYSTEM=1 -Os -Wall -Wextra --shell-file ../lib/raylib/src/minshell.html --preload-file ../res"
+        "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s WASM=1 -s TOTAL_MEMORY=67108864 -s FORCE_FILESYSTEM=1 -Os -Wall -Wextra --shell-file ../lib/raylib/src/minshell.html"
     )
 
     set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".html")

@@ -3,17 +3,13 @@
 #include "Tool.hpp"
 
 class Canvas;
-class ColorSystem;
-class Cursor;
 
-class BrushTool : public Tool {
+class PanTool : public Tool {
 private:
     Canvas* m_Canvas;
-    ColorSystem* m_ColorSystem;
-    Cursor* m_Cursor;
 
 public:
-    BrushTool(Canvas* canvas, ColorSystem* colorSystem, Cursor* cursor);
+    PanTool(Canvas* canvas);
     void OnButtonPress() override;
     void OnButtonDown() override;
     void OnButtonRelease() override;

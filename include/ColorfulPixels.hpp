@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "raylib.h"
+#include "imgui.h"
 
 #include "Viewport.hpp"
 #include "Canvas.hpp"
@@ -32,6 +33,12 @@ private:
     std::unique_ptr<ToolSystem> m_ToolSystem;
     std::unique_ptr<ColorSystem> m_ColorSystem;
 
+    bool m_DrawToolsPanel;
+    bool m_DrawColorPanel;
+    bool m_DrawLayerPanel;
+
+    bool m_LoadIniFile;
+
 public:
     ColorfulPixels();
 
@@ -41,4 +48,9 @@ public:
     void Update();
     void Render();
     void RenderGUI();
+
+    void MenuBarGuiPanel(const char* name, bool draw);
+
+    void BeginDockingSpace(const char* name);
+    void EndDockingSpace();
 };

@@ -68,6 +68,10 @@ void LayerSystem::PushNewLayer(const int CELL_COUNT_X, const int CELL_COUNT_Y) {
 void LayerSystem::PopLayer() {
     m_LayerList.pop_back();
     m_LayerCount--;
+    
+    if(m_CurrentLayerID >= m_LayerList.size()) {
+        m_CurrentLayerID--;
+    }
 }
 
 void LayerSystem::EraseLayer() {
@@ -82,15 +86,15 @@ void LayerSystem::EraseLayer() {
     m_LayerCount--;
 }
 
-void LayerSystem::LayersGuiPanel(const char* name, ImVec2 position, ImVec2 size) {
+void LayerSystem::LayersGuiPanel(const char* name, bool draw) {
+    if(!draw) {
+        return;
+    }
+
     ImGui::Begin(
         name, 
-        NULL, 
-        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse
+        nullptr
     );
-
-    ImGui::SetWindowPos(position);
-    ImGui::SetWindowSize(size);
 
     if(ImGui::Button("Add layer")) {
         PushNewLayer(m_Canvas->CellCountX(), m_Canvas->CellCountY());
@@ -102,11 +106,17 @@ void LayerSystem::LayersGuiPanel(const char* name, ImVec2 position, ImVec2 size)
         EraseLayer();
     }
 
+    ImGui::SameLine();
+
+    if(ImGui::Button("Pop layer") && m_LayerList.size() > 1) {
+        PopLayer();
+    }
+
     ImGui::Separator();
 
     ImGui::BeginChild(1);
 
-    for(int i = 0; i < m_LayerList.size(); i++) {
+    for(int i = m_LayerCount - 1; i >= 0; i--) {
         if(ImGui::Button(m_CurrentLayerID == i ? TextFormat("Layer no.%i (Current)", m_LayerList.at(i)->GetID()) : TextFormat("Layer no.%i", m_LayerList.at(i)->GetID()), ImVec2(256.0f, 20.0f))) {
             m_CurrentLayerID = i;
         }

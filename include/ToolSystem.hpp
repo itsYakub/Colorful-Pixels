@@ -22,5 +22,5 @@ public:
     std::unique_ptr<Tool>& GetCurrentTool();
     void SetCurrentTool(Tool* newTool);
 
-    void ToolsGuiPanel(const char* name, ImVec2 position, ImVec2 size);
+    void ToolsGuiPanel(const char* name, bool draw);
 };

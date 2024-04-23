@@ -1,4 +1,5 @@
 #include "ColorSystem.hpp"
+#include "imgui.h"
 
 ColorSystem::ColorSystem() :
     m_ColorPalette(),
@@ -31,15 +32,17 @@ void ColorSystem::SetColor(float newColor[4]) {
     };
 }
 
-void ColorSystem::ColorGuiPanel(const char* name, ImVec2 position, ImVec2 size) {
+void ColorSystem::ColorGuiPanel(const char* name, bool draw) {
+    if(!draw) {
+        return;
+    }
+
     ImGui::Begin(
         name, 
-        NULL, 
-        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration
+        nullptr
     );
 
-    ImGui::SetWindowPos(position);
-    ImGui::SetWindowSize(size);
+    ImVec2 size = ImGui::GetWindowSize();
 
     float colorArray[4] = { m_CurrentColor.r / 255.0f, m_CurrentColor.g / 255.0f, m_CurrentColor.b / 255.0f, m_CurrentColor.a / 255.0f };
 

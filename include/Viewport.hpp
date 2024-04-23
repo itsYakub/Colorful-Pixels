@@ -1,8 +1,11 @@
 #pragma once
 
+#include "Cursor.hpp"
 #include "raylib.h"
 #include "imgui.h"
 #include "rlImGui.h"
+
+class Cursor;
 
 class Viewport {
 private:
@@ -12,10 +15,10 @@ private:
     Vector2 m_Size;
 
 public:
-    Viewport(const Vector2 position, const Vector2 size);
+    Viewport();
     void Unload();
 
-    void ViewportGuiPanel(const char* name, ImVec2 position, ImVec2 size);
+    void ViewportGuiPanel(const char* name, bool draw);
 
     void Begin();
     void Clear(Color color);
@@ -23,4 +26,10 @@ public:
 
     Vector2 GetPosition();
     Vector2 GetSize();
+    Vector2 GetTextureSize();
+    Vector2 GetOffset();
+    Vector2 GetPositionOffset();
+
+
+    bool IsCursorInViewport();
 };

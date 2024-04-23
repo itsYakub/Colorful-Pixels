@@ -7,14 +7,23 @@
 
 #include "Viewport.hpp"
 #include "LayerSystem.hpp"
+#include "Cursor.hpp"
 
 class Canvas {
+public:
+    bool drawGrid;
+    bool drawFrame;
+    bool drawCursor;
+    
+    float gridThickness;
+    float frameThickness;
+    float cursorThickness;
+
 private:
     Viewport* m_Viewport;
     Camera2D m_Camera;
-    const Vector2 m_CameraOffset;
+    Texture2D m_CanvasBackground;
 
-    Vector2 m_PreviousFrameMousePosition;
     Vector2 m_Position;
     const Vector2 SIZE;
 
@@ -24,6 +33,7 @@ private:
     float m_Scale;
 
     LayerSystem m_LayerSystem;
+    Cursor m_Cursor;
 
 public:
     Canvas(Viewport* viewport, const int CELL_COUNT_X, const int CELL_COUNT_Y);
@@ -35,25 +45,13 @@ public:
     void Render();
 
     LayerSystem& GetLayerSystem();
+    Cursor& GetCursor();
 
     const int CellCountX();
     const int CellCountY();
 
     void Pan();
     void Zoom();
-
-    // `GetMouseCanvasIndex()` - This function returns the cell index of the canvas that the cursor is currently hovering above
-    Vector2 GetMouseCanvasIndex(Vector2 mousePositionScaled);
-
-    // `GetMouseWorldPosition()` - This function returns the position of the mouse cursor in the 2D World space ( `GetScreenToWorld2D()` )
-    Vector2 MouseWorldPosition();
-
-    // `GetMouseWorldPositionScaled()` - This function returns the position of the mouse cursor in the 2D World space divided by the scale factor ( `scale` )
-    Vector2 MouseWorldPositionScaled();
-
-    Vector2& PreviousFrameMousePosition();
-
-    Vector2 PreviousFrameMousePositionScaled();
 
     // `DigitalDifferentialAnalyzer()` - algorithm for drawing lines in between two points on the 2D Raster.
     // Algorithm fill-up the blanks between points (`ax`, `ay`) and (`bx`, `by`) with the specified `color`
@@ -66,22 +64,18 @@ public:
     // These are the valid grid positions.
     void DigitalDifferentialAnalyzer(int ax, int ay, int bx, int by, Color color);
 
-    // `GetCanvasSize()` - This function returns the size of the canvas based on the count of the cells in X and Y axis (default resolution is 512px)
     Vector2 GetCanvasSize(const int COUNT_X, const int COUNT_Y);
+    Vector2 GetCanvasOffset();
 
-    // `GetCanvasOriginOffset()` - This function returns the origin offset from the center of the canvas
-    Vector2 GetCanvasOriginOffset();
+    Vector2 PositionInWorldSpace(Vector2 position);
+    Vector2 PositionAsCanvasCell(Vector2 position);
+    Vector2 PositionAsCanvasIndex(Vector2 indexPosition);
 
-    // `GetMouseWorldCanvasPosition()` - This function returns the position of the cell in the canvas, based on the current mouse position in the 2D World ( `GetMouseWorldPosition()` )
-    Vector2 GetMouseToCanvasCellPosition(Vector2 mouseCanvasIndex);
+    bool CanvasIndexValid(Vector2 position);
 
-    // `IsMouseCanvasIndexValid()` - This function check's if `GetMouseCanvasIndex()` returns a valid index for the `positionScaled` mouse position
-    bool IsMouseCanvasIndexValid(Vector2 positionScaled);
-
-    bool MouseViewportHover();
-
+    void DrawBackground();
     void DrawLayer(bool visible, Layer& layer);
-    void DrawCanvasGrid(bool visible, const int WIDTH, const int HEIGHT);
-    void DrawCanvasCursor(bool visible);
-    void DrawCanvasFrame(bool visible);
+    void DrawCanvasGrid(const int WIDTH, const int HEIGHT);
+    void DrawCanvasCursor();
+    void DrawCanvasFrame();
 };

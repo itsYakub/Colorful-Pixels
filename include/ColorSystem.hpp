@@ -20,5 +20,5 @@ public:
     void SetColor(Color newColor);
     void SetColor(float newColor[4]);
 
-    void ColorGuiPanel(const char* name, ImVec2 position, ImVec2 size);
+    void ColorGuiPanel(const char* name, bool draw);
 };

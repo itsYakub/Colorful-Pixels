@@ -12,12 +12,12 @@ ColorPickerTool::ColorPickerTool(Canvas* canvas, ColorSystem* colorSystem, ToolS
     m_ToolSystem(toolSystem) { }
 
 void ColorPickerTool::OnButtonPress() { 
-    int x = m_Canvas->GetMouseCanvasIndex(m_Canvas->MouseWorldPositionScaled()).x;
-    int y = m_Canvas->GetMouseCanvasIndex(m_Canvas->MouseWorldPositionScaled()).y;
+    int x = m_Canvas->PositionAsCanvasIndex(m_Canvas->PositionInWorldSpace(GetMousePosition())).x;
+    int y = m_Canvas->PositionAsCanvasIndex(m_Canvas->PositionInWorldSpace(GetMousePosition())).y;
 
     m_ColorSystem->SetColor(m_Canvas->GetLayerSystem().GetLayer()->GetPixelColor(x, y));
 
-    m_ToolSystem->SetCurrentTool(new BrushTool(m_Canvas, m_ColorSystem));
+    m_ToolSystem->SetCurrentTool(new BrushTool(m_Canvas, m_ColorSystem, &m_Canvas->GetCursor()));
 }
 
 void ColorPickerTool::OnButtonDown() { }

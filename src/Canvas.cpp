@@ -1,13 +1,26 @@
 #include "Canvas.hpp"
+
+#include <cmath>
+#include <utils.h>
+
+#include "raylib.h"
+#include "raymath.h"
+
+#include "Cursor.hpp"
 #include "Viewport.hpp"
 
 Canvas::Canvas(Viewport* viewport, const int CELL_COUNT_X, const int CELL_COUNT_Y) : 
-    m_Viewport(viewport),
-    m_Camera( (Camera2D) { 0 }),
-    m_CameraOffset( (const Vector2) { viewport->GetSize().x / 2.0f, viewport->GetSize().y / 2.0f } ),
+    drawGrid(false),
+    drawFrame(true),
+    drawCursor(true),
+    gridThickness(1.0f),
+    frameThickness(4.0f),
+    cursorThickness(2.0f),
 
-    m_PreviousFrameMousePosition(MouseWorldPosition()),
-    m_Position( (Vector2) { 0.0f, 0.0f } ), 
+    m_Viewport(viewport),
+    m_Camera(),
+
+    m_Position(Vector2Zero()), 
     SIZE(GetCanvasSize(CELL_COUNT_X, CELL_COUNT_Y)),
 
     CELL_COUNT_X(CELL_COUNT_X), 
@@ -15,10 +28,15 @@ Canvas::Canvas(Viewport* viewport, const int CELL_COUNT_X, const int CELL_COUNT_
 
     m_Scale(1.0f),
 
-    m_LayerSystem(this) {
+    m_LayerSystem(this),
+    m_Cursor() {
         m_Camera.target = m_Position;
-        m_Camera.offset = m_CameraOffset;
+        m_Camera.offset = { 64.0f, 64.0f };
         m_Camera.zoom = m_Scale;
+
+        Image canvasBackgroundImage = GenImageChecked(SIZE.x, SIZE.y, 64, 64, (Color) { 128, 128, 128, 255 }, (Color) { 192, 192, 192, 255 });
+        m_CanvasBackground = LoadTextureFromImage(canvasBackgroundImage);
+        UnloadImage(canvasBackgroundImage);
 }
 
 Canvas::Canvas(Viewport* viewport) : Canvas(viewport, 32, 32) { }
@@ -26,29 +44,36 @@ Canvas::Canvas(Viewport* viewport, const int CELL_COUNT) : Canvas(viewport, CELL
 
 void Canvas::Unload() {
     m_LayerSystem.Unload();
+    UnloadTexture(m_CanvasBackground);
 }
 
 void Canvas::Update() {
     m_LayerSystem.UpdateLayer();
-    m_PreviousFrameMousePosition = MouseWorldPosition();
+    m_Cursor.UpdatePreviousFramePosition();
 }
 
 void Canvas::Render() {    
     BeginMode2D(m_Camera);
 
+        DrawBackground();
+
         for(int i = m_LayerSystem.GetCount() - 1; i >= 0; i--) {
             DrawLayer(m_LayerSystem.GetLayer(i)->IsVisible(), *m_LayerSystem.GetLayer(i));
         }
 
-        DrawCanvasCursor(true);
-        DrawCanvasGrid(true, CELL_COUNT_X, CELL_COUNT_Y);
-        DrawCanvasFrame(true);
+        DrawCanvasCursor();
+        DrawCanvasGrid(CELL_COUNT_X, CELL_COUNT_Y);
+        DrawCanvasFrame();
 
     EndMode2D();
 }
 
 LayerSystem& Canvas::GetLayerSystem() {
     return m_LayerSystem;
+}
+
+Cursor& Canvas::GetCursor() {
+    return m_Cursor;
 }
 
 const int Canvas::CellCountX() {
@@ -73,42 +98,6 @@ void Canvas::Zoom() {
     m_Camera.target = GetScreenToWorld2D(GetMousePosition(), m_Camera);
     m_Camera.offset = GetMousePosition();
     m_Camera.zoom = m_Scale;
-}
-
-
-// `GetMouseCanvasIndex()` - This function returns the cell index of the canvas that the cursor is currently hovering above
-Vector2 Canvas::GetMouseCanvasIndex(Vector2 mousePositionScaled) {
-    return { 
-        floor(mousePositionScaled.x / SIZE.x * CELL_COUNT_X),
-        floor(mousePositionScaled.y / SIZE.y * CELL_COUNT_Y)
-    };
-}
-
-// `GetMouseWorldPosition()` - This function returns the position of the mouse cursor in the 2D World space ( `GetScreenToWorld2D()` )
-Vector2 Canvas::MouseWorldPosition() {
-    return {
-        GetScreenToWorld2D(GetMousePosition(), m_Camera).x + GetCanvasOriginOffset().x - m_Viewport->GetPosition().x / m_Scale,
-        GetScreenToWorld2D(GetMousePosition(), m_Camera).y + GetCanvasOriginOffset().y - m_Viewport->GetPosition().y / m_Scale 
-    };
-}
-
-// `GetMouseWorldPositionScaled()` - This function returns the position of the mouse cursor in the 2D World space divided by the scale factor ( `scale` )
-Vector2 Canvas::MouseWorldPositionScaled() {
-    return {
-        MouseWorldPosition().x / m_Scale,
-        MouseWorldPosition().y / m_Scale
-    };
-}
-
-Vector2& Canvas::PreviousFrameMousePosition() {
-    return m_PreviousFrameMousePosition;
-}
-
-Vector2 Canvas::PreviousFrameMousePositionScaled() {
-    return {
-        m_PreviousFrameMousePosition.x / m_Scale,
-        m_PreviousFrameMousePosition.y / m_Scale
-    };
 }
 
 // `DigitalDifferentialAnalyzer()` - algorithm for drawing lines in between two points on the 2D Raster.
@@ -150,7 +139,6 @@ void Canvas::DigitalDifferentialAnalyzer(int ax, int ay, int bx, int by, Color c
     }
 }
 
-// `GetCanvasSize()` - This function returns the size of the canvas based on the count of the cells in X and Y axis (default resolution is 512px)
 Vector2 Canvas::GetCanvasSize(const int COUNT_X, const int COUNT_Y) {
     const float defaultResolutionValue = 512.0f;
     Vector2 result = { 0.0f, 0.0f };
@@ -177,39 +165,61 @@ Vector2 Canvas::GetCanvasSize(const int COUNT_X, const int COUNT_Y) {
     return result;
 }
 
-// `GetCanvasOriginOffset()` - This function returns the origin offset from the center of the canvas
-Vector2 Canvas::GetCanvasOriginOffset() {
+// TODO: Implement this later
+Vector2 Canvas::GetCanvasOffset() {
     return {
-        SIZE.x * m_Scale / 2.0f,
-        SIZE.y * m_Scale / 2.0f
+        SIZE.x / m_Scale / 2.0f,
+        SIZE.y / m_Scale / 2.0f
     };
 }
 
-// `GetMouseWorldCanvasPosition()` - This function returns the position of the cell in the canvas, based on the current mouse position in the 2D World ( `GetMouseWorldPosition()` )
-Vector2 Canvas::GetMouseToCanvasCellPosition(Vector2 mouseCanvasIndex) {
+
+Vector2 Canvas::PositionInWorldSpace(Vector2 position) {
     return {
-        m_Position.x - GetCanvasOriginOffset().x + mouseCanvasIndex.x * (SIZE.x * m_Scale / CELL_COUNT_X),
-        m_Position.y - GetCanvasOriginOffset().y + mouseCanvasIndex.y * (SIZE.y * m_Scale / CELL_COUNT_Y)
+        GetScreenToWorld2D({ position.x - m_Viewport->GetPosition().x, position.y - m_Viewport->GetPosition().y - 20 }, m_Camera).x,
+        GetScreenToWorld2D({ position.x - m_Viewport->GetPosition().x, position.y - m_Viewport->GetPosition().y - 20 }, m_Camera).y
     };
 }
 
-// `IsMouseCanvasIndexValid()` - This function check's if `GetMouseCanvasIndex()` returns a valid index for the `positionScaled` mouse position
-bool Canvas::IsMouseCanvasIndexValid(Vector2 positionScaled) {
-    return (GetMouseCanvasIndex(positionScaled).x >= 0 && GetMouseCanvasIndex(positionScaled).x < CELL_COUNT_X) &&
-        (GetMouseCanvasIndex(positionScaled).y >= 0 && GetMouseCanvasIndex(positionScaled).y < CELL_COUNT_Y) &&
-        MouseViewportHover();
+Vector2 Canvas::PositionAsCanvasCell(Vector2 position) {
+    return {
+        PositionAsCanvasIndex(PositionInWorldSpace(position)).x * (SIZE.x / CELL_COUNT_X),
+        PositionAsCanvasIndex(PositionInWorldSpace(position)).y * (SIZE.y / CELL_COUNT_Y)
+    };
 }
 
-bool Canvas::MouseViewportHover() {
-    return CheckCollisionPointRec(
-        GetMousePosition(), 
-        (Rectangle) {
-            m_Viewport->GetPosition().x,
-            m_Viewport->GetPosition().y,
-            m_Viewport->GetSize().x,
-            m_Viewport->GetSize().y
-        }
-    );
+Vector2 Canvas::PositionAsCanvasIndex(Vector2 position) {
+    return {
+        std::floor(((position.x / m_Scale)) / SIZE.x * CELL_COUNT_X),
+        std::floor(((position.y / m_Scale)) / SIZE.y * CELL_COUNT_X)
+    };
+}
+
+bool Canvas::CanvasIndexValid(Vector2 indexPosition) {
+    return 
+        indexPosition.x >= 0 && indexPosition.x < CELL_COUNT_X &&
+        indexPosition.y >= 0 && indexPosition.y < CELL_COUNT_Y; 
+}
+
+void Canvas::DrawBackground() {
+    DrawTexturePro(
+        m_CanvasBackground,
+        (Rectangle) { 
+            0.0f, 
+            0.0f, 
+            static_cast<float>(m_CanvasBackground.width), 
+            static_cast<float>(m_CanvasBackground.height) 
+        },
+        (Rectangle) { 
+            m_Position.x, 
+            m_Position.y, 
+            SIZE.x * m_Scale, 
+            SIZE.y * m_Scale 
+        },
+        Vector2Zero(),
+        0.0f,
+        WHITE
+    ); 
 }
 
 void Canvas::DrawLayer(bool visible, Layer& layer) {
@@ -231,14 +241,14 @@ void Canvas::DrawLayer(bool visible, Layer& layer) {
             SIZE.x * m_Scale, 
             SIZE.y * m_Scale 
         },
-        GetCanvasOriginOffset(),
+        Vector2Zero(),
         0.0f,
         WHITE
     );    
 }
 
-void Canvas::DrawCanvasGrid(bool visible, const int WIDTH, const int HEIGHT) {
-    if(!visible) {
+void Canvas::DrawCanvasGrid(const int WIDTH, const int HEIGHT) {
+    if(!drawGrid) {
         return;
     }
 
@@ -246,48 +256,48 @@ void Canvas::DrawCanvasGrid(bool visible, const int WIDTH, const int HEIGHT) {
         for(int x = 0; x < WIDTH; x++) {
             DrawRectangleLinesEx(
                 (Rectangle) { 
-                    m_Position.x - GetCanvasOriginOffset().x + (x * (SIZE.x * m_Scale / WIDTH)),
-                    m_Position.y - GetCanvasOriginOffset().y + (y * (SIZE.y * m_Scale / HEIGHT)),
+                    m_Position.x + (x * (SIZE.x * m_Scale / WIDTH)),
+                    m_Position.y + (y * (SIZE.y * m_Scale / HEIGHT)),
                     SIZE.x * m_Scale / WIDTH, 
                     SIZE.y * m_Scale / HEIGHT 
                 }, 
-                0.5f / m_Scale, 
-                Fade(LIGHTGRAY, 0.5f)
+                gridThickness / m_Scale, 
+                Fade(BLACK, 0.5f)
             );
         }
     }        
 }
 
-void Canvas::DrawCanvasCursor(bool visible) {
-    if(!visible && MouseViewportHover()) {
+void Canvas::DrawCanvasCursor() {
+    if(!drawCursor && m_Viewport->IsCursorInViewport()) {
         return;
     }
 
     DrawRectangleLinesEx(
         (Rectangle) {
-            GetMouseToCanvasCellPosition(GetMouseCanvasIndex(MouseWorldPositionScaled())).x,
-            GetMouseToCanvasCellPosition(GetMouseCanvasIndex(MouseWorldPositionScaled())).y,
+            PositionAsCanvasCell(GetMousePosition()).x * m_Scale,
+            PositionAsCanvasCell(GetMousePosition()).y * m_Scale,
             SIZE.x * m_Scale / CELL_COUNT_X, 
             SIZE.y * m_Scale / CELL_COUNT_Y 
         },
-        2.0f / m_Scale,
+        cursorThickness / m_Scale,
         WHITE
     );
 }
 
-void Canvas::DrawCanvasFrame(bool visible) {
-    if(!visible) {
+void Canvas::DrawCanvasFrame() {
+    if(!drawFrame) {
         return;
     }
 
     DrawRectangleLinesEx(
         (Rectangle) {
-            m_Position.x - GetCanvasOriginOffset().x,
-            m_Position.y - GetCanvasOriginOffset().y,
+            m_Position.x,
+            m_Position.y,
             SIZE.x * m_Scale,
             SIZE.y * m_Scale
         },
-        2.0f / m_Scale,
+        frameThickness / m_Scale,
         BLACK
     );
 }

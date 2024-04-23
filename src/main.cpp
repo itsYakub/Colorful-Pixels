@@ -25,9 +25,13 @@ private:
 public:
     // `Game` class constructor.
     Game() : WIDTH(1024), HEIGHT(768), TITLE(TextFormat("Raylib %s - Colorful Pixels %s", RAYLIB_VERSION, COLORFUL_PIXELS_VERSION)), colorfulPixels() {
+        SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+
         // Initializing the Audio Device and creating a Window.
         InitAudioDevice();
         InitWindow(WIDTH, HEIGHT, TITLE.c_str());
+
+        MaximizeWindow();
 
         colorfulPixels.Load();
 
