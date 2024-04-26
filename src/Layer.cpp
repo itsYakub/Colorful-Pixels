@@ -42,6 +42,10 @@ std::vector<Color>& Layer::GetData() {
     return m_LayerData;
 }
 
+Vector2 Layer::GetCount() {
+    return COUNT;
+}
+
 bool Layer::IsVisible() {
     return layerVisible;
 }

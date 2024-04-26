@@ -1,34 +1,49 @@
 #include "ColorfulPixels.hpp"
+
+#include <array>
+#include <memory>
+
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "raylib.h"
+#include "rlImGui.h"
 
 ColorfulPixels::ColorfulPixels() :
     m_DrawToolsPanel(true),
     m_DrawLayerPanel(true),
     m_DrawColorPanel(true),
     
-    m_LoadIniFile(false) { }
+    m_LoadIniFile(true) { }
 
 void ColorfulPixels::Load() {
     m_Viewport = std::make_unique<Viewport>();
-    m_Canvas = std::make_unique<Canvas>(m_Viewport.get(), 16);
+    m_Canvas = std::make_unique<Canvas>(m_Viewport.get());
     m_ColorSystem = std::make_unique<ColorSystem>();
     m_ToolSystem = std::make_unique<ToolSystem>(m_Canvas.get(), m_ColorSystem.get());
+    m_ThemeLoader = std::make_unique<ThemeLoader>();
 
-    rlImGuiSetup(true);
+    LoadImGui();
+}
+
+void ColorfulPixels::LoadImGui() {
+    rlImGuiSetup(false);
 
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
-    ImGui::LoadIniSettingsFromDisk("../res/layout/layout_default.ini");
+    m_ThemeLoader->LoadLayout(1);
+    m_ThemeLoader->SetupImGuiStyleDark();
 }
 
 void ColorfulPixels::Unload() {
-    rlImGuiShutdown();
-
     m_Viewport->Unload();
     m_Canvas->Unload();
+
+    UnloadImGui();
+}
+
+void ColorfulPixels::UnloadImGui() {
+    rlImGuiShutdown();
 }
 
 void ColorfulPixels::Update() {    
@@ -50,7 +65,7 @@ void ColorfulPixels::Update() {
         }
 
         // ...Check if scroll is pressed
-        if(IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
+        if(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) || IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
             m_Canvas->Pan();
         }
 
@@ -62,12 +77,7 @@ void ColorfulPixels::Update() {
 
     m_Canvas->Update();
     m_ToolSystem->Update();
-
-    if(m_LoadIniFile) {
-        ImGui::LoadIniSettingsFromDisk("../res/layout/layout_default.ini");
-
-        m_LoadIniFile = false;
-    }
+    m_ThemeLoader->Update();
 }
 
 void ColorfulPixels::Render() {
@@ -83,10 +93,10 @@ void ColorfulPixels::RenderGUI() {
     ClearBackground(BLACK);
 
     rlImGuiBegin();
+    rlImGuiReloadFonts();
     BeginDockingSpace("Docking Space");
 
         m_Viewport->ViewportGuiPanel("Panel: Viewport", true);
-
         m_ColorSystem->ColorGuiPanel("Panel: Colors", m_DrawColorPanel);
         m_Canvas->GetLayerSystem().LayersGuiPanel("Panel: Layers", m_DrawLayerPanel);
         m_ToolSystem->ToolsGuiPanel("Panel: Tools", m_DrawToolsPanel);
@@ -154,13 +164,8 @@ void ColorfulPixels::MenuBarGuiPanel(const char* name, bool draw) {
                 ImGui::EndMenu();
             }
 
-            if(ImGui::BeginMenu("Layout")) {
-                if(ImGui::Button("Layout: Default")) {
-                    m_LoadIniFile = true;
-                }
-
-                ImGui::EndMenu();
-            }
+            m_ThemeLoader->LayoutMenu("Layout", true);
+            m_ThemeLoader->ThemeMenu("Theme", true);
 
             ImGui::EndMenu();
         }

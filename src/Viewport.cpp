@@ -1,12 +1,13 @@
 #include "Viewport.hpp"
 
 #include "imgui.h"
+#include "imgui_internal.h"
 #include "raylib.h"
 #include "raymath.h"
 #include "rlImGui.h"
 
 Viewport::Viewport() :
-    m_RenderTexture(LoadRenderTexture(2048, 2048)),
+    m_RenderTexture(LoadRenderTexture(GetMonitorWidth(0), GetMonitorHeight(0))),
     m_Position(Vector2Zero()), m_Size(Vector2Zero()) { }
 
 void Viewport::Unload() {

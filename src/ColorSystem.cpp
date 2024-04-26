@@ -1,5 +1,6 @@
 #include "ColorSystem.hpp"
 #include "imgui.h"
+#include "imgui_internal.h"
 
 ColorSystem::ColorSystem() :
     m_ColorPalette(),
@@ -59,8 +60,6 @@ void ColorSystem::ColorGuiPanel(const char* name, bool draw) {
 
     ImGui::SeparatorText("Color Palette");
 
-    ImGui::BeginChild(1);
-
     for(int i = 0, colorsInARow = 4; i < m_ColorPalette.Size(); i += colorsInARow) {
         ImGui::NewLine();
 
@@ -81,8 +80,6 @@ void ColorSystem::ColorGuiPanel(const char* name, bool draw) {
             ImGui::PopID();
         }
     }
-
-    ImGui::EndChild();
 
     ImGui::End();
 

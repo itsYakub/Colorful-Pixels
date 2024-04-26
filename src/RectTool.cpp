@@ -1,4 +1,4 @@
-#include "LineTool.hpp"
+#include "RectTool.hpp"
 
 #include "raylib.h"
 #include "raymath.h"
@@ -8,19 +8,19 @@
 #include "ColorSystem.hpp"
 #include "Cursor.hpp"
 
-LineTool::LineTool(Canvas* canvas, ColorSystem* colorSystem, Cursor* cursor) : 
+RectTool::RectTool(Canvas* canvas, ColorSystem* colorSystem, Cursor* cursor) : 
     m_Canvas(canvas),
     m_ColorSystem(colorSystem),
     m_Cursor(cursor),
     m_PointA(Vector2Zero()), m_PointB(Vector2Zero()) { }
 
-void LineTool::OnButtonPress() {
+void RectTool::OnButtonPress() {
     m_PointA = m_Canvas->PositionAsCanvasIndex(m_Canvas->PositionInWorldSpace(GetMousePosition()));
 }
 
-void LineTool::OnButtonDown() { }
+void RectTool::OnButtonDown() { }
 
-void LineTool::OnButtonRelease() {
+void RectTool::OnButtonRelease() {
     m_PointB = m_Canvas->PositionAsCanvasIndex(m_Canvas->PositionInWorldSpace(GetMousePosition()));
 
     int ax = m_PointA.x;
@@ -34,16 +34,10 @@ void LineTool::OnButtonRelease() {
         return;
     }
 
-    Algorithms::DigitalDifferentialAnalyzer(ax, ay, bx, by, m_ColorSystem->GetColor(), *m_Canvas->GetLayerSystem().GetLayer());
-
-    TraceLog(
-        LOG_INFO, 
-        TextFormat(
-            "Line drawn for positions: x1.:%i, y1.:%i, x2.:%i, y2.:%i",
-            ax, ay,
-            bx, by
-        )
-    );
+    Algorithms::DigitalDifferentialAnalyzer(ax, ay, bx, ay, m_ColorSystem->GetColor(), *m_Canvas->GetLayerSystem().GetLayer());
+    Algorithms::DigitalDifferentialAnalyzer(ax, ay, ax, by, m_ColorSystem->GetColor(), *m_Canvas->GetLayerSystem().GetLayer());
+    Algorithms::DigitalDifferentialAnalyzer(ax, by, bx, by, m_ColorSystem->GetColor(), *m_Canvas->GetLayerSystem().GetLayer());
+    Algorithms::DigitalDifferentialAnalyzer(bx, ay, bx, by, m_ColorSystem->GetColor(), *m_Canvas->GetLayerSystem().GetLayer());
 
     m_PointA = Vector2Zero();
     m_PointB = Vector2Zero();

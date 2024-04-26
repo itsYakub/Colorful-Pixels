@@ -31,6 +31,7 @@ public:
     int GetID();
     Texture2D& GetTexture();
     std::vector<Color>& GetData();
+    Vector2 GetCount();
 
     bool IsVisible();
     void SetVisibility(bool visibility);

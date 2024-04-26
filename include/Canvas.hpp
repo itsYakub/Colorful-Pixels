@@ -53,19 +53,10 @@ public:
     void Pan();
     void Zoom();
 
-    // `DigitalDifferentialAnalyzer()` - algorithm for drawing lines in between two points on the 2D Raster.
-    // Algorithm fill-up the blanks between points (`ax`, `ay`) and (`bx`, `by`) with the specified `color`
-    //
-    // NOTE: This function MUST use the index coordinates on the 2D grid; it fills the 2D grid based on the cell positions, not based on the mouse positions.
-    // Example: 
-    // Grid: 16x16
-    // ax = 0, ay = 4
-    // bx = 3, by = 15
-    // These are the valid grid positions.
-    void DigitalDifferentialAnalyzer(int ax, int ay, int bx, int by, Color color);
-
     Vector2 GetCanvasSize(const int COUNT_X, const int COUNT_Y);
     Vector2 GetCanvasOffset();
+
+    void CenterCanvas();
 
     Vector2 PositionInWorldSpace(Vector2 position);
     Vector2 PositionAsCanvasCell(Vector2 position);

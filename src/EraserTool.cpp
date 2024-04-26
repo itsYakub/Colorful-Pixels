@@ -1,5 +1,8 @@
 #include "EraserTool.hpp"
 
+#include "raylib.h"
+
+#include "Algorithms.hpp"
 #include "Canvas.hpp"
 #include "Cursor.hpp"
 
@@ -20,7 +23,7 @@ void EraserTool::OnButtonDown() {
         return;
     }
 
-    m_Canvas->DigitalDifferentialAnalyzer(ax, ay, bx, by, BLANK);
+    Algorithms::DigitalDifferentialAnalyzer(ax, ay, bx, by, BLANK, *m_Canvas->GetLayerSystem().GetLayer());
 }
 
 void EraserTool::OnButtonRelease() { }

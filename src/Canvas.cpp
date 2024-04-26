@@ -31,10 +31,10 @@ Canvas::Canvas(Viewport* viewport, const int CELL_COUNT_X, const int CELL_COUNT_
     m_LayerSystem(this),
     m_Cursor() {
         m_Camera.target = m_Position;
-        m_Camera.offset = { 64.0f, 64.0f };
+        m_Camera.offset = { 512.0f, 128.0f };
         m_Camera.zoom = m_Scale;
 
-        Image canvasBackgroundImage = GenImageChecked(SIZE.x, SIZE.y, 64, 64, (Color) { 128, 128, 128, 255 }, (Color) { 192, 192, 192, 255 });
+        Image canvasBackgroundImage = GenImageChecked(SIZE.x, SIZE.y, 128, 128, (Color) { 128, 128, 128, 255 }, (Color) { 192, 192, 192, 255 });
         m_CanvasBackground = LoadTextureFromImage(canvasBackgroundImage);
         UnloadImage(canvasBackgroundImage);
 }
@@ -100,45 +100,6 @@ void Canvas::Zoom() {
     m_Camera.zoom = m_Scale;
 }
 
-// `DigitalDifferentialAnalyzer()` - algorithm for drawing lines in between two points on the 2D Raster.
-// Algorithm fill-up the blanks between points (`ax`, `ay`) and (`bx`, `by`) with the specified `color`
-//
-// NOTE: This function MUST use the index coordinates on the 2D grid; it fills the 2D grid based on the cell positions, not based on the mouse positions.
-// Example: 
-// Grid: 16x16
-// ax = 0, ay = 4
-// bx = 3, by = 15
-// These are the valid grid positions.
-void Canvas::DigitalDifferentialAnalyzer(int ax, int ay, int bx, int by, Color color) {
-    // source: https://en.wikipedia.org/wiki/Digital_differential_analyzer_(graphics_algorithm)
-
-    float dx = bx - ax;
-    float dy = by - ay;
-    float steps = 0;
-    float i = 0;
-
-    float x = 0;
-    float y = 0;
-
-    if (abs(dx) >= abs(dy)) {
-        steps = abs(dx);
-    } else {
-        steps = abs(dy);
-    }
-
-    dx = dx / steps;
-    dy = dy / steps;
-    x = ax;
-    y = ay;
-
-    while (i <= steps) {
-        m_LayerSystem.GetLayer()->SetPixelColor(std::floor(x), std::floor(y), color);
-        x += dx;
-        y += dy;
-        i++;
-    }
-}
-
 Vector2 Canvas::GetCanvasSize(const int COUNT_X, const int COUNT_Y) {
     const float defaultResolutionValue = 512.0f;
     Vector2 result = { 0.0f, 0.0f };
@@ -173,11 +134,18 @@ Vector2 Canvas::GetCanvasOffset() {
     };
 }
 
+void Canvas::CenterCanvas() {
+    m_Camera.offset = {
+        m_Viewport->GetSize().x - GetCanvasOffset().x / 2.0f,
+        m_Viewport->GetSize().y - GetCanvasOffset().y / 2.0f
+    };
+}
+
 
 Vector2 Canvas::PositionInWorldSpace(Vector2 position) {
     return {
-        GetScreenToWorld2D({ position.x - m_Viewport->GetPosition().x, position.y - m_Viewport->GetPosition().y - 20 }, m_Camera).x,
-        GetScreenToWorld2D({ position.x - m_Viewport->GetPosition().x, position.y - m_Viewport->GetPosition().y - 20 }, m_Camera).y
+        GetScreenToWorld2D({ position.x - m_Viewport->GetPosition().x, position.y - m_Viewport->GetPosition().y }, m_Camera).x,
+        GetScreenToWorld2D({ position.x - m_Viewport->GetPosition().x, position.y - m_Viewport->GetPosition().y }, m_Camera).y
     };
 }
 

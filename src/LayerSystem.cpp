@@ -1,6 +1,8 @@
 #include "LayerSystem.hpp"
 
 #include "Canvas.hpp"
+#include "imgui.h"
+#include "rlImGui.h"
 
 LayerSystem::LayerSystem(Canvas* canvas) :
     m_Canvas(canvas),
@@ -116,11 +118,20 @@ void LayerSystem::LayersGuiPanel(const char* name, bool draw) {
 
     ImGui::BeginChild(1);
 
-    for(int i = m_LayerCount - 1; i >= 0; i--) {
-        if(ImGui::Button(m_CurrentLayerID == i ? TextFormat("Layer no.%i (Current)", m_LayerList.at(i)->GetID()) : TextFormat("Layer no.%i", m_LayerList.at(i)->GetID()), ImVec2(256.0f, 20.0f))) {
-            m_CurrentLayerID = i;
-        }
+    for(int i = 0; i < m_LayerCount; i++) {
+        ImGui::PushID(i);
+            if(ImGui::Button(m_CurrentLayerID == i ? TextFormat("Layer no.%i (Current)", m_LayerList.at(i)->GetID()) : TextFormat("Layer no.%i", m_LayerList.at(i)->GetID()), ImVec2(256.0f, 38.0f))) {
+                m_CurrentLayerID = i;
+            }
 
+        ImGui::SameLine();
+
+            if(rlImGuiImageButtonSize("##layer_preview", &GetLayer(i)->GetTexture(), ImVec2(32, 32))) {
+                m_CurrentLayerID = i;
+            }
+            
+        ImGui::PopID();
+        
         ImGui::SameLine();
         ImGui::PushID(i);
             ImGui::Checkbox("##visible", &m_LayerList.at(i)->layerVisible);
@@ -137,6 +148,8 @@ void LayerSystem::LayersGuiPanel(const char* name, bool draw) {
             if(ImGui::Button("Up")) {
                 if(i - 1 >= 0) {
                     std::swap(m_LayerList.at(i), m_LayerList.at(i - 1));
+
+                    m_CurrentLayerID--;
                 }
             }
 
@@ -148,6 +161,8 @@ void LayerSystem::LayersGuiPanel(const char* name, bool draw) {
             if(ImGui::Button("Down")) {
                 if(i + 1 < m_LayerList.size()) {
                     std::swap(m_LayerList.at(i), m_LayerList.at(i + 1));
+
+                    m_CurrentLayerID++;
                 }
             }
 

@@ -2,6 +2,7 @@
 
 #include "raylib.h"
 
+#include "Algorithms.hpp"
 #include "Canvas.hpp"
 #include "ColorSystem.hpp"
 #include "Cursor.hpp"
@@ -24,7 +25,7 @@ void BrushTool::OnButtonDown() {
         return;
     }
 
-    m_Canvas->DigitalDifferentialAnalyzer(ax, ay, bx, by, m_ColorSystem->GetColor());
+    Algorithms::DigitalDifferentialAnalyzer(ax, ay, bx, by, m_ColorSystem->GetColor(), *m_Canvas->GetLayerSystem().GetLayer());
 }
 
 void BrushTool::OnButtonRelease() { }
