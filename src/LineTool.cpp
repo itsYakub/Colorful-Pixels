@@ -47,4 +47,6 @@ void LineTool::OnButtonRelease() {
 
     m_PointA = Vector2Zero();
     m_PointB = Vector2Zero();
+
+    m_Canvas->ToggleTextureReload();
 }

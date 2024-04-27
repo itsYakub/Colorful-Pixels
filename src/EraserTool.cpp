@@ -24,6 +24,8 @@ void EraserTool::OnButtonDown() {
     }
 
     Algorithms::DigitalDifferentialAnalyzer(ax, ay, bx, by, BLANK, *m_Canvas->GetLayerSystem().GetLayer());
+
+    m_Canvas->ToggleTextureReload();
 }
 
 void EraserTool::OnButtonRelease() { }

@@ -28,6 +28,8 @@ Canvas::Canvas(Viewport* viewport, const int CELL_COUNT_X, const int CELL_COUNT_
 
     m_Scale(1.0f),
 
+    m_ReloadLayerTexture(false),
+
     m_LayerSystem(this),
     m_Cursor() {
         m_Camera.target = m_Position;
@@ -48,8 +50,12 @@ void Canvas::Unload() {
 }
 
 void Canvas::Update() {
-    m_LayerSystem.UpdateLayer();
     m_Cursor.UpdatePreviousFramePosition();
+
+    if(m_ReloadLayerTexture) {
+        m_LayerSystem.UpdateLayer();
+        m_ReloadLayerTexture = false;
+    }
 }
 
 void Canvas::Render() {    
@@ -98,6 +104,10 @@ void Canvas::Zoom() {
     m_Camera.target = GetScreenToWorld2D(GetMousePosition(), m_Camera);
     m_Camera.offset = GetMousePosition();
     m_Camera.zoom = m_Scale;
+}
+
+void Canvas::ToggleTextureReload() {
+    m_ReloadLayerTexture = true;
 }
 
 Vector2 Canvas::GetCanvasSize(const int COUNT_X, const int COUNT_Y) {

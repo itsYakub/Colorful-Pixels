@@ -55,6 +55,7 @@ set(
     ${CMAKE_SOURCE_DIR}/lib/raylib/src # raysan5/raylib
     ${CMAKE_SOURCE_DIR}/lib/imgui
     ${CMAKE_SOURCE_DIR}/lib/rlImGui
+    ${CMAKE_SOURCE_DIR}/vendor
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})

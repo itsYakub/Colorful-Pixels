@@ -26,6 +26,8 @@ void BrushTool::OnButtonDown() {
     }
 
     Algorithms::DigitalDifferentialAnalyzer(ax, ay, bx, by, m_ColorSystem->GetColor(), *m_Canvas->GetLayerSystem().GetLayer());
+
+    m_Canvas->ToggleTextureReload();
 }
 
 void BrushTool::OnButtonRelease() { }

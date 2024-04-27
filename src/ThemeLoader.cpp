@@ -2,11 +2,16 @@
 
 #include <utility>
 
-#include "imgui.h"
 #include "raylib.h"
+#include "imgui.h"
+
+#include "IconsFontAwesome6.h"
+#include "IconsFontAwesome6Brands.h"
 
 ThemeLoader::ThemeLoader() :
+	reloadFont(true), 
     m_CurrentTheme(THEME_DARK),
+	m_LoadTheme(false),
     m_CurrentID(0),
     m_LoadLayout(false) {
         FilePathList pathList = LoadDirectoryFilesEx("../res/layout/", ".ini", false);
@@ -23,21 +28,27 @@ void ThemeLoader::Update() {
         m_LoadLayout = false;
     }
 
-    switch (m_CurrentTheme) {
-        case THEME_DARK:
-            TraceLog(LOG_INFO, "Setting current theme to: DARK");
-            SetupImGuiStyleDark();
-            break;
+	if(m_LoadTheme) {
+		switch (m_CurrentTheme) {
+			case THEME_DARK:
+				TraceLog(LOG_INFO, "Setting current theme to: DARK");
+				SetupImGuiStyleDark();
 
-        case THEME_LIGHT:
-            TraceLog(LOG_INFO, "Setting current theme to: LIGHT");
-            SetupImGuiStyleLight();
-            break;
+				break;
 
-        case THEME_COUNT:
+			case THEME_LIGHT:
+				TraceLog(LOG_INFO, "Setting current theme to: LIGHT");
+				SetupImGuiStyleLight();
+			
+				break;
 
-            break;
-    }
+			case THEME_COUNT:
+
+				break;
+		}
+
+		m_LoadTheme = false;
+	}
 }
 
 void ThemeLoader::LayoutMenu(const char* name, bool draw) {
@@ -65,10 +76,12 @@ void ThemeLoader::ThemeMenu(const char* name, bool draw) {
     if(ImGui::BeginMenu(name)) {
         if(ImGui::Button("Theme: LIGHT")) {
             m_CurrentTheme = THEME_LIGHT;
+			m_LoadTheme = true;
         }
 
         if(ImGui::Button("Theme: DARK")) {
             m_CurrentTheme = THEME_DARK;
+			m_LoadTheme = true;
         }
 
         ImGui::EndMenu();
@@ -81,14 +94,29 @@ void ThemeLoader::LoadLayout(int ID) {
     TraceLog(LOG_INFO, TextFormat("Loading Dear ImGui layout from: %s", m_LayoutPaths.at(ID).c_str()));
 }
 
+void ThemeLoader::LoadFont() {
+	ImGuiIO& io = ImGui::GetIO();
+	float baseFontSize = 20.0f; 
+	float iconFontSize = baseFontSize * 2.0f / 3.0f; 
+
+	const ImWchar icon_ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
+	const ImWchar icon_brand_ranges[] = { ICON_MIN_FAB, ICON_MAX_FAB, 0 };
+	ImFontConfig config; 
+	config.MergeMode = true; 
+	config.PixelSnapH = true; 
+	config.GlyphMinAdvanceX = iconFontSize;
+
+	io.Fonts->Clear();
+	io.Fonts->AddFontFromFileTTF("../res/fonts/VarelaRound-Regular.ttf", baseFontSize, nullptr, io.Fonts->GetGlyphRangesDefault());
+	io.Fonts->AddFontFromFileTTF("../res/fonts/fa-solid-900.ttf", iconFontSize, &config, icon_ranges);
+	io.Fonts->AddFontFromFileTTF("../res/fonts/fa-brands-400.ttf", iconFontSize, &config, icon_brand_ranges);
+	io.Fonts->Build();
+
+	reloadFont = true;
+}
+
 void ThemeLoader::SetupImGuiStyleDark() {
     // Discord (Dark) style by BttrDrgn from ImThemes
-
-    ImGuiIO& io = ImGui::GetIO();
-
-    io.Fonts->Clear();
-    io.Fonts->AddFontFromFileTTF("../res/fonts/ThaleahFat.ttf", 16.0f, nullptr, io.Fonts->GetGlyphRangesDefault());
-    io.Fonts->Build();
 
 	ImGuiStyle& style = ImGui::GetStyle();
 	
@@ -179,12 +207,6 @@ void ThemeLoader::SetupImGuiStyleDark() {
 }
 
 void ThemeLoader::SetupImGuiStyleLight() {
-    ImGuiIO& io = ImGui::GetIO();
-
-    io.Fonts->Clear();
-    io.Fonts->AddFontFromFileTTF("../res/fonts/ThaleahFat.ttf", 16.0f, nullptr, io.Fonts->GetGlyphRangesDefault());
-    io.Fonts->Build();
-
     // Light style by dougbinks from ImThemes
 	ImGuiStyle& style = ImGui::GetStyle();
 	

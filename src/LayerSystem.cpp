@@ -4,6 +4,8 @@
 #include "imgui.h"
 #include "rlImGui.h"
 
+#include "IconsFontAwesome6.h"
+
 LayerSystem::LayerSystem(Canvas* canvas) :
     m_Canvas(canvas),
     m_LayerList(0),
@@ -114,9 +116,7 @@ void LayerSystem::LayersGuiPanel(const char* name, bool draw) {
         PopLayer();
     }
 
-    ImGui::Separator();
-
-    ImGui::BeginChild(1);
+    ImGui::SeparatorText("##text");
 
     for(int i = 0; i < m_LayerCount; i++) {
         ImGui::PushID(i);
@@ -145,11 +145,13 @@ void LayerSystem::LayersGuiPanel(const char* name, bool draw) {
         ImGui::SameLine();
         ImGui::PushID(i);
 
-            if(ImGui::Button("Up")) {
+            if(ImGui::Button(ICON_FA_ARROW_UP, ImVec2(38, 38))) {
                 if(i - 1 >= 0) {
                     std::swap(m_LayerList.at(i), m_LayerList.at(i - 1));
 
-                    m_CurrentLayerID--;
+                    if(m_CurrentLayerID == i) {
+                        m_CurrentLayerID--;
+                    }
                 }
             }
 
@@ -158,18 +160,19 @@ void LayerSystem::LayersGuiPanel(const char* name, bool draw) {
         ImGui::SameLine();
         ImGui::PushID(i);
         
-            if(ImGui::Button("Down")) {
+            if(ImGui::Button(ICON_FA_ARROW_DOWN, ImVec2(38, 38))) {
                 if(i + 1 < m_LayerList.size()) {
                     std::swap(m_LayerList.at(i), m_LayerList.at(i + 1));
 
-                    m_CurrentLayerID++;
+                    if(m_CurrentLayerID == i) {
+                        m_CurrentLayerID++;
+                    }
                 }
             }
 
         ImGui::PopID();
     }
 
-    ImGui::EndChild();
     ImGui::End();    
 
 }

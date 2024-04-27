@@ -32,6 +32,8 @@ private:
 
     float m_Scale;
 
+    bool m_ReloadLayerTexture;
+
     LayerSystem m_LayerSystem;
     Cursor m_Cursor;
 
@@ -52,6 +54,8 @@ public:
 
     void Pan();
     void Zoom();
+
+    void ToggleTextureReload();
 
     Vector2 GetCanvasSize(const int COUNT_X, const int COUNT_Y);
     Vector2 GetCanvasOffset();

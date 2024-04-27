@@ -8,6 +8,9 @@
 #include "raylib.h"
 #include "rlImGui.h"
 
+#include "IconsFontAwesome6.h"
+#include "IconsFontAwesome6Brands.h"
+
 ColorfulPixels::ColorfulPixels() :
     m_DrawToolsPanel(true),
     m_DrawLayerPanel(true),
@@ -32,6 +35,7 @@ void ColorfulPixels::LoadImGui() {
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
     m_ThemeLoader->LoadLayout(1);
+    m_ThemeLoader->LoadFont();
     m_ThemeLoader->SetupImGuiStyleDark();
 }
 
@@ -93,7 +97,12 @@ void ColorfulPixels::RenderGUI() {
     ClearBackground(BLACK);
 
     rlImGuiBegin();
-    rlImGuiReloadFonts();
+
+    if(m_ThemeLoader->reloadFont) {
+        rlImGuiReloadFonts();
+        m_ThemeLoader->reloadFont = false;
+    }
+
     BeginDockingSpace("Docking Space");
 
         m_Viewport->ViewportGuiPanel("Panel: Viewport", true);
@@ -111,27 +120,27 @@ void ColorfulPixels::MenuBarGuiPanel(const char* name, bool draw) {
     }
 
     if(ImGui::BeginMenuBar()) {
-        if(ImGui::BeginMenu("File")) {
-            if(ImGui::MenuItem("New...")) {
+        if(ImGui::BeginMenu(ICON_FA_FILE " File")) {
+            if(ImGui::MenuItem(ICON_FA_PLUS " New...")) {
                 TraceLog(LOG_INFO, "Menu option: New");
             }
 
-            if(ImGui::MenuItem("Load...")) {
+            if(ImGui::MenuItem(ICON_FA_UPLOAD " Load...")) {
                 TraceLog(LOG_INFO, "Menu option: Load");
             }
 
-            if(ImGui::MenuItem("Save...")) {
+            if(ImGui::MenuItem(ICON_FA_DOWNLOAD " Save...")) {
                 TraceLog(LOG_INFO, "Menu option: Save");
             }
 
-            if(ImGui::MenuItem("Export...")) {
+            if(ImGui::MenuItem(ICON_FA_FILE_EXPORT " Export...")) {
                 TraceLog(LOG_INFO, "Menu option: Export");
             }
 
             ImGui::EndMenu();
         }
         
-        if(ImGui::BeginMenu("View")) {
+        if(ImGui::BeginMenu(ICON_FA_SLIDERS " View")) {
             ImGui::SeparatorText("Options: Canvas");
 
             ImGui::Checkbox("Canvas: Draw grid", &m_Canvas->drawGrid);
@@ -155,7 +164,7 @@ void ColorfulPixels::MenuBarGuiPanel(const char* name, bool draw) {
             ImGui::EndMenu();
         }
         
-        if(ImGui::BeginMenu("Window")) {
+        if(ImGui::BeginMenu(ICON_FA_WINDOW_MAXIMIZE " Window")) {
             if(ImGui::BeginMenu("Panels")) {
                 ImGui::Checkbox("Color", &m_DrawColorPanel);
                 ImGui::Checkbox("Layers", &m_DrawLayerPanel);
@@ -170,13 +179,17 @@ void ColorfulPixels::MenuBarGuiPanel(const char* name, bool draw) {
             ImGui::EndMenu();
         }
 
-        if(ImGui::BeginMenu("Other")) {
-            if(ImGui::Button("Source code...")) {
+        if(ImGui::BeginMenu(ICON_FA_USER " Other")) {
+            if(ImGui::Button(ICON_FA_GITHUB " Source code...")) {
                 OpenURL("https://github.com/itsYakub/Colorful-Pixels");
             }
 
-            if(ImGui::Button("Buy me a coffee...")) {
+            if(ImGui::Button(ICON_FA_MUG_SAUCER " Buy me a coffee...")) {
                 OpenURL("https://ko-fi.com/yakub");
+            }
+
+            if(ImGui::Button(ICON_FA_ITCH_IO " Itch.io page...")) {
+                OpenURL("https://itsyakub.itch.io/colorful-pixels");
             }
 
             ImGui::EndMenu();
