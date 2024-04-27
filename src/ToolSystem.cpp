@@ -3,7 +3,7 @@
 #include "imgui.h"
 #include "raylib.h"
 
-#include "IconsFontAwesome6.h"
+#include "IconsLucide.h"
 
 #include "BrushTool.hpp"
 #include "EraserTool.hpp"
@@ -91,14 +91,14 @@ void ToolSystem::ToolsGuiPanel(const char* name, bool draw) {
 
     ImGui::SeparatorText("##text");
 
-    if(ImGui::Button(ICON_FA_BRUSH, size)) {
+    if(ImGui::Button(ICON_LC_BRUSH, size)) {
         SetCurrentTool(new BrushTool(m_Canvas, m_ColorSystem, &m_Canvas->GetCursor()));
         m_ToolList = TOOL_BRUSH;
     } if(ImGui::IsItemHovered()) {
         ImGui::SetTooltip("Tool: Brush\n(Key: C)");
     }
 
-    if(ImGui::Button(ICON_FA_ERASER, size)) {
+    if(ImGui::Button(ICON_LC_ERASER, size)) {
         SetCurrentTool(new EraserTool(m_Canvas, &m_Canvas->GetCursor()));
         m_ToolList = TOOL_ERASER;
     } if(ImGui::IsItemHovered()) {
@@ -107,14 +107,14 @@ void ToolSystem::ToolsGuiPanel(const char* name, bool draw) {
 
     ImGui::SeparatorText("##text");
 
-    if(ImGui::Button(ICON_FA_EYE_DROPPER, size)) {
+    if(ImGui::Button(ICON_LC_PIPETTE, size)) {
         SetCurrentTool(new ColorPickerTool(m_Canvas, m_ColorSystem, this));
         m_ToolList = TOOL_COLORPICKER;
     } if(ImGui::IsItemHovered()) {
         ImGui::SetTooltip("Tool: Color Picker\n(Key: V)");
     }
 
-    if(ImGui::Button(ICON_FA_FILL, size)) {
+    if(ImGui::Button(ICON_LC_PAINT_BUCKET, size)) {
         SetCurrentTool(new FillTool(m_Canvas, m_ColorSystem, &m_Canvas->GetCursor()));
         m_ToolList = TOOL_FILL;
     } if(ImGui::IsItemHovered()) {
@@ -123,7 +123,7 @@ void ToolSystem::ToolsGuiPanel(const char* name, bool draw) {
 
     ImGui::SeparatorText("##text");
 
-    if(ImGui::Button(ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT, size)) {
+    if(ImGui::Button(ICON_LC_MOVE, size)) {
         SetCurrentTool(new PanTool(m_Canvas));
         m_ToolList = TOOL_PAN;
     } if(ImGui::IsItemHovered()) {
@@ -132,14 +132,14 @@ void ToolSystem::ToolsGuiPanel(const char* name, bool draw) {
 
     ImGui::SeparatorText("##text");
 
-    if(ImGui::Button("?", size)) {
+    if(ImGui::Button(ICON_LC_PENCIL_LINE, size)) {
         SetCurrentTool(new LineTool(m_Canvas, m_ColorSystem, &m_Canvas->GetCursor()));
         m_ToolList = TOOL_LINE;
     } if(ImGui::IsItemHovered()) {
         ImGui::SetTooltip("Tool: Line Tool\n(Key: L)");
     }
 
-    if(ImGui::Button("?", size)) {
+    if(ImGui::Button(ICON_LC_SQUARE, size)) {
         SetCurrentTool(new RectTool(m_Canvas, m_ColorSystem, &m_Canvas->GetCursor()));
         m_ToolList = TOOL_RECT;
     } if(ImGui::IsItemHovered()) {

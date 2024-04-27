@@ -1,6 +1,9 @@
 #include "ColorSystem.hpp"
+
 #include "imgui.h"
 #include "imgui_internal.h"
+
+#include "IconsLucide.h"
 
 ColorSystem::ColorSystem() :
     m_ColorPalette(),
@@ -47,20 +50,20 @@ void ColorSystem::ColorGuiPanel(const char* name, bool draw) {
 
     float colorArray[4] = { m_CurrentColor.r / 255.0f, m_CurrentColor.g / 255.0f, m_CurrentColor.b / 255.0f, m_CurrentColor.a / 255.0f };
 
-    ImGui::SeparatorText("Color Picker");
+    ImGui::SeparatorText(ICON_LC_SQUARE_MOUSE_POINTER " Color Picker");
 
     ImGui::PushItemWidth(size.x - 16.0f);
     ImGui::ColorPicker4(
         "Color Picker", 
         colorArray, 
-        ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoLabel
+        ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoInputs
     );
 
     SetColor(colorArray);
 
-    ImGui::SeparatorText("Color Palette");
+    ImGui::SeparatorText(ICON_LC_PALETTE " Color Palette");
 
-    for(int i = 0, colorsInARow = 4; i < m_ColorPalette.Size(); i += colorsInARow) {
+    for(int i = 0, colorsInARow = 7; i < m_ColorPalette.Size(); i += colorsInARow) {
         ImGui::NewLine();
 
         for(int j = 0; j < colorsInARow; j++) {

@@ -31,3 +31,4 @@ void BrushTool::OnButtonDown() {
 }
 
 void BrushTool::OnButtonRelease() { }
+void BrushTool::Render() { }

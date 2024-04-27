@@ -5,8 +5,7 @@
 #include "raylib.h"
 #include "imgui.h"
 
-#include "IconsFontAwesome6.h"
-#include "IconsFontAwesome6Brands.h"
+#include "IconsLucide.h"
 
 ThemeLoader::ThemeLoader() :
 	reloadFont(true), 
@@ -58,7 +57,7 @@ void ThemeLoader::LayoutMenu(const char* name, bool draw) {
 
     if(ImGui::BeginMenu(name)) {
         for(int i = 0; i < m_LayoutPaths.size(); i++) {
-            if(ImGui::Button(TextFormat("Layout: %s", GetFileNameWithoutExt(m_LayoutPaths.at(i).c_str())))) {
+            if(ImGui::MenuItem(TextFormat("Layout: %s", GetFileNameWithoutExt(m_LayoutPaths.at(i).c_str())))) {
                 m_CurrentID = i;
                 m_LoadLayout = true;
             }
@@ -74,12 +73,12 @@ void ThemeLoader::ThemeMenu(const char* name, bool draw) {
     }
 
     if(ImGui::BeginMenu(name)) {
-        if(ImGui::Button("Theme: LIGHT")) {
+        if(ImGui::MenuItem("Theme: LIGHT")) {
             m_CurrentTheme = THEME_LIGHT;
 			m_LoadTheme = true;
         }
 
-        if(ImGui::Button("Theme: DARK")) {
+        if(ImGui::MenuItem("Theme: DARK")) {
             m_CurrentTheme = THEME_DARK;
 			m_LoadTheme = true;
         }
@@ -96,11 +95,10 @@ void ThemeLoader::LoadLayout(int ID) {
 
 void ThemeLoader::LoadFont() {
 	ImGuiIO& io = ImGui::GetIO();
-	float baseFontSize = 20.0f; 
+	float baseFontSize = 24.0f; 
 	float iconFontSize = baseFontSize * 2.0f / 3.0f; 
 
-	const ImWchar icon_ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
-	const ImWchar icon_brand_ranges[] = { ICON_MIN_FAB, ICON_MAX_FAB, 0 };
+	const ImWchar icon_ranges[] = { ICON_MIN_LC, ICON_MAX_LC, 0 };
 	ImFontConfig config; 
 	config.MergeMode = true; 
 	config.PixelSnapH = true; 
@@ -108,8 +106,7 @@ void ThemeLoader::LoadFont() {
 
 	io.Fonts->Clear();
 	io.Fonts->AddFontFromFileTTF("../res/fonts/VarelaRound-Regular.ttf", baseFontSize, nullptr, io.Fonts->GetGlyphRangesDefault());
-	io.Fonts->AddFontFromFileTTF("../res/fonts/fa-solid-900.ttf", iconFontSize, &config, icon_ranges);
-	io.Fonts->AddFontFromFileTTF("../res/fonts/fa-brands-400.ttf", iconFontSize, &config, icon_brand_ranges);
+	io.Fonts->AddFontFromFileTTF("../res/fonts/lucide.ttf", iconFontSize, &config, icon_ranges);
 	io.Fonts->Build();
 
 	reloadFont = true;

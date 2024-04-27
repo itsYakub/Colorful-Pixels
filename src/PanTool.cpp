@@ -12,3 +12,5 @@ void PanTool::OnButtonDown() {
 }
 
 void PanTool::OnButtonRelease() { }
+
+void PanTool::Render() { }

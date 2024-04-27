@@ -28,3 +28,5 @@ void FillTool::OnButtonPress() {
 void FillTool::OnButtonDown() { }
 
 void FillTool::OnButtonRelease() { }
+
+void FillTool::Render() { }

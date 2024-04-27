@@ -69,7 +69,7 @@ if (${PLATFORM} STREQUAL "Web")
     # Tell Emscripten to build a final executable
     set(
         CMAKE_EXE_LINKER_FLAGS 
-        "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s WASM=1 -s TOTAL_MEMORY=67108864 -s FORCE_FILESYSTEM=1 -Os -Wall -Wextra --shell-file ../lib/raylib/src/minshell.html"
+        "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s WASM=1 -s TOTAL_MEMORY=67108864 -s FORCE_FILESYSTEM=1 -Os -Wall -Wextra --shell-file ../lib/raylib/src/minshell.html --preload-file ../res"
     )
 
     set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".html")

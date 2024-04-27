@@ -7,7 +7,7 @@
 #include "rlImGui.h"
 
 Viewport::Viewport() :
-    m_RenderTexture(LoadRenderTexture(GetMonitorWidth(0), GetMonitorHeight(0))),
+    m_RenderTexture(LoadRenderTexture(1600, 1080)),
     m_Position(Vector2Zero()), m_Size(Vector2Zero()) { }
 
 void Viewport::Unload() {

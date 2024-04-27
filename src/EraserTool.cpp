@@ -29,3 +29,6 @@ void EraserTool::OnButtonDown() {
 }
 
 void EraserTool::OnButtonRelease() { }
+
+void EraserTool::Render() { }
+

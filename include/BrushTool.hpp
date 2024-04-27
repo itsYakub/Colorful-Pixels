@@ -17,4 +17,5 @@ public:
     void OnButtonPress() override;
     void OnButtonDown() override;
     void OnButtonRelease() override;
+    void Render() override;
 };

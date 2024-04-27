@@ -1,10 +1,11 @@
 #include "LayerSystem.hpp"
 
 #include "Canvas.hpp"
+#include "IconsLucide.h"
 #include "imgui.h"
 #include "rlImGui.h"
 
-#include "IconsFontAwesome6.h"
+#include "IconsLucide.h"
 
 LayerSystem::LayerSystem(Canvas* canvas) :
     m_Canvas(canvas),
@@ -118,9 +119,9 @@ void LayerSystem::LayersGuiPanel(const char* name, bool draw) {
 
     ImGui::SeparatorText("##text");
 
-    for(int i = 0; i < m_LayerCount; i++) {
+    for(int i = m_LayerCount - 1; i >= 0; i--) {
         ImGui::PushID(i);
-            if(ImGui::Button(m_CurrentLayerID == i ? TextFormat("Layer no.%i (Current)", m_LayerList.at(i)->GetID()) : TextFormat("Layer no.%i", m_LayerList.at(i)->GetID()), ImVec2(256.0f, 38.0f))) {
+            if(ImGui::Button(m_CurrentLayerID == i ? TextFormat("Layer %i. (Current)", m_LayerList.at(i)->GetID()) : TextFormat("Layer %i.", m_LayerList.at(i)->GetID()), ImVec2(256.0f, 38.0f))) {
                 m_CurrentLayerID = i;
             }
 
@@ -134,18 +135,26 @@ void LayerSystem::LayersGuiPanel(const char* name, bool draw) {
         
         ImGui::SameLine();
         ImGui::PushID(i);
-            ImGui::Checkbox("##visible", &m_LayerList.at(i)->layerVisible);
+
+            if(ImGui::Button(GetLayer()->layerVisible ? ICON_LC_EYE : ICON_LC_EYE_OFF, ImVec2(38, 38))) {
+                m_LayerList.at(i)->layerVisible = !m_LayerList.at(i)->layerVisible;
+            }
+
         ImGui::PopID();
 
         ImGui::SameLine();
         ImGui::PushID(i);
-            ImGui::Checkbox("##locked", &m_LayerList.at(i)->layerLocked);
+
+            if(ImGui::Button(GetLayer()->layerLocked ? ICON_LC_LOCK : ICON_LC_LOCK_OPEN, ImVec2(38, 38))) {
+                m_LayerList.at(i)->layerLocked = !m_LayerList.at(i)->layerLocked;
+            }
+
         ImGui::PopID();
 
         ImGui::SameLine();
         ImGui::PushID(i);
 
-            if(ImGui::Button(ICON_FA_ARROW_UP, ImVec2(38, 38))) {
+            if(ImGui::Button(ICON_LC_SQUARE_CHEVRON_UP, ImVec2(38, 38))) {
                 if(i - 1 >= 0) {
                     std::swap(m_LayerList.at(i), m_LayerList.at(i - 1));
 
@@ -160,7 +169,7 @@ void LayerSystem::LayersGuiPanel(const char* name, bool draw) {
         ImGui::SameLine();
         ImGui::PushID(i);
         
-            if(ImGui::Button(ICON_FA_ARROW_DOWN, ImVec2(38, 38))) {
+            if(ImGui::Button(ICON_LC_SQUARE_CHEVRON_DOWN, ImVec2(38, 38))) {
                 if(i + 1 < m_LayerList.size()) {
                     std::swap(m_LayerList.at(i), m_LayerList.at(i + 1));
 

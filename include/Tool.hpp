@@ -8,4 +8,5 @@ public:
     virtual void OnButtonPress() { }
     virtual void OnButtonDown() { }
     virtual void OnButtonRelease() { }
+    virtual void Render() { }
 };

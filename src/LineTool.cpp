@@ -15,20 +15,19 @@ LineTool::LineTool(Canvas* canvas, ColorSystem* colorSystem, Cursor* cursor) :
     m_PointA(Vector2Zero()), m_PointB(Vector2Zero()) { }
 
 void LineTool::OnButtonPress() {
-    m_PointA = m_Canvas->PositionAsCanvasIndex(m_Canvas->PositionInWorldSpace(GetMousePosition()));
+    m_PointA = m_Canvas->PositionInWorldSpace(GetMousePosition());
 }
 
-void LineTool::OnButtonDown() { }
+void LineTool::OnButtonDown() { 
+    m_PointB = m_Canvas->PositionInWorldSpace(GetMousePosition());
+}
 
 void LineTool::OnButtonRelease() {
-    m_PointB = m_Canvas->PositionAsCanvasIndex(m_Canvas->PositionInWorldSpace(GetMousePosition()));
+    int ax = m_Canvas->PositionAsCanvasIndex(m_PointA).x;
+    int ay = m_Canvas->PositionAsCanvasIndex(m_PointA).y;
 
-    int ax = m_PointA.x;
-    int ay = m_PointA.y;
-
-    int bx = m_PointB.x;
-    int by = m_PointB.y;
-
+    int bx = m_Canvas->PositionAsCanvasIndex(m_PointB).x;
+    int by = m_Canvas->PositionAsCanvasIndex(m_PointB).y;
 
     if(!m_Canvas->CanvasIndexValid({ static_cast<float>(ax), static_cast<float>(ay) }) || !m_Canvas->CanvasIndexValid({ static_cast<float>(bx), static_cast<float>(by) })) {
         return;
@@ -50,3 +49,5 @@ void LineTool::OnButtonRelease() {
 
     m_Canvas->ToggleTextureReload();
 }
+
+void LineTool::Render() { }
