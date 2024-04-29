@@ -19,7 +19,7 @@ ColorfulPixels::ColorfulPixels() :
 
 void ColorfulPixels::Load() {
     m_Viewport = std::make_unique<Viewport>();
-    m_Canvas = std::make_unique<Canvas>(m_Viewport.get(), 16);
+    m_Canvas = std::make_unique<Canvas>(m_Viewport.get());
     m_ColorSystem = std::make_unique<ColorSystem>();
     m_ToolSystem = std::make_unique<ToolSystem>(m_Canvas.get(), m_ColorSystem.get());
     m_ThemeLoader = std::make_unique<ThemeLoader>();
@@ -79,7 +79,6 @@ void ColorfulPixels::Update() {
     }
 
     m_Canvas->Update();
-    m_ToolSystem->Update();
     m_ThemeLoader->Update();
 }
 

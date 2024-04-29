@@ -12,69 +12,30 @@
 #include "LineTool.hpp"
 #include "FillTool.hpp"
 #include "RectTool.hpp"
+#include <memory>
 
 ToolSystem::ToolSystem(Canvas* canvas, ColorSystem* colorSystem) :
     m_Canvas(canvas),
-    m_ColorSystem(colorSystem),
-    m_ToolList(TOOL_BRUSH) {
-        SetCurrentTool(new BrushTool(m_Canvas, m_ColorSystem, &m_Canvas->GetCursor()));
+    m_ColorSystem(colorSystem) {
+        m_CurrentTool = SetCurrentTool(TOOL_BRUSH);
     }
 
-
-void ToolSystem::Update() {
-    switch(GetKeyPressed()) {
-        case KEY_C:
-            SetCurrentTool(new BrushTool(m_Canvas, m_ColorSystem, &m_Canvas->GetCursor()));
-            m_ToolList = TOOL_BRUSH;
-
-            break;
-
-        case KEY_E:
-            SetCurrentTool(new EraserTool(m_Canvas, &m_Canvas->GetCursor()));
-            m_ToolList = TOOL_ERASER;
-
-            break;
-
-        case KEY_V:
-            SetCurrentTool(new ColorPickerTool(m_Canvas, m_ColorSystem, this));
-            m_ToolList = TOOL_COLORPICKER;
-
-            break;
-
-        case KEY_F:
-            SetCurrentTool(new FillTool(m_Canvas, m_ColorSystem, &m_Canvas->GetCursor()));
-            m_ToolList = TOOL_FILL;
-
-            break;
-
-        case KEY_M:
-            SetCurrentTool(new PanTool(m_Canvas));
-            m_ToolList = TOOL_PAN;
-
-            break;
-
-        case KEY_L:
-            SetCurrentTool(new LineTool(m_Canvas, m_ColorSystem, &m_Canvas->GetCursor()));
-            m_ToolList = TOOL_LINE;
-
-            break;
-
-        case KEY_R:
-            SetCurrentTool(new RectTool(m_Canvas, m_ColorSystem, &m_Canvas->GetCursor()));
-            m_ToolList = TOOL_RECT;
-
-            break;
-    }
-}
 
 std::unique_ptr<Tool>& ToolSystem::GetCurrentTool() {
     return m_CurrentTool;
 }
 
-void ToolSystem::SetCurrentTool(Tool* newTool) {
-    m_CurrentTool = std::unique_ptr<Tool>(newTool);
-
-    TraceLog(LOG_INFO, "Current tool: %s", typeid(*newTool).name());
+std::unique_ptr<Tool> ToolSystem::SetCurrentTool(ToolList list) {
+    switch(list) {
+        case TOOL_BRUSH: return std::make_unique<BrushTool>(m_Canvas, m_ColorSystem);
+        case TOOL_ERASER: return std::make_unique<EraserTool>(m_Canvas);
+        case TOOL_COLORPICKER: return std::make_unique<ColorPickerTool>(m_Canvas, m_ColorSystem, this);
+        case TOOL_FILL: return std::make_unique<FillTool>(m_Canvas, m_ColorSystem);
+        case TOOL_PAN: return std::make_unique<PanTool>(m_Canvas);
+        case TOOL_LINE: return std::make_unique<LineTool>(m_Canvas, m_ColorSystem);
+        case TOOL_RECT: return std::make_unique<RectTool>(m_Canvas, m_ColorSystem);
+        default: return std::make_unique<BrushTool>(m_Canvas, m_ColorSystem);
+    }
 }
 
 void ToolSystem::ToolsGuiPanel(const char* name, bool draw) {
@@ -92,59 +53,38 @@ void ToolSystem::ToolsGuiPanel(const char* name, bool draw) {
     ImGui::SeparatorText("##text");
 
     if(ImGui::Button(ICON_LC_BRUSH, size)) {
-        SetCurrentTool(new BrushTool(m_Canvas, m_ColorSystem, &m_Canvas->GetCursor()));
-        m_ToolList = TOOL_BRUSH;
-    } if(ImGui::IsItemHovered()) {
-        ImGui::SetTooltip("Tool: Brush\n(Key: C)");
-    }
+        m_CurrentTool = SetCurrentTool(TOOL_BRUSH);
+    } 
 
     if(ImGui::Button(ICON_LC_ERASER, size)) {
-        SetCurrentTool(new EraserTool(m_Canvas, &m_Canvas->GetCursor()));
-        m_ToolList = TOOL_ERASER;
-    } if(ImGui::IsItemHovered()) {
-            ImGui::SetTooltip("Tool: Eraser\n(Key: E)");
-    }
+        m_CurrentTool = SetCurrentTool(TOOL_ERASER);
+    } 
 
     ImGui::SeparatorText("##text");
 
     if(ImGui::Button(ICON_LC_PIPETTE, size)) {
-        SetCurrentTool(new ColorPickerTool(m_Canvas, m_ColorSystem, this));
-        m_ToolList = TOOL_COLORPICKER;
-    } if(ImGui::IsItemHovered()) {
-        ImGui::SetTooltip("Tool: Color Picker\n(Key: V)");
-    }
+        m_CurrentTool = SetCurrentTool(TOOL_COLORPICKER);
+    } 
 
     if(ImGui::Button(ICON_LC_PAINT_BUCKET, size)) {
-        SetCurrentTool(new FillTool(m_Canvas, m_ColorSystem, &m_Canvas->GetCursor()));
-        m_ToolList = TOOL_FILL;
-    } if(ImGui::IsItemHovered()) {
-        ImGui::SetTooltip("Tool: Fill Tool\n(Key: F)");
-    }
+        m_CurrentTool = SetCurrentTool(TOOL_FILL);
+    } 
 
     ImGui::SeparatorText("##text");
 
     if(ImGui::Button(ICON_LC_MOVE, size)) {
-        SetCurrentTool(new PanTool(m_Canvas));
-        m_ToolList = TOOL_PAN;
-    } if(ImGui::IsItemHovered()) {
-        ImGui::SetTooltip("Tool: Pan Tool\n(Key: M)");
-    }
+        m_CurrentTool = SetCurrentTool(TOOL_PAN);
+    } 
 
     ImGui::SeparatorText("##text");
 
     if(ImGui::Button(ICON_LC_PENCIL_LINE, size)) {
-        SetCurrentTool(new LineTool(m_Canvas, m_ColorSystem, &m_Canvas->GetCursor()));
-        m_ToolList = TOOL_LINE;
-    } if(ImGui::IsItemHovered()) {
-        ImGui::SetTooltip("Tool: Line Tool\n(Key: L)");
-    }
+        m_CurrentTool = SetCurrentTool(TOOL_LINE);
+    } 
 
     if(ImGui::Button(ICON_LC_SQUARE, size)) {
-        SetCurrentTool(new RectTool(m_Canvas, m_ColorSystem, &m_Canvas->GetCursor()));
-        m_ToolList = TOOL_RECT;
-    } if(ImGui::IsItemHovered()) {
-        ImGui::SetTooltip("Tool: Rect Tool\n(Key: R)");
-    }
-
+        m_CurrentTool = SetCurrentTool(TOOL_RECT);
+    } 
+    
     ImGui::End(); 
 }

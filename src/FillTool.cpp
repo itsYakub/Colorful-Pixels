@@ -7,10 +7,9 @@
 #include "ColorSystem.hpp"
 #include "Cursor.hpp"
 
-FillTool::FillTool(Canvas* canvas, ColorSystem* colorSystem, Cursor* cursor) : 
+FillTool::FillTool(Canvas* canvas, ColorSystem* colorSystem) : 
     m_Canvas(canvas),
-    m_ColorSystem(colorSystem),
-    m_Cursor(cursor) { }
+    m_ColorSystem(colorSystem) { }
 
 void FillTool::OnButtonPress() {
     int x = m_Canvas->PositionAsCanvasIndex(m_Canvas->PositionInWorldSpace(GetMousePosition())).x;

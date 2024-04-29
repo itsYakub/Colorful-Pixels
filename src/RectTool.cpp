@@ -8,10 +8,9 @@
 #include "ColorSystem.hpp"
 #include "Cursor.hpp"
 
-RectTool::RectTool(Canvas* canvas, ColorSystem* colorSystem, Cursor* cursor) : 
+RectTool::RectTool(Canvas* canvas, ColorSystem* colorSystem) : 
     m_Canvas(canvas),
     m_ColorSystem(colorSystem),
-    m_Cursor(cursor),
     m_PointA(Vector2Zero()), m_PointB(Vector2Zero()) { }
 
 void RectTool::OnButtonPress() {

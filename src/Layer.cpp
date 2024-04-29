@@ -38,7 +38,7 @@ Texture2D& Layer::GetTexture() {
     return m_LayerTexture;
 }
 
-std::vector<Color>& Layer::GetData() {
+PixelData& Layer::GetData() {
     return m_LayerData;
 }
 

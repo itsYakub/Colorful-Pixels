@@ -6,9 +6,8 @@
 #include "Canvas.hpp"
 #include "Cursor.hpp"
 
-EraserTool::EraserTool(Canvas* canvas, Cursor* cursor) : 
-    m_Canvas(canvas),
-    m_Cursor(cursor) { }
+EraserTool::EraserTool(Canvas* canvas) : 
+    m_Canvas(canvas) { }
 
 void EraserTool::OnButtonPress() { }
 
@@ -16,8 +15,8 @@ void EraserTool::OnButtonDown() {
     int ax = m_Canvas->PositionAsCanvasIndex(m_Canvas->PositionInWorldSpace(GetMousePosition())).x;
     int ay = m_Canvas->PositionAsCanvasIndex(m_Canvas->PositionInWorldSpace(GetMousePosition())).y;
 
-    int bx = m_Canvas->PositionAsCanvasIndex(m_Canvas->PositionInWorldSpace(m_Cursor->GetPreviousFramePosition())).x;
-    int by = m_Canvas->PositionAsCanvasIndex(m_Canvas->PositionInWorldSpace(m_Cursor->GetPreviousFramePosition())).y;
+    int bx = m_Canvas->PositionAsCanvasIndex(m_Canvas->PositionInWorldSpace(m_Canvas->GetCursor().GetPreviousFramePosition())).x;
+    int by = m_Canvas->PositionAsCanvasIndex(m_Canvas->PositionInWorldSpace(m_Canvas->GetCursor().GetPreviousFramePosition())).y;
 
     if(!m_Canvas->CanvasIndexValid({ static_cast<float>(ax), static_cast<float>(ay) }) || !m_Canvas->CanvasIndexValid({ static_cast<float>(bx), static_cast<float>(by) })) {
         return;

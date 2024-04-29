@@ -19,7 +19,7 @@ void ColorPickerTool::OnButtonPress() {
 
     if(ColorToInt(m_Canvas->GetLayerSystem().GetLayer()->GetPixelColor(x, y)) != ColorToInt(BLANK)) {
         m_ColorSystem->SetColor(m_Canvas->GetLayerSystem().GetLayer()->GetPixelColor(x, y));
-        m_ToolSystem->SetCurrentTool(new BrushTool(m_Canvas, m_ColorSystem, &m_Canvas->GetCursor()));
+        m_ToolSystem->GetCurrentTool() = m_ToolSystem->SetCurrentTool(ToolSystem::TOOL_BRUSH);
     }
 }
 

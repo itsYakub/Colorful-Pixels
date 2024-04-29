@@ -5,12 +5,14 @@
 #include "raylib.h"
 #include "raymath.h"
 
+using PixelData = std::vector<Color>;
+
 class Layer {
 private:
     const Vector2 COUNT;
     const int ID;
 
-    std::vector<Color> m_LayerData;
+    PixelData m_LayerData;
     Texture2D m_LayerTexture;
 
 public:
@@ -30,7 +32,7 @@ public:
 
     int GetID();
     Texture2D& GetTexture();
-    std::vector<Color>& GetData();
+    PixelData& GetData();
     Vector2 GetCount();
 
     bool IsVisible();
