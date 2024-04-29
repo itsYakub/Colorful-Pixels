@@ -36,10 +36,6 @@ private:
     std::unique_ptr<Canvas> m_Canvas;
     std::unique_ptr<ToolSystem> m_ToolSystem;
 
-    bool m_DrawToolsPanel;
-    bool m_DrawColorPanel;
-    bool m_DrawLayerPanel;
-
     bool m_LoadIniFile;
 
 public:

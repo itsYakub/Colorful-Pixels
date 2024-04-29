@@ -43,6 +43,26 @@ void ToolSystem::ToolsGuiPanel(const char* name, bool draw) {
         return;
     }
 
+    const char* ICONS[] {
+        ICON_LC_BRUSH,
+        ICON_LC_ERASER,
+        ICON_LC_PIPETTE,
+        ICON_LC_PAINT_BUCKET,
+        ICON_LC_MOVE,
+        ICON_LC_PENCIL_LINE,
+        ICON_LC_SQUARE
+    };
+
+    const char* TOOLTIPS[] {
+        "Tool: Brush",
+        "Tool: Eraser",
+        "Tool: Color Picker",
+        "Tool: Fill",
+        "Tool: Pan",
+        "Tool: Line",
+        "Tool: Rect"
+    };
+
     ImGui::Begin(
         name, 
         nullptr
@@ -52,39 +72,13 @@ void ToolSystem::ToolsGuiPanel(const char* name, bool draw) {
 
     ImGui::SeparatorText("##text");
 
-    if(ImGui::Button(ICON_LC_BRUSH, size)) {
-        m_CurrentTool = SetCurrentTool(TOOL_BRUSH);
-    } 
-
-    if(ImGui::Button(ICON_LC_ERASER, size)) {
-        m_CurrentTool = SetCurrentTool(TOOL_ERASER);
-    } 
-
-    ImGui::SeparatorText("##text");
-
-    if(ImGui::Button(ICON_LC_PIPETTE, size)) {
-        m_CurrentTool = SetCurrentTool(TOOL_COLORPICKER);
-    } 
-
-    if(ImGui::Button(ICON_LC_PAINT_BUCKET, size)) {
-        m_CurrentTool = SetCurrentTool(TOOL_FILL);
-    } 
-
-    ImGui::SeparatorText("##text");
-
-    if(ImGui::Button(ICON_LC_MOVE, size)) {
-        m_CurrentTool = SetCurrentTool(TOOL_PAN);
-    } 
-
-    ImGui::SeparatorText("##text");
-
-    if(ImGui::Button(ICON_LC_PENCIL_LINE, size)) {
-        m_CurrentTool = SetCurrentTool(TOOL_LINE);
-    } 
-
-    if(ImGui::Button(ICON_LC_SQUARE, size)) {
-        m_CurrentTool = SetCurrentTool(TOOL_RECT);
-    } 
+    for(int i = 0; i < ToolList::TOOL_COUNT; i++) {
+        if(ImGui::Button(ICONS[i], size)) {
+            m_CurrentTool = SetCurrentTool(static_cast<ToolList>(i));
+        } if(ImGui::IsItemHovered()) {
+            ImGui::SetTooltip(TOOLTIPS[i]);
+        }
+    }
     
     ImGui::End(); 
 }

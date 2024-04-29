@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "ToolSystem.hpp"
+
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "raylib.h"
@@ -15,20 +16,15 @@ ColorfulPixels::ColorfulPixels() :
     m_Viewport(),
     m_ThemeLoader(),
     m_ColorSystem(),
-
-    m_DrawToolsPanel(true),
-    m_DrawLayerPanel(true),
-    m_DrawColorPanel(true),
     
     m_LoadIniFile(true) { }
 
 void ColorfulPixels::Load() {
+    LoadImGui();
     m_Viewport.Load();
 
     m_Canvas = std::make_unique<Canvas>(&m_Viewport);
     m_ToolSystem = std::make_unique<ToolSystem>(m_Canvas.get(), &m_ColorSystem);
-
-    LoadImGui();
 }
 
 void ColorfulPixels::LoadImGui() {
@@ -109,9 +105,9 @@ void ColorfulPixels::RenderGUI() {
     BeginDockingSpace("Docking Space");
 
         m_Viewport.ViewportGuiPanel("Panel: Viewport", true);
-        m_ColorSystem.ColorGuiPanel("Panel: Colors", m_DrawColorPanel);
-        m_Canvas->GetLayerSystem().LayersGuiPanel("Panel: Layers", m_DrawLayerPanel);
-        m_ToolSystem->ToolsGuiPanel("Panel: Tools", m_DrawToolsPanel);
+        m_ColorSystem.ColorGuiPanel("Panel: Colors", true);
+        m_Canvas->GetLayerSystem().LayersGuiPanel("Panel: Layers", true);
+        m_ToolSystem->ToolsGuiPanel("Panel: Tools", true);
 
     EndDockingSpace();
     rlImGuiEnd();    
@@ -144,14 +140,6 @@ void ColorfulPixels::MenuBarGuiPanel(const char* name, bool draw) {
         }
         
         if(ImGui::BeginMenu(ICON_LC_APP_WINDOW " Window")) {
-            if(ImGui::BeginMenu("Panels")) {
-                ImGui::Checkbox("Color", &m_DrawColorPanel);
-                ImGui::Checkbox("Layers", &m_DrawLayerPanel);
-                ImGui::Checkbox("Tools", &m_DrawToolsPanel);
-
-                ImGui::EndMenu();
-            }
-
             m_ThemeLoader.ThemeMenu("Theme", true);
 
             ImGui::EndMenu();
