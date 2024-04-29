@@ -32,9 +32,10 @@ private:
     Viewport m_Viewport;
     ThemeLoader m_ThemeLoader;
     ColorSystem m_ColorSystem;
+    ToolSystem m_ToolSystem;
 
     std::unique_ptr<Canvas> m_Canvas;
-    std::unique_ptr<ToolSystem> m_ToolSystem;
+    std::unique_ptr<Tool> m_Tool;
 
     bool m_LoadIniFile;
 

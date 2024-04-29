@@ -8,10 +8,9 @@
 #include "BrushTool.hpp"
 
 
-ColorPickerTool::ColorPickerTool(Canvas* canvas, ColorSystem* colorSystem, ToolSystem* toolSystem) : 
+ColorPickerTool::ColorPickerTool(Canvas* canvas, ColorSystem* colorSystem) : 
     m_Canvas(canvas),
-    m_ColorSystem(colorSystem),
-    m_ToolSystem(toolSystem) { }
+    m_ColorSystem(colorSystem) { }
 
 void ColorPickerTool::OnButtonPress() { 
     int x = m_Canvas->PositionAsCanvasIndex(m_Canvas->PositionInWorldSpace(GetMousePosition())).x;
@@ -19,7 +18,6 @@ void ColorPickerTool::OnButtonPress() {
 
     if(ColorToInt(m_Canvas->GetLayerSystem().GetLayer()->GetPixelColor(x, y)) != ColorToInt(BLANK)) {
         m_ColorSystem->SetColor(m_Canvas->GetLayerSystem().GetLayer()->GetPixelColor(x, y));
-        m_ToolSystem->GetCurrentTool() = m_ToolSystem->SetCurrentTool(ToolSystem::TOOL_BRUSH);
     }
 }
 

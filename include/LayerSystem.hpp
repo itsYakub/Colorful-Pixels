@@ -7,28 +7,25 @@
 
 #include "Layer.hpp"
 
-class Canvas;
+using LayerList = std::vector<std::unique_ptr<Layer>>;
 
 class LayerSystem {
 private:
-    Canvas* m_Canvas;
+    LayerList m_LayerList;
 
-    std::vector<std::unique_ptr<Layer>> m_LayerList;
     int m_CurrentLayerID;
     int m_LayerCount;
     int m_LayerCountTotal;
 
+    const int CELL_COUNT_X;
+    const int CELL_COUNT_Y;
+
 public:
-    LayerSystem(Canvas* canvas);
+    LayerSystem(const int& CELL_COUNT_X, const int& CELL_COUNT_Y);
 
     void Unload();
 
     void UpdateLayer();
-
-    int GetCurrentLayerIndex();
-    void SetCurrentLayerIndex(int index);
-    void IncrementCurrentLayerIndex();
-    void DecrementCurrentLayerIndex();
 
     std::unique_ptr<Layer>& GetLayer();
     std::unique_ptr<Layer>& GetLayer(int index);

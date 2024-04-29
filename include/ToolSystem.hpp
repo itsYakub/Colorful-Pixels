@@ -23,16 +23,10 @@ public:
         TOOL_COUNT,
     };
 
-private:
-    Canvas* m_Canvas;
-    ColorSystem* m_ColorSystem;
-    std::unique_ptr<Tool> m_CurrentTool;
-
 public:
-    ToolSystem(Canvas* canvas, ColorSystem* colorSystem);
+    ToolSystem();
 
-    std::unique_ptr<Tool>& GetCurrentTool();
-    std::unique_ptr<Tool> SetCurrentTool(ToolList list);
+    std::unique_ptr<Tool> SetCurrentTool(ToolList list, Canvas& canvas, ColorSystem& colorSystem);
 
-    void ToolsGuiPanel(const char* name, bool draw);
+    void ToolsGuiPanel(const char* name, bool draw, std::unique_ptr<Tool>& tool, Canvas& canvas, ColorSystem& colorSystem);
 };

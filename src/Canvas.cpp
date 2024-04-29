@@ -23,13 +23,13 @@ Canvas::Canvas(Viewport* viewport, const int CELL_COUNT_X, const int CELL_COUNT_
 
     m_ReloadLayerTexture(false),
 
-    m_LayerSystem(this),
+    m_LayerSystem(CELL_COUNT_X, CELL_COUNT_Y),
     m_Cursor() {
         m_Camera.target = m_Position;
         m_Camera.offset = { 512.0f, 128.0f };
         m_Camera.zoom = m_Scale;
 
-        Image canvasBackgroundImage = GenImageChecked(SIZE.x, SIZE.y, 128, 128, (Color) { 128, 128, 128, 255 }, (Color) { 192, 192, 192, 255 });
+        Image canvasBackgroundImage = GenImageChecked(SIZE.x, SIZE.y, SIZE.x / 2.0f, SIZE.x / 2.0f, (Color) { 128, 128, 128, 255 }, (Color) { 192, 192, 192, 255 });
         m_CanvasBackground = LoadTextureFromImage(canvasBackgroundImage);
         UnloadImage(canvasBackgroundImage);
 }
@@ -60,7 +60,7 @@ void Canvas::Render() {
             DrawLayer(m_LayerSystem.GetLayer(i)->IsVisible(), *m_LayerSystem.GetLayer(i));
         }
 
-        DrawCanvasGrid(CELL_COUNT_X, CELL_COUNT_Y);
+        // DrawCanvasGrid(CELL_COUNT_X, CELL_COUNT_Y);
         DrawCanvasCursor();
         DrawCanvasFrame();
 
@@ -88,23 +88,23 @@ void Canvas::ToggleTextureReload() {
 }
 
 Vector2 Canvas::GetCanvasSize(const int COUNT_X, const int COUNT_Y) {
-    const float defaultResolutionValue = 512.0f;
-    Vector2 result = { 0.0f, 0.0f };
+    const float DEFAULT_SIZE = 512.0f;
+    Vector2 result = Vector2Zero();
 
     if(COUNT_X > COUNT_Y) {
         result = { 
-            defaultResolutionValue, 
-            (defaultResolutionValue / COUNT_X) * COUNT_Y 
+            DEFAULT_SIZE, 
+            (DEFAULT_SIZE / COUNT_X) * COUNT_Y 
         };
     } else if(COUNT_X < COUNT_Y) {
         result = { 
-            (defaultResolutionValue / COUNT_Y) * COUNT_X, 
-            defaultResolutionValue 
+            (DEFAULT_SIZE / COUNT_Y) * COUNT_X, 
+            DEFAULT_SIZE 
         };
     } else {
         result = { 
-            defaultResolutionValue, 
-            defaultResolutionValue 
+            DEFAULT_SIZE, 
+            DEFAULT_SIZE 
         };
     }
 
@@ -112,22 +112,6 @@ Vector2 Canvas::GetCanvasSize(const int COUNT_X, const int COUNT_Y) {
 
     return result;
 }
-
-// TODO: Implement this later
-Vector2 Canvas::GetCanvasOffset() {
-    return {
-        SIZE.x / m_Scale / 2.0f,
-        SIZE.y / m_Scale / 2.0f
-    };
-}
-
-void Canvas::CenterCanvas() {
-    m_Camera.offset = {
-        m_Viewport->GetSize().x - GetCanvasOffset().x / 2.0f,
-        m_Viewport->GetSize().y - GetCanvasOffset().y / 2.0f
-    };
-}
-
 
 Vector2 Canvas::PositionInWorldSpace(Vector2 screenspacePosition) {
     return {
@@ -146,7 +130,7 @@ Vector2 Canvas::PositionAsCanvasCell(Vector2 worldspacePosition) {
 Vector2 Canvas::PositionAsCanvasIndex(Vector2 worldspacePosition) {
     return {
         std::floor(((worldspacePosition.x / m_Scale)) / SIZE.x * CELL_COUNT_X),
-        std::floor(((worldspacePosition.y / m_Scale)) / SIZE.y * CELL_COUNT_X)
+        std::floor(((worldspacePosition.y / m_Scale)) / SIZE.y * CELL_COUNT_Y)
     };
 }
 
@@ -244,7 +228,7 @@ void Canvas::DrawCanvasFrame() {
             SIZE.x * m_Scale,
             SIZE.y * m_Scale
         },
-        4.0f / m_Scale,
+        2.0f / m_Scale,
         BLACK
     );
 }
