@@ -10,23 +10,9 @@
 ThemeLoader::ThemeLoader() :
 	reloadFont(true), 
     m_CurrentTheme(THEME_DARK),
-	m_LoadTheme(false),
-    m_CurrentID(0),
-    m_LoadLayout(false) {
-        FilePathList pathList = LoadDirectoryFilesEx("../res/layout/", ".ini", false);
-
-        for(int i = 0; i < pathList.count; i++) {
-            m_LayoutPaths.insert(std::make_pair(i, pathList.paths[i]));
-        }
-}
+	m_LoadTheme(false) { }
 
 void ThemeLoader::Update() {
-    if(m_LoadLayout) {
-        LoadLayout(m_CurrentID);
-
-        m_LoadLayout = false;
-    }
-
 	if(m_LoadTheme) {
 		switch (m_CurrentTheme) {
 			case THEME_DARK:
@@ -50,23 +36,6 @@ void ThemeLoader::Update() {
 	}
 }
 
-void ThemeLoader::LayoutMenu(const char* name, bool draw) {
-    if(!draw) {
-        return;
-    }
-
-    if(ImGui::BeginMenu(name)) {
-        for(int i = 0; i < m_LayoutPaths.size(); i++) {
-            if(ImGui::MenuItem(TextFormat("Layout: %s", GetFileNameWithoutExt(m_LayoutPaths.at(i).c_str())))) {
-                m_CurrentID = i;
-                m_LoadLayout = true;
-            }
-        }
-
-        ImGui::EndMenu();
-    }
-}
-
 void ThemeLoader::ThemeMenu(const char* name, bool draw) {
     if(!draw) {
         return;
@@ -87,10 +56,8 @@ void ThemeLoader::ThemeMenu(const char* name, bool draw) {
     }
 }
 
-void ThemeLoader::LoadLayout(int ID) {
-    ImGui::LoadIniSettingsFromDisk(m_LayoutPaths.at(ID).c_str());
-
-    TraceLog(LOG_INFO, TextFormat("Loading Dear ImGui layout from: %s", m_LayoutPaths.at(ID).c_str()));
+void ThemeLoader::LoadLayout() {
+    ImGui::LoadIniSettingsFromDisk("../res/layout/default.ini");
 }
 
 void ThemeLoader::LoadFont() {

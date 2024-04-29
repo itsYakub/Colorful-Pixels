@@ -29,11 +29,12 @@
 
 class ColorfulPixels {
 private:
-    std::unique_ptr<Viewport> m_Viewport;
+    Viewport m_Viewport;
+    ThemeLoader m_ThemeLoader;
+    ColorSystem m_ColorSystem;
+
     std::unique_ptr<Canvas> m_Canvas;
     std::unique_ptr<ToolSystem> m_ToolSystem;
-    std::unique_ptr<ColorSystem> m_ColorSystem;
-    std::unique_ptr<ThemeLoader> m_ThemeLoader;
 
     bool m_DrawToolsPanel;
     bool m_DrawColorPanel;

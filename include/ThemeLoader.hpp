@@ -17,20 +17,13 @@ private:
     } m_CurrentTheme;
     bool m_LoadTheme;
 
-    std::unordered_map<int, std::string> m_LayoutPaths;
-
-    int m_CurrentID;
-    bool m_LoadLayout;
-
 public:
     ThemeLoader();
 
     void Update();
-    void LayoutMenu(const char* name, bool draw);
     void ThemeMenu(const char* name, bool draw);
 
-    void LoadLayout(int ID);
-
+    void LoadLayout();
     void LoadFont();
 
     void SetupImGuiStyleDark();

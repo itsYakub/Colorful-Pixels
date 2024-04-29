@@ -16,6 +16,8 @@ private:
 
 public:
     Viewport();
+
+    void Load();
     void Unload();
 
     void ViewportGuiPanel(const char* name, bool draw);
