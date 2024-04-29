@@ -46,31 +46,32 @@ public:
     void Update();
     void Render();
 
-    LayerSystem& GetLayerSystem();
-    Cursor& GetCursor();
-
-    const int CellCountX();
-    const int CellCountY();
-
     void Pan();
     void Zoom();
 
     void ToggleTextureReload();
 
-    Vector2 GetCanvasSize(const int COUNT_X, const int COUNT_Y);
-    Vector2 GetCanvasOffset();
+    Vector2 PositionInWorldSpace(Vector2 screenspacePosition);
+    Vector2 PositionAsCanvasCell(Vector2 worldspacePosition);
+    Vector2 PositionAsCanvasIndex(Vector2 worldspacePosition);
 
-    void CenterCanvas();
-
-    Vector2 PositionInWorldSpace(Vector2 position);
-    Vector2 PositionAsCanvasCell(Vector2 position);
-    Vector2 PositionAsCanvasIndex(Vector2 indexPosition);
-
-    bool CanvasIndexValid(Vector2 position);
+    bool CanvasIndexValid(Vector2 index);
 
     void DrawBackground();
     void DrawLayer(bool visible, Layer& layer);
     void DrawCanvasGrid(const int WIDTH, const int HEIGHT);
     void DrawCanvasCursor();
     void DrawCanvasFrame();
+
+    Vector2 GetCanvasSize(const int COUNT_X, const int COUNT_Y);
+    Vector2 GetCanvasOffset();
+
+    void CenterCanvas();
+
+    LayerSystem& GetLayerSystem();
+    Cursor& GetCursor();
+
+    const int CellCountX();
+    const int CellCountY();
+
 };

@@ -74,22 +74,6 @@ void Canvas::Render() {
     EndMode2D();
 }
 
-LayerSystem& Canvas::GetLayerSystem() {
-    return m_LayerSystem;
-}
-
-Cursor& Canvas::GetCursor() {
-    return m_Cursor;
-}
-
-const int Canvas::CellCountX() {
-    return CELL_COUNT_X;
-}
-
-const int Canvas::CellCountY() {
-    return CELL_COUNT_Y;
-}
-
 void Canvas::Pan() {
     Vector2 delta = GetMouseDelta();
     delta = Vector2Scale(delta, -1.0f / m_Camera.zoom);
@@ -152,31 +136,31 @@ void Canvas::CenterCanvas() {
 }
 
 
-Vector2 Canvas::PositionInWorldSpace(Vector2 position) {
+Vector2 Canvas::PositionInWorldSpace(Vector2 screenspacePosition) {
     return {
-        GetScreenToWorld2D({ position.x - m_Viewport->GetPosition().x, position.y - m_Viewport->GetPosition().y }, m_Camera).x,
-        GetScreenToWorld2D({ position.x - m_Viewport->GetPosition().x, position.y - m_Viewport->GetPosition().y }, m_Camera).y
+        GetScreenToWorld2D({ screenspacePosition.x - m_Viewport->GetPosition().x, screenspacePosition.y - m_Viewport->GetPosition().y }, m_Camera).x,
+        GetScreenToWorld2D({ screenspacePosition.x - m_Viewport->GetPosition().x, screenspacePosition.y - m_Viewport->GetPosition().y }, m_Camera).y
     };
 }
 
-Vector2 Canvas::PositionAsCanvasCell(Vector2 position) {
+Vector2 Canvas::PositionAsCanvasCell(Vector2 worldspacePosition) {
     return {
-        PositionAsCanvasIndex(PositionInWorldSpace(position)).x * (SIZE.x / CELL_COUNT_X),
-        PositionAsCanvasIndex(PositionInWorldSpace(position)).y * (SIZE.y / CELL_COUNT_Y)
+        PositionAsCanvasIndex(PositionInWorldSpace(worldspacePosition)).x * (SIZE.x / CELL_COUNT_X),
+        PositionAsCanvasIndex(PositionInWorldSpace(worldspacePosition)).y * (SIZE.y / CELL_COUNT_Y)
     };
 }
 
-Vector2 Canvas::PositionAsCanvasIndex(Vector2 position) {
+Vector2 Canvas::PositionAsCanvasIndex(Vector2 worldspacePosition) {
     return {
-        std::floor(((position.x / m_Scale)) / SIZE.x * CELL_COUNT_X),
-        std::floor(((position.y / m_Scale)) / SIZE.y * CELL_COUNT_X)
+        std::floor(((worldspacePosition.x / m_Scale)) / SIZE.x * CELL_COUNT_X),
+        std::floor(((worldspacePosition.y / m_Scale)) / SIZE.y * CELL_COUNT_X)
     };
 }
 
-bool Canvas::CanvasIndexValid(Vector2 indexPosition) {
+bool Canvas::CanvasIndexValid(Vector2 index) {
     return 
-        indexPosition.x >= 0 && indexPosition.x < CELL_COUNT_X &&
-        indexPosition.y >= 0 && indexPosition.y < CELL_COUNT_Y; 
+        index.x >= 0 && index.x < CELL_COUNT_X &&
+        index.y >= 0 && index.y < CELL_COUNT_Y; 
 }
 
 void Canvas::DrawBackground() {
@@ -279,3 +263,20 @@ void Canvas::DrawCanvasFrame() {
         BLACK
     );
 }
+
+LayerSystem& Canvas::GetLayerSystem() {
+    return m_LayerSystem;
+}
+
+Cursor& Canvas::GetCursor() {
+    return m_Cursor;
+}
+
+const int Canvas::CellCountX() {
+    return CELL_COUNT_X;
+}
+
+const int Canvas::CellCountY() {
+    return CELL_COUNT_Y;
+}
+
