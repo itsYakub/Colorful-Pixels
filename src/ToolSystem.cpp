@@ -17,20 +17,20 @@
 
 ToolSystem::ToolSystem() { }
 
-std::unique_ptr<Tool> ToolSystem::SetCurrentTool(ToolList list, Canvas& canvas, ColorSystem& colorSystem) {
+std::unique_ptr<Tool> ToolSystem::SetCurrentTool(ToolList list, Project& project, ColorSystem& colorSystem) {
     switch(list) {
-        case TOOL_BRUSH: return std::make_unique<BrushTool>(&canvas, &colorSystem);
-        case TOOL_ERASER: return std::make_unique<EraserTool>(&canvas);
-        case TOOL_COLORPICKER: return std::make_unique<ColorPickerTool>(&canvas, &colorSystem);
-        case TOOL_FILL: return std::make_unique<FillTool>(&canvas, &colorSystem);
-        case TOOL_PAN: return std::make_unique<PanTool>(&canvas);
-        case TOOL_LINE: return std::make_unique<LineTool>(&canvas, &colorSystem);
-        case TOOL_RECT: return std::make_unique<RectTool>(&canvas, &colorSystem);
-        default: return std::make_unique<BrushTool>(&canvas, &colorSystem);
+        case TOOL_BRUSH: return std::make_unique<BrushTool>(&project, &colorSystem);
+        case TOOL_ERASER: return std::make_unique<EraserTool>(&project);
+        case TOOL_COLORPICKER: return std::make_unique<ColorPickerTool>(&project, &colorSystem);
+        case TOOL_FILL: return std::make_unique<FillTool>(&project, &colorSystem);
+        case TOOL_PAN: return std::make_unique<PanTool>(&project);
+        case TOOL_LINE: return std::make_unique<LineTool>(&project, &colorSystem);
+        case TOOL_RECT: return std::make_unique<RectTool>(&project, &colorSystem);
+        default: return std::make_unique<BrushTool>(&project, &colorSystem);
     }
 }
 
-void ToolSystem::ToolsGuiPanel(const char* name, bool draw, std::unique_ptr<Tool>& tool, Canvas& canvas, ColorSystem& colorSystem) {
+void ToolSystem::ToolsGuiPanel(const char* name, bool draw, std::unique_ptr<Tool>& tool, Project& project, ColorSystem& colorSystem) {
     if(!draw) {
         return;
     }
@@ -62,7 +62,7 @@ void ToolSystem::ToolsGuiPanel(const char* name, bool draw, std::unique_ptr<Tool
 
         for(int i = 0; i < ToolList::TOOL_COUNT; i++) {
             if(ImGui::Button(ICONS[i], size)) {
-                tool = SetCurrentTool(static_cast<ToolList>(i), canvas, colorSystem);
+                tool = SetCurrentTool(static_cast<ToolList>(i), project, colorSystem);
             } if(ImGui::IsItemHovered()) {
                 ImGui::SetTooltip("%s", TOOLTIPS[i]);
             }

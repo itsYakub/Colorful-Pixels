@@ -3,8 +3,6 @@
 #include <array>
 #include <memory>
 
-#include "ToolSystem.hpp"
-
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "raylib.h"
@@ -13,19 +11,19 @@
 #include "IconsLucide.h"
 
 ColorfulPixels::ColorfulPixels() :
-    m_Viewport(),
     m_ThemeLoader(),
+
+    m_Viewport(),
     m_ColorSystem(),
     m_ToolSystem(),
+    m_Project(m_Viewport, m_ColorSystem, m_ToolSystem),
     
     m_LoadIniFile(true) { }
 
 void ColorfulPixels::Load() {
     LoadImGui();
     m_Viewport.Load();
-
-    m_Canvas = std::make_unique<Canvas>(&m_Viewport);
-    m_Tool = m_ToolSystem.SetCurrentTool(ToolSystem::TOOL_BRUSH, *m_Canvas, m_ColorSystem);
+    m_Project.Load();
 }
 
 void ColorfulPixels::LoadImGui() {
@@ -40,8 +38,7 @@ void ColorfulPixels::LoadImGui() {
 }
 
 void ColorfulPixels::Unload() {
-    m_Viewport.Unload();
-    m_Canvas->Unload();
+    m_Project.Unload();
 
     UnloadImGui();
 }
@@ -51,35 +48,7 @@ void ColorfulPixels::UnloadImGui() {
 }
 
 void ColorfulPixels::Update() {    
-    // Check if mouse cursor is placed on the viewport...
-    if(m_Viewport.IsCursorInViewport()) {        
-        // ...Check if left mouse button is pressed
-        if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-            m_Tool->OnButtonPress();
-        }
-
-        // ...Check if left mouse button is down
-        if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-            m_Tool->OnButtonDown();
-        }
-
-        // ...Check if left mouse button is released
-        if(IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-            m_Tool->OnButtonRelease();
-        }
-
-        // ...Check if scroll is pressed
-        if(IsMouseButtonDown(MOUSE_BUTTON_RIGHT) || IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
-            m_Canvas->Pan();
-        }
-
-        // ...Check if scroll accelerates
-        if(GetMouseWheelMove() != 0.0f) {
-            m_Canvas->Zoom();
-        }
-    }
-
-    m_Canvas->Update();
+    m_Project.Update();
     m_ThemeLoader.Update();
 }
 
@@ -87,8 +56,7 @@ void ColorfulPixels::Render() {
     m_Viewport.Begin();
     m_Viewport.Clear(BLANK);
 
-        m_Canvas->Render();
-        m_Tool->Render();
+        m_Project.Render();
 
     m_Viewport.End();
 }
@@ -107,8 +75,8 @@ void ColorfulPixels::RenderGUI() {
 
         m_Viewport.ViewportGuiPanel("Panel: Viewport", true);
         m_ColorSystem.ColorGuiPanel("Panel: Colors", true);
-        m_Canvas->GetLayerSystem().LayersGuiPanel("Panel: Layers", true);
-        m_ToolSystem.ToolsGuiPanel("Panel: Tools", true, m_Tool, *m_Canvas, m_ColorSystem);
+        m_Project.canvas->layerSystem.LayersGuiPanel("Panel: Layers", true);
+        m_ToolSystem.ToolsGuiPanel("Panel: Tools", true, m_Project.tool, m_Project, m_ColorSystem);
 
     EndDockingSpace();
     rlImGuiEnd();    

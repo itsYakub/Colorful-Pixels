@@ -2,15 +2,15 @@
 
 #include "Tool.hpp"
 
-class Canvas;
+class Project;
 class Cursor;
 
 class EraserTool : public Tool {
 private:
-    Canvas* m_Canvas;
+    Project* m_Project;
 
 public:
-    EraserTool(Canvas* canvas);
+    EraserTool(Project* project);
     void OnButtonPress() override;
     void OnButtonDown() override;
     void OnButtonRelease() override;

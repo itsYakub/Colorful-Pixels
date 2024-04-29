@@ -6,10 +6,10 @@
 #include "imgui.h"
 
 #include "Viewport.hpp"
-#include "Canvas.hpp"
 #include "ToolSystem.hpp"
 #include "ColorSystem.hpp"
 #include "ThemeLoader.hpp"
+#include "Project.hpp"
 
 #ifndef COLORFUL_PIXELS_VERSION_RELEASE
     #define COLORFUL_PIXELS_VERSION_RELEASE "Alpha"
@@ -29,13 +29,13 @@
 
 class ColorfulPixels {
 private:
-    Viewport m_Viewport;
     ThemeLoader m_ThemeLoader;
+
+    Viewport m_Viewport;
     ColorSystem m_ColorSystem;
     ToolSystem m_ToolSystem;
 
-    std::unique_ptr<Canvas> m_Canvas;
-    std::unique_ptr<Tool> m_Tool;
+    Project m_Project;
 
     bool m_LoadIniFile;
 

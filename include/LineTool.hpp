@@ -4,19 +4,19 @@
 
 #include "Tool.hpp"
 
-class Canvas;
+class Project;
 class ColorSystem;
 
 class LineTool : public Tool {
 private:
-    Canvas* m_Canvas;
+    Project* m_Project;
     ColorSystem* m_ColorSystem;
 
     Vector2 m_PointA;
     Vector2 m_PointB;
 
 public:
-    LineTool(Canvas* canvas, ColorSystem* colorSystem);
+    LineTool(Project* project, ColorSystem* colorSystem);
     void OnButtonPress() override;
     void OnButtonDown() override;
     void OnButtonRelease() override;

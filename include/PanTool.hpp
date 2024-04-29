@@ -2,14 +2,14 @@
 
 #include "Tool.hpp"
 
-class Canvas;
+class Project;
 
 class PanTool : public Tool {
 private:
-    Canvas* m_Canvas;
+    Project* m_Project;
 
 public:
-    PanTool(Canvas* canvas);
+    PanTool(Project* project);
     void OnButtonPress() override;
     void OnButtonDown() override;
     void OnButtonRelease() override;

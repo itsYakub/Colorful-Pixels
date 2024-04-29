@@ -6,6 +6,7 @@
 #include "raylib.h"
 #include "imgui.h"
 
+#include "Project.hpp"
 #include "Canvas.hpp"
 #include "ColorSystem.hpp"
 #include "Tool.hpp"
@@ -26,7 +27,7 @@ public:
 public:
     ToolSystem();
 
-    std::unique_ptr<Tool> SetCurrentTool(ToolList list, Canvas& canvas, ColorSystem& colorSystem);
+    std::unique_ptr<Tool> SetCurrentTool(ToolList list, Project& project, ColorSystem& colorSystem);
 
-    void ToolsGuiPanel(const char* name, bool draw, std::unique_ptr<Tool>& tool, Canvas& canvas, ColorSystem& colorSystem);
+    void ToolsGuiPanel(const char* name, bool draw, std::unique_ptr<Tool>& tool, Project& project, ColorSystem& colorSystem);
 };

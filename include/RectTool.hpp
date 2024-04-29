@@ -4,20 +4,20 @@
 
 #include "Tool.hpp"
 
-class Canvas;
+class Project;
 class ColorSystem;
 class Cursor;
 
 class RectTool : public Tool {
 private:
-    Canvas* m_Canvas;
+    Project* m_Project;
     ColorSystem* m_ColorSystem;
 
     Vector2 m_PointA;
     Vector2 m_PointB;
 
 public:
-    RectTool(Canvas* canvas, ColorSystem* colorSystem);
+    RectTool(Project* project, ColorSystem* colorSystem);
     void OnButtonPress() override;
     void OnButtonDown() override;
     void OnButtonRelease() override;

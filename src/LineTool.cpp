@@ -4,35 +4,36 @@
 #include "raymath.h"
 
 #include "Algorithms.hpp"
+#include "Project.hpp"
 #include "Canvas.hpp"
 #include "ColorSystem.hpp"
 #include "Cursor.hpp"
 
-LineTool::LineTool(Canvas* canvas, ColorSystem* colorSystem) : 
-    m_Canvas(canvas),
+LineTool::LineTool(Project* project, ColorSystem* colorSystem) : 
+    m_Project(project),
     m_ColorSystem(colorSystem),
     m_PointA(Vector2Zero()), m_PointB(Vector2Zero()) { }
 
 void LineTool::OnButtonPress() {
-    m_PointA = m_Canvas->PositionInWorldSpace(GetMousePosition());
+    m_PointA = m_Project->canvas->PositionInWorldSpace(GetMousePosition(), m_Project->camera);
 }
 
 void LineTool::OnButtonDown() { 
-    m_PointB = m_Canvas->PositionInWorldSpace(GetMousePosition());
+    m_PointB = m_Project->canvas->PositionInWorldSpace(GetMousePosition(), m_Project->camera);
 }
 
 void LineTool::OnButtonRelease() {
-    int ax = m_Canvas->PositionAsCanvasIndex(m_PointA).x;
-    int ay = m_Canvas->PositionAsCanvasIndex(m_PointA).y;
+    int ax = m_Project->canvas->PositionAsCanvasIndex(m_PointA).x;
+    int ay = m_Project->canvas->PositionAsCanvasIndex(m_PointA).y;
 
-    int bx = m_Canvas->PositionAsCanvasIndex(m_PointB).x;
-    int by = m_Canvas->PositionAsCanvasIndex(m_PointB).y;
+    int bx = m_Project->canvas->PositionAsCanvasIndex(m_PointB).x;
+    int by = m_Project->canvas->PositionAsCanvasIndex(m_PointB).y;
 
-    if(!m_Canvas->CanvasIndexValid({ static_cast<float>(ax), static_cast<float>(ay) }) || !m_Canvas->CanvasIndexValid({ static_cast<float>(bx), static_cast<float>(by) })) {
+    if(!m_Project->canvas->CanvasIndexValid({ static_cast<float>(ax), static_cast<float>(ay) }) || !m_Project->canvas->CanvasIndexValid({ static_cast<float>(bx), static_cast<float>(by) })) {
         return;
     }
 
-    Algorithms::DigitalDifferentialAnalyzer(ax, ay, bx, by, m_ColorSystem->GetColor(), *m_Canvas->GetLayerSystem().GetLayer());
+    Algorithms::DigitalDifferentialAnalyzer(ax, ay, bx, by, m_ColorSystem->GetColor(), *m_Project->canvas->layerSystem.GetLayer());
 
     TraceLog(
         LOG_INFO, 
@@ -46,7 +47,7 @@ void LineTool::OnButtonRelease() {
     m_PointA = Vector2Zero();
     m_PointB = Vector2Zero();
 
-    m_Canvas->ToggleTextureReload();
+    m_Project->canvas->ToggleTextureReload();
 }
 
 void LineTool::Render() { }

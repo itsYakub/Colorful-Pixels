@@ -2,16 +2,16 @@
 
 #include "Tool.hpp"
 
-class Canvas;
+class Project;
 class ColorSystem;
 
 class ColorPickerTool : public Tool {
 private:
-    Canvas* m_Canvas;
+    Project* m_Project;
     ColorSystem* m_ColorSystem;
 
 public:
-    ColorPickerTool(Canvas* canvas, ColorSystem* colorSystem);
+    ColorPickerTool(Project* project, ColorSystem* colorSystem);
     void OnButtonPress() override;
     void OnButtonDown() override;
     void OnButtonRelease() override;

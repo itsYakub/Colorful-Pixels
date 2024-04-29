@@ -10,23 +10,22 @@
 #include "Cursor.hpp"
 
 class Canvas {
-private:
-    Viewport* m_Viewport;
-    Camera2D m_Camera;
-    Texture2D m_CanvasBackground;
+public:
+    LayerSystem layerSystem;
+    Cursor cursor;
 
-    Vector2 m_Position;
     const Vector2 SIZE;
 
     const int CELL_COUNT_X;
     const int CELL_COUNT_Y;
 
-    float m_Scale;
+    float scale;
+
+private:
+    Viewport* m_Viewport;
+    Texture2D m_CanvasBackground;
 
     bool m_ReloadLayerTexture;
-
-    LayerSystem m_LayerSystem;
-    Cursor m_Cursor;
 
 public:
     Canvas(Viewport* viewport, const int CELL_COUNT_X, const int CELL_COUNT_Y);
@@ -35,14 +34,11 @@ public:
 
     void Unload();
     void Update();
-    void Render();
-
-    void Pan();
-    void Zoom();
+    void Render(Camera2D& camera);
 
     void ToggleTextureReload();
 
-    Vector2 PositionInWorldSpace(Vector2 screenspacePosition);
+    Vector2 PositionInWorldSpace(Vector2 screenspacePosition, Camera2D camera);
     Vector2 PositionAsCanvasCell(Vector2 worldspacePosition);
     Vector2 PositionAsCanvasIndex(Vector2 worldspacePosition);
 
@@ -51,18 +47,9 @@ public:
     void DrawBackground();
     void DrawLayer(bool visible, Layer& layer);
     void DrawCanvasGrid(const int WIDTH, const int HEIGHT);
-    void DrawCanvasCursor();
+    void DrawCanvasCursor(Camera2D& camera);
     void DrawCanvasFrame();
 
     Vector2 GetCanvasSize(const int COUNT_X, const int COUNT_Y);
     Vector2 GetCanvasOffset();
-
-    void CenterCanvas();
-
-    LayerSystem& GetLayerSystem();
-    Cursor& GetCursor();
-
-    const int CellCountX();
-    const int CellCountY();
-
 };
