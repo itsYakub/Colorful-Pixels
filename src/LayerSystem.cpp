@@ -3,6 +3,7 @@
 #include "Canvas.hpp"
 #include "IconsLucide.h"
 #include "imgui.h"
+#include "imgui_internal.h"
 #include "rlImGui.h"
 
 #include "IconsLucide.h"

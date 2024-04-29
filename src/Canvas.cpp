@@ -10,13 +10,6 @@
 #include "Viewport.hpp"
 
 Canvas::Canvas(Viewport* viewport, const int CELL_COUNT_X, const int CELL_COUNT_Y) : 
-    drawGrid(false),
-    drawFrame(true),
-    drawCursor(true),
-    gridThickness(1.0f),
-    frameThickness(4.0f),
-    cursorThickness(2.0f),
-
     m_Viewport(viewport),
     m_Camera(),
 
@@ -67,8 +60,8 @@ void Canvas::Render() {
             DrawLayer(m_LayerSystem.GetLayer(i)->IsVisible(), *m_LayerSystem.GetLayer(i));
         }
 
-        DrawCanvasCursor();
         DrawCanvasGrid(CELL_COUNT_X, CELL_COUNT_Y);
+        DrawCanvasCursor();
         DrawCanvasFrame();
 
     EndMode2D();
@@ -210,10 +203,6 @@ void Canvas::DrawLayer(bool visible, Layer& layer) {
 }
 
 void Canvas::DrawCanvasGrid(const int WIDTH, const int HEIGHT) {
-    if(!drawGrid) {
-        return;
-    }
-
     for(int y = 0; y < HEIGHT; y++) {
         for(int x = 0; x < WIDTH; x++) {
             DrawRectangleLinesEx(
@@ -223,7 +212,7 @@ void Canvas::DrawCanvasGrid(const int WIDTH, const int HEIGHT) {
                     SIZE.x * m_Scale / WIDTH, 
                     SIZE.y * m_Scale / HEIGHT 
                 }, 
-                gridThickness / m_Scale, 
+                1.0 / m_Scale, 
                 Fade(BLACK, 0.5f)
             );
         }
@@ -231,7 +220,7 @@ void Canvas::DrawCanvasGrid(const int WIDTH, const int HEIGHT) {
 }
 
 void Canvas::DrawCanvasCursor() {
-    if(!drawCursor && m_Viewport->IsCursorInViewport()) {
+    if(!m_Viewport->IsCursorInViewport()) {
         return;
     }
 
@@ -242,16 +231,12 @@ void Canvas::DrawCanvasCursor() {
             SIZE.x * m_Scale / CELL_COUNT_X, 
             SIZE.y * m_Scale / CELL_COUNT_Y 
         },
-        cursorThickness / m_Scale,
+        2.0f / m_Scale,
         WHITE
     );
 }
 
 void Canvas::DrawCanvasFrame() {
-    if(!drawFrame) {
-        return;
-    }
-
     DrawRectangleLinesEx(
         (Rectangle) {
             m_Position.x,
@@ -259,7 +244,7 @@ void Canvas::DrawCanvasFrame() {
             SIZE.x * m_Scale,
             SIZE.y * m_Scale
         },
-        frameThickness / m_Scale,
+        4.0f / m_Scale,
         BLACK
     );
 }

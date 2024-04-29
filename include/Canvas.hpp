@@ -10,15 +10,6 @@
 #include "Cursor.hpp"
 
 class Canvas {
-public:
-    bool drawGrid;
-    bool drawFrame;
-    bool drawCursor;
-    
-    float gridThickness;
-    float frameThickness;
-    float cursorThickness;
-
 private:
     Viewport* m_Viewport;
     Camera2D m_Camera;
