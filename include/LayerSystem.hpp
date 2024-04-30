@@ -27,6 +27,7 @@ public:
 
     void UpdateLayer();
 
+    LayerList& GetList();
     std::unique_ptr<Layer>& GetLayer();
     std::unique_ptr<Layer>& GetLayer(int index);
 

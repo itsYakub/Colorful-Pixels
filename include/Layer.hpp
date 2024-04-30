@@ -43,6 +43,7 @@ public:
 
     Color GetPixelColor(int x, int y);
     void SetPixelColor(int x, int y, Color color);
+    static void SetPixelColor(PixelData& pixelData, int x, int y, int w, int h, Color color);
 
     void UpdateLayer();
 };

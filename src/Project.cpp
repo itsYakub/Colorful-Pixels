@@ -11,10 +11,10 @@
 #include "ToolSystem.hpp"
 
 Project::Project(Viewport& viewport, ColorSystem& colorSystem, ToolSystem& toolSystem) :
-    title("New Project"),
-    path("."),
-    width(0),
-    height(0),
+    title("Project"),
+    path(GetApplicationDirectory()),
+    width(32),
+    height(32),
     valid(false),
     m_Viewport(viewport),
     m_ColorSystem(colorSystem),

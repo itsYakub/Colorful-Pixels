@@ -12,6 +12,7 @@
 
 ColorfulPixels::ColorfulPixels() :
     m_ThemeLoader(),
+    m_IO(),
 
     m_Viewport(),
     m_ColorSystem(),
@@ -23,7 +24,6 @@ ColorfulPixels::ColorfulPixels() :
 void ColorfulPixels::Load() {
     LoadImGui();
     m_Viewport.Load();
-    m_Project.Load("New Project", GetApplicationDirectory(), 16, 16);
 }
 
 void ColorfulPixels::LoadImGui() {
@@ -79,7 +79,10 @@ void ColorfulPixels::RenderGUI() {
             m_ColorSystem.ColorGuiPanel("Panel: Colors", true);
             m_Project.canvas->layerSystem.LayersGuiPanel("Panel: Layers", true);
             m_ToolSystem.ToolsGuiPanel("Panel: Tools", true, m_Project.tool, m_Project, m_ColorSystem);
-        }
+        } 
+
+        if(m_IO.drawNewProjectGuiPanel) m_IO.NewProject(m_Project);
+        if(m_IO.drawExportProjectGuiPanel) m_IO.ExportProject(m_Project, m_Project.canvas->layerSystem);
 
     EndDockingSpace();
     rlImGuiEnd();    
@@ -94,6 +97,7 @@ void ColorfulPixels::MenuBarGuiPanel(const char* name, bool draw) {
         if(ImGui::BeginMenu(ICON_LC_FILE " File")) {
             if(ImGui::MenuItem(ICON_LC_PLUS " New...")) {
                 TraceLog(LOG_INFO, "Menu option: New");
+                m_IO.drawNewProjectGuiPanel = true;
             }
 
             if(ImGui::MenuItem(ICON_LC_UPLOAD " Load...")) {
@@ -105,7 +109,10 @@ void ColorfulPixels::MenuBarGuiPanel(const char* name, bool draw) {
             }
 
             if(ImGui::MenuItem(ICON_LC_IMAGE_DOWN " Export...")) {
-                TraceLog(LOG_INFO, "Menu option: Export");
+                if(m_Project.valid) {
+                    TraceLog(LOG_INFO, "Menu option: Export");
+                    m_IO.drawExportProjectGuiPanel = true;
+                }
             }
 
             ImGui::EndMenu();

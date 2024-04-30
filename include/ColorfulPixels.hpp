@@ -10,6 +10,7 @@
 #include "ColorSystem.hpp"
 #include "ThemeLoader.hpp"
 #include "Project.hpp"
+#include "IO.hpp"
 
 #ifndef COLORFUL_PIXELS_VERSION_RELEASE
     #define COLORFUL_PIXELS_VERSION_RELEASE "Alpha"
@@ -30,6 +31,7 @@
 class ColorfulPixels {
 private:
     ThemeLoader m_ThemeLoader;
+    IO m_IO;
 
     Viewport m_Viewport;
     ColorSystem m_ColorSystem;

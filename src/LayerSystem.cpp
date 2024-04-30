@@ -27,6 +27,10 @@ void LayerSystem::UpdateLayer() {
     m_LayerList.at(m_CurrentLayerID)->UpdateLayer();
 }
 
+LayerList& LayerSystem::GetList() {
+    return m_LayerList;
+}
+
 std::unique_ptr<Layer>& LayerSystem::GetLayer() {
     return m_LayerList.at(m_CurrentLayerID);
 }
@@ -96,7 +100,7 @@ void LayerSystem::LayersGuiPanel(const char* name, bool draw) {
 
         ImGui::SeparatorText("##text");
 
-        for(int i = m_LayerCount - 1; i >= 0; i--) {
+        for(int i = 0; i < m_LayerCount; i++) {
             ImGui::PushID(i);
                 if(ImGui::Button(m_CurrentLayerID == i ? TextFormat("Layer %i. (Current)", m_LayerList.at(i)->GetID()) : TextFormat("Layer %i.", m_LayerList.at(i)->GetID()), ImVec2(256.0f, 38.0f))) {
                     m_CurrentLayerID = i;
