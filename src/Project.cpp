@@ -16,7 +16,7 @@ Project::Project(Viewport& viewport, ColorSystem& colorSystem, ToolSystem& toolS
     m_ToolSystem(toolSystem) { }
 
 void Project::Load() {
-    canvas = std::make_unique<Canvas>(&m_Viewport);
+    canvas = std::make_unique<Canvas>(&m_Viewport, 16);
     tool = m_ToolSystem.SetCurrentTool(ToolSystem::TOOL_BRUSH, *this, m_ColorSystem);
 
     camera.target = Vector2Zero();

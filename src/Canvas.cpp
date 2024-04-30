@@ -48,7 +48,7 @@ void Canvas::Render(Camera2D& camera) {
         DrawLayer(layerSystem.GetLayer(i)->IsVisible(), *layerSystem.GetLayer(i));
     }
 
-    // DrawCanvasGrid(CELL_COUNT_X, CELL_COUNT_Y);
+    // DrawCanvasGrid();
     DrawCanvasCursor(camera);
     DrawCanvasFrame();
 }
@@ -81,6 +81,13 @@ Vector2 Canvas::GetCanvasSize(const int COUNT_X, const int COUNT_Y) {
     TraceLog(LOG_INFO, TextFormat("Canvas size: %0.1f / %0.1f (%ix%i)", result.x, result.y, COUNT_X, COUNT_Y));
 
     return result;
+}
+
+Vector2 Canvas::GetCellSize() {
+    return {
+        SIZE.x * scale / CELL_COUNT_X, 
+        SIZE.y * scale / CELL_COUNT_Y 
+    };
 }
 
 Vector2 Canvas::PositionInWorldSpace(Vector2 screenspacePosition, Camera2D camera) {
@@ -156,17 +163,27 @@ void Canvas::DrawLayer(bool visible, Layer& layer) {
     );    
 }
 
-void Canvas::DrawCanvasGrid(const int WIDTH, const int HEIGHT) {
-    for(int y = 0; y < HEIGHT; y++) {
-        for(int x = 0; x < WIDTH; x++) {
-            DrawRectangleLinesEx(
-                (Rectangle) { 
-                    x * (SIZE.x * scale / WIDTH),
-                    y * (SIZE.y * scale / HEIGHT),
-                    SIZE.x * scale / WIDTH, 
-                    SIZE.y * scale / HEIGHT 
-                }, 
-                1.0 / scale, 
+void Canvas::DrawCell(float x, float y, float thickness, Color color) {
+    DrawRectangleLinesEx(
+        (Rectangle) { 
+            x,
+            y,
+            GetCellSize().x,
+            GetCellSize().y
+        }, 
+        thickness, 
+        color
+    );
+}
+
+
+void Canvas::DrawCanvasGrid() {
+    for(int y = 0; y < CELL_COUNT_Y; y++) {
+        for(int x = 0; x < CELL_COUNT_X; x++) {
+            DrawCell(
+                x * GetCellSize().x,
+                y * GetCellSize().y,
+                1.0f / scale, 
                 Fade(BLACK, 0.5f)
             );
         }
@@ -178,14 +195,10 @@ void Canvas::DrawCanvasCursor(Camera2D& camera) {
         return;
     }
 
-    DrawRectangleLinesEx(
-        (Rectangle) {
-            PositionAsCanvasCell(PositionInWorldSpace(GetMousePosition(), camera)).x * scale,
-            PositionAsCanvasCell(PositionInWorldSpace(GetMousePosition(), camera)).y * scale,
-            SIZE.x * scale / CELL_COUNT_X, 
-            SIZE.y * scale / CELL_COUNT_Y 
-        },
-        2.0f / scale,
+    DrawCell(
+        PositionAsCanvasCell(PositionInWorldSpace(GetMousePosition(), camera)).x * scale, 
+        PositionAsCanvasCell(PositionInWorldSpace(GetMousePosition(), camera)).y * scale, 
+        2.0f / scale, 
         WHITE
     );
 }

@@ -46,10 +46,12 @@ public:
 
     void DrawBackground();
     void DrawLayer(bool visible, Layer& layer);
-    void DrawCanvasGrid(const int WIDTH, const int HEIGHT);
+    void DrawCell(float x, float y, float thickness, Color color);
+    void DrawCanvasGrid();
     void DrawCanvasCursor(Camera2D& camera);
     void DrawCanvasFrame();
 
     Vector2 GetCanvasSize(const int COUNT_X, const int COUNT_Y);
+    Vector2 GetCellSize();
     Vector2 GetCanvasOffset();
 };

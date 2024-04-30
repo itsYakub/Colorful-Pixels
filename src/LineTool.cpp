@@ -50,4 +50,28 @@ void LineTool::OnButtonRelease() {
     m_Project->canvas->ToggleTextureReload();
 }
 
-void LineTool::Render() { }
+void LineTool::Render() {
+    if(IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
+        m_Project->canvas->DrawCell(
+            m_Project->canvas->PositionAsCanvasCell(m_PointA).x, 
+            m_Project->canvas->PositionAsCanvasCell(m_PointA).y, 
+            1.0f,
+            RED
+        );
+
+        m_Project->canvas->DrawCell(
+            m_Project->canvas->PositionAsCanvasCell(m_PointB).x, 
+            m_Project->canvas->PositionAsCanvasCell(m_PointB).y, 
+            1.0f,
+            RED
+        );
+
+        DrawLine(
+            m_Project->canvas->PositionAsCanvasCell(m_PointA).x + m_Project->canvas->GetCellSize().x / 2.0f, 
+            m_Project->canvas->PositionAsCanvasCell(m_PointA).y + m_Project->canvas->GetCellSize().y / 2.0f, 
+            m_Project->canvas->PositionAsCanvasCell(m_PointB).x + m_Project->canvas->GetCellSize().x / 2.0f, 
+            m_Project->canvas->PositionAsCanvasCell(m_PointB).y + m_Project->canvas->GetCellSize().y / 2.0f, 
+            RED
+        );
+    }
+}
