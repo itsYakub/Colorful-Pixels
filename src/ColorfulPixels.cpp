@@ -19,10 +19,13 @@ ColorfulPixels::ColorfulPixels() :
     m_ToolSystem(),
     m_Project(m_Viewport, m_ColorSystem, m_ToolSystem),
     
-    m_LoadIniFile(true) { }
+    m_LoadIniFile(true),
+    m_IntroPanelImage(),
+    m_DrawIntroGuiPanel(true) { }
 
 void ColorfulPixels::Load() {
     LoadImGui();
+    m_IntroPanelImage = LoadTexture("../res/images/colorful_pixels_screenshot.png");
     m_Viewport.Load();
 }
 
@@ -39,6 +42,8 @@ void ColorfulPixels::LoadImGui() {
 
 void ColorfulPixels::Unload() {
     m_Project.Unload();
+
+    UnloadTexture(m_IntroPanelImage);
 
     UnloadImGui();
 }
@@ -73,14 +78,14 @@ void ColorfulPixels::RenderGUI() {
 
     BeginDockingSpace("Docking Space");
 
-        m_Viewport.ViewportGuiPanel("Panel: Viewport", true);
-
         if(m_Project.valid) {
+            m_Viewport.ViewportGuiPanel("Panel: Viewport", true);
             m_ColorSystem.ColorGuiPanel("Panel: Colors", true);
             m_Project.canvas->layerSystem.LayersGuiPanel("Panel: Layers", true);
             m_ToolSystem.ToolsGuiPanel("Panel: Tools", true, m_Project.tool, m_Project, m_ColorSystem);
         } 
 
+        if(m_DrawIntroGuiPanel) IntroGuiPanel("Panel: Introduction", m_DrawIntroGuiPanel);
         if(m_IO.drawNewProjectGuiPanel) m_IO.NewProject(m_Project);
         if(m_IO.drawExportProjectGuiPanel) m_IO.ExportProject(m_Project, m_Project.canvas->layerSystem);
 
@@ -94,17 +99,17 @@ void ColorfulPixels::MenuBarGuiPanel(const char* name, bool draw) {
     }
 
     if(ImGui::BeginMenuBar()) {
-        if(ImGui::BeginMenu(ICON_LC_FILE " File")) {
-            if(ImGui::MenuItem(ICON_LC_PLUS " New...")) {
+        if(ImGui::BeginMenu(ICON_LC_FILE_PLUS " File")) {
+            if(ImGui::MenuItem(ICON_LC_FILE_PLUS " New...")) {
                 TraceLog(LOG_INFO, "Menu option: New");
                 m_IO.drawNewProjectGuiPanel = true;
             }
 
-            if(ImGui::MenuItem(ICON_LC_UPLOAD " Load...")) {
+            if(ImGui::MenuItem(ICON_LC_FILE_UP " Load...")) {
                 TraceLog(LOG_INFO, "Menu option: Load");
             }
 
-            if(ImGui::MenuItem(ICON_LC_DOWNLOAD " Save...")) {
+            if(ImGui::MenuItem(ICON_LC_SAVE " Save...")) {
                 TraceLog(LOG_INFO, "Menu option: Save");
             }
 
@@ -142,6 +147,72 @@ void ColorfulPixels::MenuBarGuiPanel(const char* name, bool draw) {
         
         ImGui::EndMenuBar();
     }    
+}
+
+void ColorfulPixels::IntroGuiPanel(const char* name, bool draw) {
+    if(!draw) {
+        return;
+    }
+
+    if(ImGui::Begin(TextFormat("Colorful Pixels %s", COLORFUL_PIXELS_VERSION), &m_DrawIntroGuiPanel, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse)) {
+        ImVec2 panelPosition = ImGui::GetWindowPos();
+        ImVec2 panelSize = ImGui::GetWindowSize();
+
+        if(ImGui::IsMouseReleased(ImGuiMouseButton_Left) && !ImGui::IsMouseHoveringRect(panelPosition, ImVec2(panelPosition.x + panelSize.x, panelPosition.y + panelSize.y))) {
+            m_DrawIntroGuiPanel = false;
+            
+            ImGui::End();
+            return;
+        }
+
+        ImGui::SeparatorText("##separator");
+
+        rlImGuiImageRect(
+            &m_IntroPanelImage, 
+            m_IntroPanelImage.width / 2.0f, 
+            m_IntroPanelImage.height / 2.0f, 
+            (Rectangle) {
+                0.0f,
+                0.0f,
+                static_cast<float>(m_IntroPanelImage.width),
+                static_cast<float>(m_IntroPanelImage.height)
+            }
+        );
+
+        ImGui::SeparatorText("##separator");
+
+        if(ImGui::Button(ICON_LC_FILE_PLUS " Create")) {
+            m_IO.drawNewProjectGuiPanel = true;
+            m_DrawIntroGuiPanel = false;
+            
+            ImGui::End();
+            return;
+        }
+
+        ImGui::SameLine();
+
+        
+        if(ImGui::Button(ICON_LC_FILE_UP " Load")) {
+            m_DrawIntroGuiPanel = false;
+            
+            ImGui::End();
+            return;
+        }
+
+        ImGui::SameLine();
+
+        
+        if(ImGui::Button(ICON_LC_CIRCLE_X " Cancel")) {
+            m_DrawIntroGuiPanel = false;
+            
+            ImGui::End();
+            return;
+        }
+
+        ImGui::SeparatorText("##separator");
+
+        ImGui::End();
+    }
 }
 
 void ColorfulPixels::BeginDockingSpace(const char* name) {

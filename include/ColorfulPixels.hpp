@@ -41,6 +41,9 @@ private:
 
     bool m_LoadIniFile;
 
+    Texture2D m_IntroPanelImage;
+    bool m_DrawIntroGuiPanel;
+
 public:
     ColorfulPixels();
 
@@ -55,6 +58,7 @@ public:
     void RenderGUI();
 
     void MenuBarGuiPanel(const char* name, bool draw);
+    void IntroGuiPanel(const char* name, bool draw);
 
     void BeginDockingSpace(const char* name);
     void EndDockingSpace();

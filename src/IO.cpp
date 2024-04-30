@@ -23,7 +23,10 @@ void IO::NewProject(Project& project) {
         strcpy(path, GetApplicationDirectory());
 
         ImGui::InputText(":Title", title, 127);
+
+#ifndef PLATFORM_WEB
         ImGui::InputText(":Path", path, 255);
+#endif
 
         ImGui::InputInt(":Width", &width);
         project.width = Clamp(width, 2, 128);
@@ -31,7 +34,7 @@ void IO::NewProject(Project& project) {
         ImGui::InputInt(":Height", &height);
         project.height = Clamp(height, 2, 128);
 
-        if(ImGui::Button(ICON_LC_CIRCLE_PLUS " Create") || ImGui::IsKeyReleased(ImGuiKey_Enter)) {
+        if(ImGui::Button(ICON_LC_FILE_PLUS_2 " Create") || ImGui::IsKeyReleased(ImGuiKey_Enter)) {
             project.Load(title, path, width, width);
 
             drawNewProjectGuiPanel = false;
@@ -52,16 +55,16 @@ void IO::NewProject(Project& project) {
 }
 
 void IO::LoadProject(Project& project) {
-
+    // TODO: Fill me
 }
 
 void IO::SaveProject(Project& project) {
-
+    // TODO: Fill me daddy
 }
 
 void IO::ExportProject(Project& project, LayerSystem& layerSystem) {
     if(ImGui::Begin(ICON_LC_IMAGE_DOWN " Export image...", &drawExportProjectGuiPanel, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize)) {
-        if(ImGui::Button("Export to PNG")) {
+        if(ImGui::Button(ICON_LC_IMAGE_DOWN " Export to PNG")) {
             ExportImageLogic(project, layerSystem, "png");
 
             drawExportProjectGuiPanel = false;
@@ -71,7 +74,7 @@ void IO::ExportProject(Project& project, LayerSystem& layerSystem) {
 
         ImGui::SameLine();
 
-        if(ImGui::Button("Cancel...") || ImGui::IsKeyReleased(ImGuiKey_Escape)) {
+        if(ImGui::Button(ICON_LC_CIRCLE_X " Cancel") || ImGui::IsKeyReleased(ImGuiKey_Escape)) {
             drawExportProjectGuiPanel = false;
             ImGui::End();
             return;
