@@ -23,7 +23,7 @@ ColorfulPixels::ColorfulPixels() :
 void ColorfulPixels::Load() {
     LoadImGui();
     m_Viewport.Load();
-    m_Project.Load();
+    m_Project.Load("New Project", GetApplicationDirectory(), 16, 16);
 }
 
 void ColorfulPixels::LoadImGui() {
@@ -74,9 +74,12 @@ void ColorfulPixels::RenderGUI() {
     BeginDockingSpace("Docking Space");
 
         m_Viewport.ViewportGuiPanel("Panel: Viewport", true);
-        m_ColorSystem.ColorGuiPanel("Panel: Colors", true);
-        m_Project.canvas->layerSystem.LayersGuiPanel("Panel: Layers", true);
-        m_ToolSystem.ToolsGuiPanel("Panel: Tools", true, m_Project.tool, m_Project, m_ColorSystem);
+
+        if(m_Project.valid) {
+            m_ColorSystem.ColorGuiPanel("Panel: Colors", true);
+            m_Project.canvas->layerSystem.LayersGuiPanel("Panel: Layers", true);
+            m_ToolSystem.ToolsGuiPanel("Panel: Tools", true, m_Project.tool, m_Project, m_ColorSystem);
+        }
 
     EndDockingSpace();
     rlImGuiEnd();    

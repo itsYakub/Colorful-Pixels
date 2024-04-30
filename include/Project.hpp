@@ -1,7 +1,9 @@
 #pragma once
 
 #include <memory>
+#include <string>
 
+#include "LayerSystem.hpp"
 #include "raylib.h"
 
 #include "Canvas.hpp"
@@ -14,10 +16,17 @@ class ToolSystem;
 
 class Project {
 public:
+    std::string title;
+    std::string path;
+    int width;
+    int height;
+
     std::unique_ptr<Canvas> canvas;
     std::unique_ptr<Tool> tool;
     
     Camera2D camera;
+
+    bool valid;
 
 private:
     Viewport& m_Viewport;
@@ -27,7 +36,7 @@ private:
 public:
     Project(Viewport& viewport, ColorSystem& colorSystem, ToolSystem& toolSystem);
 
-    void Load();
+    void Load(std::string title, std::string path, int width, int height);
     void Unload();
     void Update();
     void Render();

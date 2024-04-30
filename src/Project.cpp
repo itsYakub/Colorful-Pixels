@@ -11,25 +11,44 @@
 #include "ToolSystem.hpp"
 
 Project::Project(Viewport& viewport, ColorSystem& colorSystem, ToolSystem& toolSystem) :
+    title("New Project"),
+    path("."),
+    width(0),
+    height(0),
+    valid(false),
     m_Viewport(viewport),
     m_ColorSystem(colorSystem),
     m_ToolSystem(toolSystem) { }
 
-void Project::Load() {
-    canvas = std::make_unique<Canvas>(&m_Viewport, 16);
+void Project::Load(std::string title, std::string path, int width, int height) {
+    this->title = title;
+    this->path = path;
+
+    canvas = std::make_unique<Canvas>(&m_Viewport, width, height);
     tool = m_ToolSystem.SetCurrentTool(ToolSystem::TOOL_BRUSH, *this, m_ColorSystem);
 
     camera.target = Vector2Zero();
     camera.offset = { 512.0f, 128.0f };
     camera.zoom = canvas->scale;
+
+    valid = canvas.get() && tool.get();
 }
 
 void Project::Unload() {
     m_Viewport.Unload();
-    canvas->Unload();
+
+    if(valid) {
+        canvas->Render(camera);
+    }
+
+    valid = false;
 }
 
 void Project::Update() {
+    if(!valid) {
+        return;
+    }
+
     // Check if mouse cursor is placed on the viewport...
     if(m_Viewport.IsCursorInViewport()) {        
         // ...Check if left mouse button is pressed
@@ -64,8 +83,10 @@ void Project::Update() {
 void Project::Render() {
     BeginMode2D(camera);
 
-        canvas->Render(camera);
-        tool->Render();
+        if(valid) {
+            canvas->Render(camera);
+            tool->Render();
+        }
 
     EndMode2D();
 }
