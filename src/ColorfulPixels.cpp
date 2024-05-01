@@ -154,17 +154,7 @@ void ColorfulPixels::IntroGuiPanel(const char* name, bool draw) {
         return;
     }
 
-    if(ImGui::Begin(TextFormat("Colorful Pixels %s", COLORFUL_PIXELS_VERSION), &m_DrawIntroGuiPanel, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse)) {
-        ImVec2 panelPosition = ImGui::GetWindowPos();
-        ImVec2 panelSize = ImGui::GetWindowSize();
-
-        if(ImGui::IsMouseReleased(ImGuiMouseButton_Left) && !ImGui::IsMouseHoveringRect(panelPosition, ImVec2(panelPosition.x + panelSize.x, panelPosition.y + panelSize.y))) {
-            m_DrawIntroGuiPanel = false;
-            
-            ImGui::End();
-            return;
-        }
-
+    if(ImGui::Begin(TextFormat("Colorful Pixels %s", COLORFUL_PIXELS_VERSION), &m_DrawIntroGuiPanel, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse)) {
         ImGui::SeparatorText("##separator");
 
         rlImGuiImageRect(

@@ -53,9 +53,10 @@ set(
     INCLUDE_DIRECTORIES
     ${CMAKE_SOURCE_DIR}/include # default project include directory
     ${CMAKE_SOURCE_DIR}/lib/raylib/src # raysan5/raylib
-    ${CMAKE_SOURCE_DIR}/lib/imgui
-    ${CMAKE_SOURCE_DIR}/lib/rlImGui
-    ${CMAKE_SOURCE_DIR}/vendor
+    ${CMAKE_SOURCE_DIR}/lib/imgui # ocornut/imgui
+    ${CMAKE_SOURCE_DIR}/lib/rlImGui # raylib-extras/rlImGui
+    ${CMAKE_SOURCE_DIR}/lib/json/single_include # nlohmann/json
+    ${CMAKE_SOURCE_DIR}/vendor # vendor files
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
