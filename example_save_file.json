@@ -1,0 +1,41 @@
+{
+    "cfpx_version": "alpha 1.0",
+    "cfpx_version_major": 1,
+    "cfpx_version_minot": 0,
+
+    "cfpx_project_title": "project",
+    "cfpx_project_path": "path/to/the/project/",
+
+    "cfpx_project_canvas_width": 32,
+    "cfpx_project_canvas_height": 32,
+    "cfpx_project_canvas_scale": 1.0,
+
+    "cfpx_project_layer_count": 2,
+    "cfpx_project_layers": [
+        {
+            "cfpx_project_layer_id": 0,
+            "cfpx_project_layer_visible": true,
+            "cfpx_project_layer_locked": false,
+            "cfpx_project_layer_data": [
+                
+            ]
+        },
+        {
+            "cfpx_project_layer_id": 1,
+            "cfpx_project_layer_visible": true,
+            "cfpx_project_layer_locked": false,
+            "cfpx_project_layer_data": [
+                
+            ]
+        }
+    ],
+
+    "cfpx_project_camera_target": [0, 0],
+    "cfpx_project_camera_offset": [256, 128],
+    "cfpx_project_camera_zoom": 1.0,
+
+    "cfpx_project_color_palette": "raylib25",
+    "cfpx_project_color": [245, 245, 245, 255],
+
+    "cfpx_project_current_tool_id": 0
+}

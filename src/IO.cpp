@@ -1,8 +1,12 @@
 #include "IO.hpp"
 
 #include <cstring>
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
 
 #include "IconsLucide.h"
+#include "nlohmann/json.hpp"
 
 #include "Layer.hpp"
 #include "imgui.h"
@@ -85,12 +89,36 @@ void IO::ExportProject(Project& project, LayerSystem& layerSystem) {
     }
 }
 
-void IO::SerializeProject(Project& project) {
+void IO::SerializeProject(Project& project, const std::string& path) {
+    nlohmann::json projectJsonFile;
 
+    // When we serialize the project, we only need to have the access to all the necessary data from the `project` object
+    // Those are:
+    // - camera;
+    // - canvas;
+    // - tool;
+    // - layer system and it's layers
+    // - project's name and path
+    // We can also throw a warning when the save file is from the older / newer version of CFPX because the file will store those informations!
+
+    std::ofstream projectFile(path);
+    projectFile << std::setw(4) << projectJsonFile << std::endl;
+    projectFile.close();
 }
 
-void IO::DeserializeProject(const std::string& path) {
+void IO::DeserializeProject(Project& project, const std::string& path) {
+    std::ifstream projectFile(path);
+    nlohmann::json projectJsonFile = nlohmann::json::parse(projectFile);
 
+    // To deserialize the save file we can create all the necessary components here
+    // Those are:
+    // - std::unique_ptr<Canvas>;
+    // - std::unique_ptr<Tool>;
+    // - LayerSystem;
+    // - Camera2D;
+    // Later on, during the final initialization, all of those components will be fed into the final Project class instance.
+
+    projectFile.close();
 }
 
 void IO::ExportImageLogic(Project& project, LayerSystem& layerSystem, const char* format) {
