@@ -9,7 +9,7 @@ private:
     Project* m_Project;
 
 public:
-    PanTool(Project* project);
+    PanTool(int id, Project* project);
     void OnButtonPress() override;
     void OnButtonDown() override;
     void OnButtonRelease() override;

@@ -10,13 +10,12 @@ class ColorSystem;
 class LineTool : public Tool {
 private:
     Project* m_Project;
-    ColorSystem* m_ColorSystem;
 
     Vector2 m_PointA;
     Vector2 m_PointB;
 
 public:
-    LineTool(Project* project, ColorSystem* colorSystem);
+    LineTool(int id, Project* project);
     void OnButtonPress() override;
     void OnButtonDown() override;
     void OnButtonRelease() override;

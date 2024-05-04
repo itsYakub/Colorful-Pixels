@@ -3,8 +3,8 @@
 #include "Canvas.hpp"
 #include "Project.hpp"
 
-PanTool::PanTool(Project* project) : 
-    m_Project(project) { }
+PanTool::PanTool(int id, Project* project) : 
+    m_Project(project) { ID = id; }
 
 void PanTool::OnButtonPress() { }
 

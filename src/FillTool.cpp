@@ -6,23 +6,26 @@
 #include "Project.hpp"
 #include "Canvas.hpp"
 #include "ColorSystem.hpp"
-#include "Cursor.hpp"
 
-FillTool::FillTool(Project* Project, ColorSystem* colorSystem) : 
-    m_Project(Project),
-    m_ColorSystem(colorSystem) { }
+FillTool::FillTool(int id, Project* project) : 
+    m_Project(project){ ID = id; }
 
 void FillTool::OnButtonPress() {
-    int x = m_Project->canvas->PositionAsCanvasIndex(m_Project->canvas->PositionInWorldSpace(GetMousePosition(), m_Project->camera)).x;
-    int y = m_Project->canvas->PositionAsCanvasIndex(m_Project->canvas->PositionInWorldSpace(GetMousePosition(), m_Project->camera)).y;
+    Canvas& canvas = *m_Project->canvas;
+    Viewport& viewport = m_Project->viewport;
+    LayerSystem& layerSystem = canvas.layerSystem;
+    ColorSystem& colorSystem = m_Project->colorSystem;
 
-    if(!m_Project->canvas->CanvasIndexValid({ static_cast<float>(x), static_cast<float>(y) })) {
+    int x = canvas.PositionAsCanvasIndex(canvas.PositionInWorldSpace(GetMousePosition(), viewport.GetPosition(), m_Project->camera)).x;
+    int y = canvas.PositionAsCanvasIndex(canvas.PositionInWorldSpace(GetMousePosition(), viewport.GetPosition(), m_Project->camera)).y;
+
+    if(!canvas.CanvasIndexValid({ static_cast<float>(x), static_cast<float>(y) })) {
         return;
     }
 
-    Algorithms::FloodFillAlgorithm(x, y, m_Project->canvas->layerSystem.GetLayer()->GetPixelColor(x, y), m_ColorSystem->GetColor(), *m_Project->canvas->layerSystem.GetLayer());
+    Algorithms::FloodFillAlgorithm(x, y, layerSystem.GetLayer()->GetPixelColor(x, y), colorSystem.GetColor(), *layerSystem.GetLayer());
 
-    m_Project->canvas->ToggleTextureReload();
+    canvas.ToggleTextureReload();
 }
 
 void FillTool::OnButtonDown() { }

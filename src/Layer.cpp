@@ -66,6 +66,10 @@ Color Layer::GetPixelColor(int x, int y) {
     return m_LayerData.at(y * COUNT.x + x);
 }
 
+Color Layer::GetPixelColor(int i) {
+    return m_LayerData.at(i);
+}
+
 void Layer::SetPixelColor(int x, int y, Color color) {
     x = Clamp(x, 0, COUNT.x - 1);
     y = Clamp(y, 0, COUNT.y - 1);

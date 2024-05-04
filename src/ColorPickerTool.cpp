@@ -9,16 +9,22 @@
 #include "BrushTool.hpp"
 
 
-ColorPickerTool::ColorPickerTool(Project* project, ColorSystem* colorSystem) : 
-    m_Project(project),
-    m_ColorSystem(colorSystem) { }
+ColorPickerTool::ColorPickerTool(int id, Project* project) : 
+    m_Project(project) { ID = id; }
 
 void ColorPickerTool::OnButtonPress() { 
-    int x = m_Project->canvas->PositionAsCanvasIndex(m_Project->canvas->PositionInWorldSpace(GetMousePosition(), m_Project->camera)).x;
-    int y = m_Project->canvas->PositionAsCanvasIndex(m_Project->canvas->PositionInWorldSpace(GetMousePosition(), m_Project->camera)).y;
+    Canvas& canvas = *m_Project->canvas;
+    Viewport& viewport = m_Project->viewport;
+    LayerSystem& layerSystem = canvas.layerSystem;
+    ColorSystem& colorSystem = m_Project->colorSystem;
+    ToolSystem& toolSystem = m_Project->toolSystem;
 
-    if(ColorToInt(m_Project->canvas->layerSystem.GetLayer()->GetPixelColor(x, y)) != ColorToInt(BLANK)) {
-        m_ColorSystem->SetColor(m_Project->canvas->layerSystem.GetLayer()->GetPixelColor(x, y));
+    int x = canvas.PositionAsCanvasIndex(canvas.PositionInWorldSpace(GetMousePosition(), viewport.GetPosition(), m_Project->camera)).x;
+    int y = canvas.PositionAsCanvasIndex(canvas.PositionInWorldSpace(GetMousePosition(), viewport.GetPosition(), m_Project->camera)).y;
+
+    if(ColorToInt(layerSystem.GetLayer()->GetPixelColor(x, y)) != ColorToInt(BLANK)) {
+        colorSystem.SetColor(layerSystem.GetLayer()->GetPixelColor(x, y));
+        toolSystem.SetCurrentTool(ToolSystem::TOOL_BRUSH, *m_Project);
     }
 }
 

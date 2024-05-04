@@ -22,23 +22,22 @@ public:
     float scale;
 
 private:
-    Viewport* m_Viewport;
     Texture2D m_CanvasBackground;
 
     bool m_ReloadLayerTexture;
 
 public:
-    Canvas(Viewport* viewport, const int CELL_COUNT_X, const int CELL_COUNT_Y);
-    Canvas(Viewport* viewport);
-    Canvas(Viewport* viewport, const int CELL_COUNT);
+    Canvas(const int CELL_COUNT_X, const int CELL_COUNT_Y);
+    Canvas();
+    Canvas(const int CELL_COUNT);
 
     void Unload();
-    void Update();
-    void Render(Camera2D& camera);
+    void Update(Camera2D& camera, Vector2 viewportPosition);
+    void Render(Camera2D& camera, Vector2 viewportPosition);
 
     void ToggleTextureReload();
 
-    Vector2 PositionInWorldSpace(Vector2 screenspacePosition, Camera2D camera);
+    Vector2 PositionInWorldSpace(Vector2 screenspacePosition, Vector2 viewportPosition, Camera2D& camera);
     Vector2 PositionAsCanvasCell(Vector2 worldspacePosition);
     Vector2 PositionAsCanvasIndex(Vector2 worldspacePosition);
 
@@ -48,7 +47,7 @@ public:
     void DrawLayer(bool visible, Layer& layer);
     void DrawCell(float x, float y, float thickness, Color color);
     void DrawCanvasGrid();
-    void DrawCanvasCursor(Camera2D& camera);
+    void DrawCanvasCursor(Camera2D& camera, Vector2 viewportPosition);
     void DrawCanvasFrame();
 
     Vector2 GetCanvasSize(const int COUNT_X, const int COUNT_Y);

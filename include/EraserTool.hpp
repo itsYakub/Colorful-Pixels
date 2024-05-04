@@ -10,7 +10,7 @@ private:
     Project* m_Project;
 
 public:
-    EraserTool(Project* project);
+    EraserTool(int id, Project* project);
     void OnButtonPress() override;
     void OnButtonDown() override;
     void OnButtonRelease() override;

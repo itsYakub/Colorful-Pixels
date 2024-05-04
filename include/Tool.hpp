@@ -2,6 +2,9 @@
 
 class Tool {
 public:
+    int ID;
+
+public:
     Tool() = default;
     virtual ~Tool() { }
 

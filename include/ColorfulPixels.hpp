@@ -42,7 +42,6 @@ private:
     bool m_LoadIniFile;
 
     Texture2D m_IntroPanelImage;
-    bool m_DrawIntroGuiPanel;
 
 public:
     ColorfulPixels();

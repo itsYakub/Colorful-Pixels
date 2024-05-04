@@ -11,13 +11,12 @@ class Cursor;
 class RectTool : public Tool {
 private:
     Project* m_Project;
-    ColorSystem* m_ColorSystem;
 
     Vector2 m_PointA;
     Vector2 m_PointB;
 
 public:
-    RectTool(Project* project, ColorSystem* colorSystem);
+    RectTool(int id, Project* project);
     void OnButtonPress() override;
     void OnButtonDown() override;
     void OnButtonRelease() override;

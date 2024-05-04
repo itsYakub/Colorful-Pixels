@@ -20,8 +20,7 @@ ColorfulPixels::ColorfulPixels() :
     m_Project(m_Viewport, m_ColorSystem, m_ToolSystem),
     
     m_LoadIniFile(true),
-    m_IntroPanelImage(),
-    m_DrawIntroGuiPanel(true) { }
+    m_IntroPanelImage() { }
 
 void ColorfulPixels::Load() {
     LoadImGui();
@@ -82,11 +81,13 @@ void ColorfulPixels::RenderGUI() {
             m_Viewport.ViewportGuiPanel("Panel: Viewport", true);
             m_ColorSystem.ColorGuiPanel("Panel: Colors", true);
             m_Project.canvas->layerSystem.LayersGuiPanel("Panel: Layers", true);
-            m_ToolSystem.ToolsGuiPanel("Panel: Tools", true, m_Project.tool, m_Project, m_ColorSystem);
+            m_ToolSystem.ToolsGuiPanel("Panel: Tools", true, m_Project.tool, m_Project);
         } 
 
-        if(m_DrawIntroGuiPanel) IntroGuiPanel("Panel: Introduction", m_DrawIntroGuiPanel);
+        if(m_IO.drawIntroGuiPanel) IntroGuiPanel("Panel: Introduction", m_IO.drawIntroGuiPanel);
         if(m_IO.drawNewProjectGuiPanel) m_IO.NewProject(m_Project);
+        if(m_IO.drawSaveProjectGuiPanel) m_IO.SaveProject(m_Project);
+        if(m_IO.drawLoadProjectGuiPanel) m_IO.LoadProject(m_Project);
         if(m_IO.drawExportProjectGuiPanel) m_IO.ExportProject(m_Project, m_Project.canvas->layerSystem);
 
     EndDockingSpace();
@@ -107,10 +108,14 @@ void ColorfulPixels::MenuBarGuiPanel(const char* name, bool draw) {
 
             if(ImGui::MenuItem(ICON_LC_FILE_UP " Load...")) {
                 TraceLog(LOG_INFO, "Menu option: Load");
+                m_IO.drawLoadProjectGuiPanel = true;
             }
 
             if(ImGui::MenuItem(ICON_LC_SAVE " Save...")) {
-                TraceLog(LOG_INFO, "Menu option: Save");
+                if(m_Project.valid) {
+                    TraceLog(LOG_INFO, "Menu option: Save");
+                    m_IO.drawSaveProjectGuiPanel = true;
+                }
             }
 
             if(ImGui::MenuItem(ICON_LC_IMAGE_DOWN " Export...")) {
@@ -150,11 +155,7 @@ void ColorfulPixels::MenuBarGuiPanel(const char* name, bool draw) {
 }
 
 void ColorfulPixels::IntroGuiPanel(const char* name, bool draw) {
-    if(!draw) {
-        return;
-    }
-
-    if(ImGui::Begin(TextFormat("Colorful Pixels %s", COLORFUL_PIXELS_VERSION), &m_DrawIntroGuiPanel, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse)) {
+    if(ImGui::Begin(TextFormat("Colorful Pixels %s", COLORFUL_PIXELS_VERSION), &draw, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse)) {
         ImGui::SeparatorText("##separator");
 
         rlImGuiImageRect(
@@ -173,7 +174,7 @@ void ColorfulPixels::IntroGuiPanel(const char* name, bool draw) {
 
         if(ImGui::Button(ICON_LC_FILE_PLUS " Create")) {
             m_IO.drawNewProjectGuiPanel = true;
-            m_DrawIntroGuiPanel = false;
+            draw = false;
             
             ImGui::End();
             return;
@@ -183,7 +184,8 @@ void ColorfulPixels::IntroGuiPanel(const char* name, bool draw) {
 
         
         if(ImGui::Button(ICON_LC_FILE_UP " Load")) {
-            m_DrawIntroGuiPanel = false;
+            m_IO.drawLoadProjectGuiPanel = true;
+            draw = false;
             
             ImGui::End();
             return;
@@ -193,7 +195,7 @@ void ColorfulPixels::IntroGuiPanel(const char* name, bool draw) {
 
         
         if(ImGui::Button(ICON_LC_CIRCLE_X " Cancel")) {
-            m_DrawIntroGuiPanel = false;
+            draw = false;
             
             ImGui::End();
             return;

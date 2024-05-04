@@ -34,6 +34,7 @@ public:
     int GetCount();
 
     void PushNewLayer(const int CELL_COUNT_X, const int CELL_COUNT_Y);
+    void PushNewLayer(const int CELL_COUNT_X, const int CELL_COUNT_Y, int ID, bool visibility, bool lock);
     void PopLayer();
     void EraseLayer();
 

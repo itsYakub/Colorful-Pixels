@@ -11,21 +11,19 @@
 #include "ToolSystem.hpp"
 
 Project::Project(Viewport& viewport, ColorSystem& colorSystem, ToolSystem& toolSystem) :
-    title("Project"),
-    path(GetApplicationDirectory()),
+    title(),
     width(32),
     height(32),
     valid(false),
-    m_Viewport(viewport),
-    m_ColorSystem(colorSystem),
-    m_ToolSystem(toolSystem) { }
+    viewport(viewport),
+    colorSystem(colorSystem),
+    toolSystem(toolSystem) { }
 
-void Project::Load(std::string title, std::string path, int width, int height) {
+void Project::Load(std::string title, int width, int height) {
     this->title = title;
-    this->path = path;
 
-    canvas = std::make_unique<Canvas>(&m_Viewport, width, height);
-    tool = m_ToolSystem.SetCurrentTool(ToolSystem::TOOL_BRUSH, *this, m_ColorSystem);
+    canvas = std::make_unique<Canvas>(width, height);
+    tool = toolSystem.SetCurrentTool(ToolSystem::TOOL_BRUSH, *this);
 
     camera.target = Vector2Zero();
     camera.offset = { 512.0f, 128.0f };
@@ -35,10 +33,10 @@ void Project::Load(std::string title, std::string path, int width, int height) {
 }
 
 void Project::Unload() {
-    m_Viewport.Unload();
+    viewport.Unload();
 
     if(valid) {
-        canvas->Render(camera);
+        canvas->Unload();
     }
 
     valid = false;
@@ -50,7 +48,7 @@ void Project::Update() {
     }
 
     // Check if mouse cursor is placed on the viewport...
-    if(m_Viewport.IsCursorInViewport()) {        
+    if(viewport.IsCursorInViewport()) {        
         // ...Check if left mouse button is pressed
         if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             tool->OnButtonPress();
@@ -77,14 +75,14 @@ void Project::Update() {
         }
     }
 
-    canvas->Update();
+    canvas->Update(camera, viewport.GetPosition());
 }
 
 void Project::Render() {
     BeginMode2D(camera);
 
         if(valid) {
-            canvas->Render(camera);
+            canvas->Render(camera, viewport.GetPosition());
             tool->Render();
         }
 

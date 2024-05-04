@@ -17,9 +17,12 @@ class ToolSystem;
 class Project {
 public:
     std::string title;
-    std::string path;
     int width;
     int height;
+
+    Viewport& viewport;
+    ColorSystem& colorSystem;
+    ToolSystem& toolSystem;
 
     std::unique_ptr<Canvas> canvas;
     std::unique_ptr<Tool> tool;
@@ -27,16 +30,11 @@ public:
     Camera2D camera;
 
     bool valid;
-
-private:
-    Viewport& m_Viewport;
-    ColorSystem& m_ColorSystem;
-    ToolSystem& m_ToolSystem;
-
+    
 public:
     Project(Viewport& viewport, ColorSystem& colorSystem, ToolSystem& toolSystem);
 
-    void Load(std::string title, std::string path, int width, int height);
+    void Load(std::string title, int width, int height);
     void Unload();
     void Update();
     void Render();

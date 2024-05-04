@@ -8,10 +8,9 @@ class ColorSystem;
 class FillTool : public Tool {
 private:
     Project* m_Project;
-    ColorSystem* m_ColorSystem;
 
 public:
-    FillTool(Project* project, ColorSystem* colorSystem);
+    FillTool(int id, Project* project);
     void OnButtonPress() override;
     void OnButtonDown() override;
     void OnButtonRelease() override;

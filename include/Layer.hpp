@@ -42,6 +42,7 @@ public:
     void SetLock(bool lock);
 
     Color GetPixelColor(int x, int y);
+    Color GetPixelColor(int i);
     void SetPixelColor(int x, int y, Color color);
     static void SetPixelColor(PixelData& pixelData, int x, int y, int w, int h, Color color);
 

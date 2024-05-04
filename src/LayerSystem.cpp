@@ -55,6 +55,19 @@ void LayerSystem::PushNewLayer(const int CELL_COUNT_X, const int CELL_COUNT_Y) {
     TraceLog(LOG_INFO, TextFormat("Inserted the layer no. %i", m_LayerCountTotal));
 }
 
+void LayerSystem::PushNewLayer(const int CELL_COUNT_X, const int CELL_COUNT_Y, int ID, bool visibility, bool lock) {
+    m_LayerList.push_back(std::make_unique<Layer>(CELL_COUNT_X, CELL_COUNT_Y, ID, visibility, lock));
+    m_LayerCount++;
+    m_LayerCountTotal++;
+
+    if(m_CurrentLayerID < m_LayerList.size() - 1) {
+        m_CurrentLayerID++;
+    }
+
+    TraceLog(LOG_INFO, TextFormat("Inserted the layer no. %i", m_LayerCountTotal));
+}
+
+
 void LayerSystem::PopLayer() {
     m_LayerList.pop_back();
     m_LayerCount--;

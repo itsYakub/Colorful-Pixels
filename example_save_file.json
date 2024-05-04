@@ -1,7 +1,7 @@
 {
     "cfpx_version": "alpha 1.0",
     "cfpx_version_major": 1,
-    "cfpx_version_minot": 0,
+    "cfpx_version_minor": 0,
 
     "cfpx_project_title": "project",
     "cfpx_project_path": "path/to/the/project/",
