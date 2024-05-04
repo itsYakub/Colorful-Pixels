@@ -8,6 +8,7 @@
 
 #include "ColorSystem.hpp"
 #include "LayerSystem.hpp"
+#include "Project.hpp"
 #include "ToolSystem.hpp"
 #include "imgui.h"
 #include "raylib.h"
@@ -159,6 +160,40 @@ void IO::ExportProject(Project& project, LayerSystem& layerSystem) {
         }
 
         ImGui::End();
+    }
+}
+
+void IO::IOGuiMenuItem(const char* title, bool draw, Project& project) {
+    if(ImGui::BeginMenu(title, draw)) {
+        if(ImGui::MenuItem(ICON_LC_FILE_PLUS " New...")) {
+            TraceLog(LOG_INFO, "Menu option: New");
+            drawNewProjectGuiPanel = true;
+        }
+
+        if(ImGui::MenuItem(ICON_LC_FILE_UP " Load...")) {
+            TraceLog(LOG_INFO, "Menu option: Load");
+            drawLoadProjectGuiPanel = true;
+        }
+
+        if(ImGui::MenuItem(ICON_LC_SAVE " Save...")) {
+            if(project.valid) {
+                TraceLog(LOG_INFO, "Menu option: Save");
+                drawSaveProjectGuiPanel = true;
+            } else {
+                TraceLog(LOG_WARNING, "There isn't any valid project opened!");
+            }
+        }
+
+        if(ImGui::MenuItem(ICON_LC_IMAGE_DOWN " Export...")) {
+            if(project.valid) {
+                TraceLog(LOG_INFO, "Menu option: Export");
+                drawExportProjectGuiPanel = true;
+            } else {
+                TraceLog(LOG_WARNING, "There isn't any valid project opened!");
+            }
+        }
+
+        ImGui::EndMenu();
     }
 }
 

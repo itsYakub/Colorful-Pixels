@@ -100,33 +100,7 @@ void ColorfulPixels::MenuBarGuiPanel(const char* name, bool draw) {
     }
 
     if(ImGui::BeginMenuBar()) {
-        if(ImGui::BeginMenu(ICON_LC_FILE_PLUS " File")) {
-            if(ImGui::MenuItem(ICON_LC_FILE_PLUS " New...")) {
-                TraceLog(LOG_INFO, "Menu option: New");
-                m_IO.drawNewProjectGuiPanel = true;
-            }
-
-            if(ImGui::MenuItem(ICON_LC_FILE_UP " Load...")) {
-                TraceLog(LOG_INFO, "Menu option: Load");
-                m_IO.drawLoadProjectGuiPanel = true;
-            }
-
-            if(ImGui::MenuItem(ICON_LC_SAVE " Save...")) {
-                if(m_Project.valid) {
-                    TraceLog(LOG_INFO, "Menu option: Save");
-                    m_IO.drawSaveProjectGuiPanel = true;
-                }
-            }
-
-            if(ImGui::MenuItem(ICON_LC_IMAGE_DOWN " Export...")) {
-                if(m_Project.valid) {
-                    TraceLog(LOG_INFO, "Menu option: Export");
-                    m_IO.drawExportProjectGuiPanel = true;
-                }
-            }
-
-            ImGui::EndMenu();
-        }
+        m_IO.IOGuiMenuItem(ICON_LC_FILE_PLUS " File", true, m_Project);
         
         if(ImGui::BeginMenu(ICON_LC_APP_WINDOW " Window")) {
             m_ThemeLoader.ThemeMenu("Theme", true);
@@ -154,7 +128,7 @@ void ColorfulPixels::MenuBarGuiPanel(const char* name, bool draw) {
     }    
 }
 
-void ColorfulPixels::IntroGuiPanel(const char* name, bool draw) {
+void ColorfulPixels::IntroGuiPanel(const char* name, bool& draw) {
     if(ImGui::Begin(TextFormat("Colorful Pixels %s", COLORFUL_PIXELS_VERSION), &draw, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse)) {
         ImGui::SeparatorText("##separator");
 

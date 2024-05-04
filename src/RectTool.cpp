@@ -42,10 +42,10 @@ void RectTool::OnButtonRelease() {
         return;
     }
 
-    Algorithms::DigitalDifferentialAnalyzer(ax, ay, bx, by, colorSystem.GetColor(), *layerSystem.GetLayer());
-    Algorithms::DigitalDifferentialAnalyzer(ax, ay, bx, by, colorSystem.GetColor(), *layerSystem.GetLayer());
-    Algorithms::DigitalDifferentialAnalyzer(ax, ay, bx, by, colorSystem.GetColor(), *layerSystem.GetLayer());
-    Algorithms::DigitalDifferentialAnalyzer(ax, ay, bx, by, colorSystem.GetColor(), *layerSystem.GetLayer());
+    Algorithms::DigitalDifferentialAnalyzer(ax, ay, ax, by, colorSystem.GetColor(), *layerSystem.GetLayer());
+    Algorithms::DigitalDifferentialAnalyzer(ax, ay, bx, ay, colorSystem.GetColor(), *layerSystem.GetLayer());
+    Algorithms::DigitalDifferentialAnalyzer(bx, ay, bx, by, colorSystem.GetColor(), *layerSystem.GetLayer());
+    Algorithms::DigitalDifferentialAnalyzer(ax, by, bx, by, colorSystem.GetColor(), *layerSystem.GetLayer());
 
     canvas.ToggleTextureReload();
 

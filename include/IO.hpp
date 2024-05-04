@@ -21,6 +21,8 @@ public:
     void SaveProject(Project& project);
     void ExportProject(Project& project, LayerSystem& layerSystem);
 
+    void IOGuiMenuItem(const char* title, bool draw, Project& project);
+
 private:
     void SerializeProject(Project& project, const std::string& path);
     void DeserializeProject(Project& project, const std::string& path);

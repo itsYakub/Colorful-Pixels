@@ -57,7 +57,7 @@ public:
     void RenderGUI();
 
     void MenuBarGuiPanel(const char* name, bool draw);
-    void IntroGuiPanel(const char* name, bool draw);
+    void IntroGuiPanel(const char* name, bool& draw);
 
     void BeginDockingSpace(const char* name);
     void EndDockingSpace();
