@@ -7,7 +7,7 @@
 
 #include "Layer.hpp"
 
-using LayerList = std::vector<std::unique_ptr<Layer>>;
+using LayerList = std::vector<Layer>;
 
 class LayerSystem {
 private:
@@ -28,8 +28,8 @@ public:
     void UpdateLayer();
 
     LayerList& GetList();
-    std::unique_ptr<Layer>& GetLayer();
-    std::unique_ptr<Layer>& GetLayer(int index);
+    Layer& GetLayer();
+    Layer& GetLayer(int index);
 
     int GetCount();
 

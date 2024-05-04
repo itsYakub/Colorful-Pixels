@@ -1,8 +1,5 @@
 #pragma once
 
-#include <vector>
-#include <memory>
-
 #include "raylib.h"
 
 #include "Viewport.hpp"
@@ -27,9 +24,12 @@ private:
     bool m_ReloadLayerTexture;
 
 public:
+    Canvas(const int CELL_COUNT_X, const int CELL_COUNT_Y, const LayerSystem& layerSystem);
     Canvas(const int CELL_COUNT_X, const int CELL_COUNT_Y);
-    Canvas();
+    Canvas(const int CELL_COUNT, const LayerSystem& layerSystem);
     Canvas(const int CELL_COUNT);
+    Canvas(const LayerSystem& layerSystem);
+    Canvas();
 
     void Unload();
     void Update(Camera2D& camera, Vector2 viewportPosition);

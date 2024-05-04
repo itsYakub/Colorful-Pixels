@@ -9,8 +9,9 @@ using PixelData = std::vector<Color>;
 
 class Layer {
 private:
-    const Vector2 COUNT;
-    const int ID;
+    int m_XSize;
+    int m_YSize;
+    int m_Id;
 
     PixelData m_LayerData;
     Texture2D m_LayerTexture;
@@ -30,10 +31,12 @@ public:
     void Load();
     void Unload();
 
+    int GetSizeX();
+    int GetSizeY();
     int GetID();
+
     Texture2D& GetTexture();
     PixelData& GetData();
-    Vector2 GetCount();
 
     bool IsVisible();
     void SetVisibility(bool visibility);

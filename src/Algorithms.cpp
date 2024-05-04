@@ -48,7 +48,7 @@ void Algorithms::FloodFillAlgorithm(int x, int y, Color oldColor, Color newColor
 void Algorithms::Fill(int x, int y, Color oldColor, Color newColor, Layer& layer) {
     if(
         x < 0 || y < 0 || // Base case no.1 & no.2: Index out of bounds
-        x >= layer.GetCount().x || y >= layer.GetCount().y || // Base case no.3 & no.4: Index out of bounds
+        x >= layer.GetSizeX() || y >= layer.GetSizeY() || // Base case no.3 & no.4: Index out of bounds
         ColorToInt(layer.GetPixelColor(x, y)) != ColorToInt(oldColor) // Base case no.5: Color at (x,y) doesn't match the input color
     ) {
         return;

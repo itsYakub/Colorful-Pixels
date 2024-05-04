@@ -23,7 +23,7 @@ void FillTool::OnButtonPress() {
         return;
     }
 
-    Algorithms::FloodFillAlgorithm(x, y, layerSystem.GetLayer()->GetPixelColor(x, y), colorSystem.GetColor(), *layerSystem.GetLayer());
+    Algorithms::FloodFillAlgorithm(x, y, layerSystem.GetLayer().GetPixelColor(x, y), colorSystem.GetColor(), layerSystem.GetLayer());
 
     canvas.ToggleTextureReload();
 }

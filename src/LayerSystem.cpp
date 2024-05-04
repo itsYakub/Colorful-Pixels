@@ -8,34 +8,34 @@
 #include "IconsLucide.h"
 
 LayerSystem::LayerSystem(const int& CELL_COUNT_X, const int& CELL_COUNT_Y) :
-    m_LayerList(0),
+    m_LayerList(),
     m_CurrentLayerID(0),
     m_LayerCount(0),
     m_LayerCountTotal(0),
     CELL_COUNT_X(CELL_COUNT_X),
     CELL_COUNT_Y(CELL_COUNT_Y) {
-        PushNewLayer(CELL_COUNT_X, CELL_COUNT_Y);
+        PushNewLayer(CELL_COUNT_X, CELL_COUNT_Y, 0, true, false);
 }
 
 void LayerSystem::Unload() {
     for(auto& i : m_LayerList) {
-        i->Unload();
+        i.Unload();
     }
 }
 
 void LayerSystem::UpdateLayer() {
-    m_LayerList.at(m_CurrentLayerID)->UpdateLayer();
+    m_LayerList.at(m_CurrentLayerID).UpdateLayer();
 }
 
 LayerList& LayerSystem::GetList() {
     return m_LayerList;
 }
 
-std::unique_ptr<Layer>& LayerSystem::GetLayer() {
+Layer& LayerSystem::GetLayer() {
     return m_LayerList.at(m_CurrentLayerID);
 }
 
-std::unique_ptr<Layer>& LayerSystem::GetLayer(int index) {
+Layer& LayerSystem::GetLayer(int index) {
     return m_LayerList.at(index);
 }
 
@@ -44,7 +44,7 @@ int LayerSystem::GetCount(){
 }
 
 void LayerSystem::PushNewLayer(const int CELL_COUNT_X, const int CELL_COUNT_Y) {
-    m_LayerList.push_back(std::make_unique<Layer>(CELL_COUNT_X, CELL_COUNT_Y, m_LayerCountTotal, true, false));
+    m_LayerList.push_back(Layer(CELL_COUNT_X, CELL_COUNT_Y, m_LayerCountTotal, true, false));
     m_LayerCount++;
     m_LayerCountTotal++;
 
@@ -56,7 +56,9 @@ void LayerSystem::PushNewLayer(const int CELL_COUNT_X, const int CELL_COUNT_Y) {
 }
 
 void LayerSystem::PushNewLayer(const int CELL_COUNT_X, const int CELL_COUNT_Y, int ID, bool visibility, bool lock) {
-    m_LayerList.push_back(std::make_unique<Layer>(CELL_COUNT_X, CELL_COUNT_Y, ID, visibility, lock));
+    Layer instance = Layer(CELL_COUNT_X, CELL_COUNT_Y, ID, visibility, lock);
+    m_LayerList.push_back(instance);
+    
     m_LayerCount++;
     m_LayerCountTotal++;
 
@@ -115,13 +117,16 @@ void LayerSystem::LayersGuiPanel(const char* name, bool draw) {
 
         for(int i = 0; i < m_LayerCount; i++) {
             ImGui::PushID(i);
-                if(ImGui::Button(m_CurrentLayerID == i ? TextFormat("Layer %i. (Current)", m_LayerList.at(i)->GetID()) : TextFormat("Layer %i.", m_LayerList.at(i)->GetID()), ImVec2(256.0f, 38.0f))) {
+                if(ImGui::Button(m_CurrentLayerID == i ? 
+                    TextFormat("Layer %i. (Current)", m_LayerList.at(i).GetID()) : 
+                    TextFormat("Layer %i.", m_LayerList.at(i).GetID()), 
+                    ImVec2(256.0f, 38.0f))) {
                     m_CurrentLayerID = i;
                 }
 
             ImGui::SameLine();
 
-                if(rlImGuiImageButtonSize("##layer_preview", &GetLayer(i)->GetTexture(), ImVec2(32, 32))) {
+                if(rlImGuiImageButtonSize("##layer_preview", &GetLayer(i).GetTexture(), ImVec2(32, 32))) {
                     m_CurrentLayerID = i;
                 }
                 
@@ -130,8 +135,11 @@ void LayerSystem::LayersGuiPanel(const char* name, bool draw) {
             ImGui::SameLine();
             ImGui::PushID(i);
 
-                if(ImGui::Button(GetLayer()->layerVisible ? ICON_LC_EYE : ICON_LC_EYE_OFF, ImVec2(38, 38))) {
-                    m_LayerList.at(i)->layerVisible = !m_LayerList.at(i)->layerVisible;
+                if(ImGui::Button(GetLayer().layerVisible ? 
+                    ICON_LC_EYE : 
+                    ICON_LC_EYE_OFF, 
+                    ImVec2(38, 38))) {
+                    m_LayerList.at(i).layerVisible = !m_LayerList.at(i).layerVisible;
                 }
 
             ImGui::PopID();
@@ -139,8 +147,11 @@ void LayerSystem::LayersGuiPanel(const char* name, bool draw) {
             ImGui::SameLine();
             ImGui::PushID(i);
 
-                if(ImGui::Button(GetLayer()->layerLocked ? ICON_LC_LOCK : ICON_LC_LOCK_OPEN, ImVec2(38, 38))) {
-                    m_LayerList.at(i)->layerLocked = !m_LayerList.at(i)->layerLocked;
+                if(ImGui::Button(GetLayer().layerLocked ? 
+                    ICON_LC_LOCK : 
+                    ICON_LC_LOCK_OPEN, 
+                    ImVec2(38, 38))) {
+                    m_LayerList.at(i).layerLocked = !m_LayerList.at(i).layerLocked;
                 }
 
             ImGui::PopID();

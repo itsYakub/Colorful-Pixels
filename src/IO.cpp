@@ -48,7 +48,7 @@ void IO::NewProject(Project& project) {
         ImGui::SeparatorText("##separator");
 
         if(ImGui::Button(ICON_LC_FILE_PLUS_2 " Create") || ImGui::IsKeyReleased(ImGuiKey_Enter)) {
-            project.Load(title, width, width);
+            project.Load(title, width, height);
 
             drawNewProjectGuiPanel = false;
             drawIntroGuiPanel = false;
@@ -226,12 +226,12 @@ void IO::SerializeProject(Project& project, const std::string& path) {
     projectJsonFile["cfpx_project_layer_count"] = layerSystem.GetList().size();
 
     for(int i = 0; i < layerSystem.GetList().size(); i++) {
-        projectJsonFile["cfpx_project_layers"][i]["cfpx_project_layer_id"] = layerSystem.GetLayer(i)->GetID();
-        projectJsonFile["cfpx_project_layers"][i]["cfpx_project_layer_visible"] = layerSystem.GetLayer(i)->layerVisible;
-        projectJsonFile["cfpx_project_layers"][i]["cfpx_project_layer_locked"] = layerSystem.GetLayer(i)->layerLocked;
+        projectJsonFile["cfpx_project_layers"][i]["cfpx_project_layer_id"] = layerSystem.GetLayer(i).GetID();
+        projectJsonFile["cfpx_project_layers"][i]["cfpx_project_layer_visible"] = layerSystem.GetLayer(i).layerVisible;
+        projectJsonFile["cfpx_project_layers"][i]["cfpx_project_layer_locked"] = layerSystem.GetLayer(i).layerLocked;
 
-        for(int j = 0; j < layerSystem.GetLayer(i)->GetCount().x * layerSystem.GetLayer(i)->GetCount().x; j++) {
-            projectJsonFile["cfpx_project_layers"][i]["cfpx_project_layer_data"][j] = ColorToInt(layerSystem.GetLayer(i)->GetPixelColor(j));
+        for(int j = 0; j < layerSystem.GetLayer(i).GetSizeX() * layerSystem.GetLayer(i).GetSizeX(); j++) {
+            projectJsonFile["cfpx_project_layers"][i]["cfpx_project_layer_data"][j] = ColorToInt(layerSystem.GetLayer(i).GetPixelColor(j));
         }
     }
 
@@ -270,8 +270,8 @@ void IO::ExportImageLogic(Project& project, LayerSystem& layerSystem, const std:
         return;
     }
 
-    int w = layerSystem.GetLayer()->GetCount().x;
-    int h = layerSystem.GetLayer()->GetCount().y;
+    int w = layerSystem.GetLayer().GetSizeX();
+    int h = layerSystem.GetLayer().GetSizeY();
     PixelData exportPixelData(w * h);
 
     for(int i = layerSystem.GetCount() - 1; i >= 0; i--) {
@@ -279,18 +279,18 @@ void IO::ExportImageLogic(Project& project, LayerSystem& layerSystem, const std:
 
         for(int y = 0; y < h; y++) {
             for(int x = 0; x < w; x++) {
-                if(ColorToInt(layer->GetPixelColor(x, y)) == ColorToInt(BLANK)) {
+                if(ColorToInt(layer.GetPixelColor(x, y)) == ColorToInt(BLANK)) {
                     continue;
                 }
 
-                Layer::SetPixelColor(exportPixelData, x, y, w, h, layer->GetPixelColor(x, y));
+                Layer::SetPixelColor(exportPixelData, x, y, w, h, layer.GetPixelColor(x, y));
             }
         }
     }
 
     Image resultImage = GenImageColor(
-        layerSystem.GetLayer()->GetCount().x, 
-        layerSystem.GetLayer()->GetCount().x, 
+        layerSystem.GetLayer().GetSizeX(), 
+        layerSystem.GetLayer().GetSizeX(), 
         BLANK
     );
 

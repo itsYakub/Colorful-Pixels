@@ -30,7 +30,7 @@ void BrushTool::OnButtonDown() {
         return;
     }
 
-    Algorithms::DigitalDifferentialAnalyzer(ax, ay, bx, by, colorSystem.GetColor(), *layerSystem.GetLayer());
+    Algorithms::DigitalDifferentialAnalyzer(ax, ay, bx, by, colorSystem.GetColor(), layerSystem.GetLayer());
 
     canvas.ToggleTextureReload();
 }

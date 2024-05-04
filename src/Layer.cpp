@@ -1,8 +1,9 @@
 #include "Layer.hpp"
 
 Layer::Layer(const int CELL_COUNT_X, const int CELL_COUNT_Y, int ID, bool visibility, bool lock) : 
-    COUNT((const Vector2) { static_cast<float>(CELL_COUNT_X), static_cast<float>(CELL_COUNT_Y) } ), 
-    ID(ID),
+    m_XSize(CELL_COUNT_X),
+    m_YSize(CELL_COUNT_Y), 
+    m_Id(ID),
     m_LayerData(CELL_COUNT_X * CELL_COUNT_Y),
     layerVisible(visibility),
     layerLocked(lock) {
@@ -16,11 +17,11 @@ Layer::Layer(const int CELL_COUNT_X, const int CELL_COUNT_Y, int ID) : Layer(CEL
 Layer::Layer(const int CELL_COUNT_X, const int CELL_COUNT_Y, int ID, bool visibility) : Layer(CELL_COUNT_X, CELL_COUNT_Y, ID, visibility, false) { }
 
 void Layer::Load() {
-    for(int i = 0; i < COUNT.x * COUNT.y; i++) {
+    for(int i = 0; i < m_XSize * m_YSize; i++) {
         m_LayerData[i] = BLANK;
     }  
 
-    Image image = GenImageColor(COUNT.x, COUNT.y, BLANK);
+    Image image = GenImageColor(m_XSize, m_YSize, BLANK);
     m_LayerTexture = LoadTextureFromImage(image);
     SetTextureFilter(m_LayerTexture, TEXTURE_FILTER_POINT);
     UnloadImage(image);  
@@ -30,9 +31,16 @@ void Layer::Unload() {
     UnloadTexture(m_LayerTexture);
 }
 
-int Layer::GetID() {
-    return ID;
+int Layer::GetSizeX() {
+    return m_XSize;
 }
+int Layer::GetSizeY() {
+    return m_YSize;
+}
+int Layer::GetID() {
+    return m_Id;
+}
+
 
 Texture2D& Layer::GetTexture() {
     return m_LayerTexture;
@@ -40,10 +48,6 @@ Texture2D& Layer::GetTexture() {
 
 PixelData& Layer::GetData() {
     return m_LayerData;
-}
-
-Vector2 Layer::GetCount() {
-    return COUNT;
 }
 
 bool Layer::IsVisible() {
@@ -63,7 +67,7 @@ void Layer::SetLock(bool lock) {
 }
 
 Color Layer::GetPixelColor(int x, int y) {
-    return m_LayerData.at(y * COUNT.x + x);
+    return m_LayerData.at(y * m_XSize + x);
 }
 
 Color Layer::GetPixelColor(int i) {
@@ -71,10 +75,10 @@ Color Layer::GetPixelColor(int i) {
 }
 
 void Layer::SetPixelColor(int x, int y, Color color) {
-    x = Clamp(x, 0, COUNT.x - 1);
-    y = Clamp(y, 0, COUNT.y - 1);
+    x = Clamp(x, 0, m_XSize - 1);
+    y = Clamp(y, 0, m_YSize - 1);
 
-    m_LayerData[y * COUNT.x + x] = color;
+    m_LayerData[y * m_XSize + x] = color;
 }
 
 void Layer::SetPixelColor(PixelData& pixelData, int x, int y, int w, int h, Color color) {

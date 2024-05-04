@@ -10,8 +10,8 @@
 #include "Cursor.hpp"
 #include "Viewport.hpp"
 
-Canvas::Canvas(const int CELL_COUNT_X, const int CELL_COUNT_Y) : 
-    layerSystem(CELL_COUNT_X, CELL_COUNT_Y),
+Canvas::Canvas(const int CELL_COUNT_X, const int CELL_COUNT_Y, const LayerSystem& layerSystem) :     
+    layerSystem(layerSystem),
     cursor(),
     SIZE(GetCanvasSize(CELL_COUNT_X, CELL_COUNT_Y)),
     CELL_COUNT_X(CELL_COUNT_X),
@@ -23,8 +23,13 @@ Canvas::Canvas(const int CELL_COUNT_X, const int CELL_COUNT_Y) :
         UnloadImage(canvasBackgroundImage);
 }
 
-Canvas::Canvas() : Canvas(32, 32) { }
-Canvas::Canvas(const int CELL_COUNT) : Canvas(CELL_COUNT, CELL_COUNT) { }
+Canvas::Canvas(const int CELL_COUNT_X, const int CELL_COUNT_Y) : Canvas(CELL_COUNT_X, CELL_COUNT_Y, LayerSystem(CELL_COUNT_X, CELL_COUNT_Y)) { }
+
+Canvas::Canvas(const int CELL_COUNT, const LayerSystem& layerSystem) : Canvas(CELL_COUNT, CELL_COUNT, layerSystem) { }
+Canvas::Canvas(const int CELL_COUNT) : Canvas(CELL_COUNT, CELL_COUNT, LayerSystem(CELL_COUNT, CELL_COUNT)) { }
+
+Canvas::Canvas(const LayerSystem& layerSystem) : Canvas(32, 32, layerSystem) { }
+Canvas::Canvas() : Canvas(32, 32, LayerSystem(32, 32)) { }
 
 void Canvas::Unload() {
     layerSystem.Unload();
@@ -44,7 +49,7 @@ void Canvas::Render(Camera2D& camera, Vector2 viewportPosition) {
     DrawBackground();
 
     for(int i = layerSystem.GetCount() - 1; i >= 0; i--) {
-        DrawLayer(layerSystem.GetLayer(i)->IsVisible(), *layerSystem.GetLayer(i));
+        DrawLayer(layerSystem.GetLayer(i).IsVisible(), layerSystem.GetLayer(i));
     }
 
     // DrawCanvasGrid();

@@ -22,8 +22,8 @@ void ColorPickerTool::OnButtonPress() {
     int x = canvas.PositionAsCanvasIndex(canvas.PositionInWorldSpace(GetMousePosition(), viewport.GetPosition(), m_Project->camera)).x;
     int y = canvas.PositionAsCanvasIndex(canvas.PositionInWorldSpace(GetMousePosition(), viewport.GetPosition(), m_Project->camera)).y;
 
-    if(ColorToInt(layerSystem.GetLayer()->GetPixelColor(x, y)) != ColorToInt(BLANK)) {
-        colorSystem.SetColor(layerSystem.GetLayer()->GetPixelColor(x, y));
+    if(ColorToInt(layerSystem.GetLayer().GetPixelColor(x, y)) != ColorToInt(BLANK)) {
+        colorSystem.SetColor(layerSystem.GetLayer().GetPixelColor(x, y));
         toolSystem.SetCurrentTool(ToolSystem::TOOL_BRUSH, *m_Project);
     }
 }
