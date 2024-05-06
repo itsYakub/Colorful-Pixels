@@ -64,8 +64,6 @@ void ToolSystem::ToolsGuiPanel(const char* name, bool draw, std::unique_ptr<Tool
 
         ImVec2 size(40.0f, 40.0f);
 
-        ImGui::SeparatorText("##text");
-
         for(int i = 0; i < ToolList::TOOL_COUNT; i++) {
             if(ImGui::Button(ICONS[i], size)) {
                 tool = SetCurrentTool(static_cast<ToolList>(i), project);

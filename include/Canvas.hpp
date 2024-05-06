@@ -45,7 +45,8 @@ public:
 
     void DrawBackground();
     void DrawLayer(bool visible, Layer& layer);
-    void DrawCell(float x, float y, float thickness, Color color);
+    void DrawCell(float x, float y, Color color);
+    void DrawCellLines(float x, float y, float thickness, Color color);
     void DrawCanvasGrid();
     void DrawCanvasCursor(Camera2D& camera, Vector2 viewportPosition);
     void DrawCanvasFrame();

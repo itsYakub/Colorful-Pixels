@@ -30,6 +30,7 @@ public:
 
     void Load();
     void Unload();
+    void UploadPixelData(PixelData& pixelData);
 
     int GetSizeX();
     int GetSizeY();
@@ -47,6 +48,7 @@ public:
     Color GetPixelColor(int x, int y);
     Color GetPixelColor(int i);
     void SetPixelColor(int x, int y, Color color);
+    void SetPixelColor(int i, Color color);
     static void SetPixelColor(PixelData& pixelData, int x, int y, int w, int h, Color color);
 
     void UpdateLayer();

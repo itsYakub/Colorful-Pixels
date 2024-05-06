@@ -21,7 +21,7 @@ private:
     const int CELL_COUNT_Y;
 
 public:
-    LayerSystem(const int& CELL_COUNT_X, const int& CELL_COUNT_Y);
+    LayerSystem(const int& CELL_COUNT_X, const int& CELL_COUNT_Y, bool createFirstLayer);
 
     void Unload();
 

@@ -7,15 +7,20 @@
 
 #include "IconsLucide.h"
 
-LayerSystem::LayerSystem(const int& CELL_COUNT_X, const int& CELL_COUNT_Y) :
+LayerSystem::LayerSystem(const int& CELL_COUNT_X, const int& CELL_COUNT_Y, bool createFirstLayer) :
     m_LayerList(),
     m_CurrentLayerID(0),
     m_LayerCount(0),
     m_LayerCountTotal(0),
     CELL_COUNT_X(CELL_COUNT_X),
-    CELL_COUNT_Y(CELL_COUNT_Y) {
-        PushNewLayer(CELL_COUNT_X, CELL_COUNT_Y, 0, true, false);
-}
+    CELL_COUNT_Y(CELL_COUNT_Y) { 
+        if(createFirstLayer) {
+            PushNewLayer(
+                CELL_COUNT_X,
+                CELL_COUNT_Y
+            );
+        }
+    }
 
 void LayerSystem::Unload() {
     for(auto& i : m_LayerList) {

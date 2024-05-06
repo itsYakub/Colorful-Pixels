@@ -54,14 +54,14 @@ void LineTool::Render() {
     Canvas& canvas = *m_Project->canvas;
 
     if(IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
-        canvas.DrawCell(
+        canvas.DrawCellLines(
             (canvas.PositionAsCanvasCell(m_PointA).x) * canvas.scale,
             (canvas.PositionAsCanvasCell(m_PointA).y) * canvas.scale,
             1.0f,
             RED
         );
 
-        canvas.DrawCell(
+        canvas.DrawCellLines(
             (canvas.PositionAsCanvasCell(m_PointB).x) * canvas.scale,
             (canvas.PositionAsCanvasCell(m_PointB).y) * canvas.scale,
             1.0f,

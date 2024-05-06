@@ -23,13 +23,13 @@ Canvas::Canvas(const int CELL_COUNT_X, const int CELL_COUNT_Y, const LayerSystem
         UnloadImage(canvasBackgroundImage);
 }
 
-Canvas::Canvas(const int CELL_COUNT_X, const int CELL_COUNT_Y) : Canvas(CELL_COUNT_X, CELL_COUNT_Y, LayerSystem(CELL_COUNT_X, CELL_COUNT_Y)) { }
+Canvas::Canvas(const int CELL_COUNT_X, const int CELL_COUNT_Y) : Canvas(CELL_COUNT_X, CELL_COUNT_Y, LayerSystem(CELL_COUNT_X, CELL_COUNT_Y, true)) { }
 
 Canvas::Canvas(const int CELL_COUNT, const LayerSystem& layerSystem) : Canvas(CELL_COUNT, CELL_COUNT, layerSystem) { }
-Canvas::Canvas(const int CELL_COUNT) : Canvas(CELL_COUNT, CELL_COUNT, LayerSystem(CELL_COUNT, CELL_COUNT)) { }
+Canvas::Canvas(const int CELL_COUNT) : Canvas(CELL_COUNT, CELL_COUNT, LayerSystem(CELL_COUNT, CELL_COUNT, true)) { }
 
 Canvas::Canvas(const LayerSystem& layerSystem) : Canvas(32, 32, layerSystem) { }
-Canvas::Canvas() : Canvas(32, 32, LayerSystem(32, 32)) { }
+Canvas::Canvas() : Canvas(32, 32, LayerSystem(32, 32, true)) { }
 
 void Canvas::Unload() {
     layerSystem.Unload();
@@ -167,7 +167,17 @@ void Canvas::DrawLayer(bool visible, Layer& layer) {
     );    
 }
 
-void Canvas::DrawCell(float x, float y, float thickness, Color color) {
+void Canvas::DrawCell(float x, float y, Color color) {
+    DrawRectangle(
+        x,
+        y,
+        GetCellSize().x,
+        GetCellSize().y,
+        color
+    );
+}
+
+void Canvas::DrawCellLines(float x, float y, float thickness, Color color) {
     DrawRectangleLinesEx(
         (Rectangle) { 
             x,
@@ -184,7 +194,7 @@ void Canvas::DrawCell(float x, float y, float thickness, Color color) {
 void Canvas::DrawCanvasGrid() {
     for(int y = 0; y < CELL_COUNT_Y; y++) {
         for(int x = 0; x < CELL_COUNT_X; x++) {
-            DrawCell(
+            DrawCellLines(
                 x * GetCellSize().x,
                 y * GetCellSize().y,
                 1.0f / scale, 
@@ -195,12 +205,23 @@ void Canvas::DrawCanvasGrid() {
 }
 
 void Canvas::DrawCanvasCursor(Camera2D& camera, Vector2 viewportPosition) {
-    DrawCell(
-        PositionAsCanvasCell(PositionInWorldSpace(GetMousePosition(), viewportPosition, camera)).x * scale, 
-        PositionAsCanvasCell(PositionInWorldSpace(GetMousePosition(), viewportPosition, camera)).y * scale, 
-        2.0f / scale, 
-        WHITE
-    );
+    Vector2 positionAsCanvasIndex = PositionAsCanvasIndex(PositionInWorldSpace(GetMousePosition(), viewportPosition, camera));
+
+    if((positionAsCanvasIndex.x >= 0 && positionAsCanvasIndex.x < CELL_COUNT_X) && (positionAsCanvasIndex.y >= 0 && positionAsCanvasIndex.y < CELL_COUNT_Y)) {
+        DrawCell(
+            PositionAsCanvasCell(PositionInWorldSpace(GetMousePosition(), viewportPosition, camera)).x * scale, 
+            PositionAsCanvasCell(PositionInWorldSpace(GetMousePosition(), viewportPosition, camera)).y * scale, 
+            WHITE
+        );
+    } else {
+        DrawCellLines(
+            PositionAsCanvasCell(PositionInWorldSpace(GetMousePosition(), viewportPosition, camera)).x * scale, 
+            PositionAsCanvasCell(PositionInWorldSpace(GetMousePosition(), viewportPosition, camera)).y * scale, 
+            2.0f / scale, 
+            WHITE
+        );
+    }
+
 }
 
 void Canvas::DrawCanvasFrame() {

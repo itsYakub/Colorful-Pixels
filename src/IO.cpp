@@ -30,20 +30,14 @@ IO::IO() :
 void IO::NewProject(Project& project) {
     ImGui::SetNextWindowSize(ImVec2(256.0f, 216.0f));
     if(ImGui::Begin(ICON_LC_PLUS " Create new project...", &drawNewProjectGuiPanel, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize)) {
-        static char title[128] = "Project";
-        static char path[256];
+        static char title[128] = "hello_world";
         static int width = 32;
         static int height = 32;
-
-        strcpy(path, GetApplicationDirectory());
 
         ImGui::InputText(":Title", title, 127);
 
         ImGui::InputInt(":Width", &width);
-        project.width = Clamp(width, 2, 128);
-
         ImGui::InputInt(":Height", &height);
-        project.height = Clamp(height, 2, 128);
 
         ImGui::SeparatorText("##separator");
 
@@ -73,7 +67,6 @@ void IO::LoadProject(Project& project) {
     ImGui::SetNextWindowSize(ImVec2(512.0f, 128.0f));
     if(ImGui::Begin(ICON_LC_IMAGE_DOWN " Load project...", &drawLoadProjectGuiPanel, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize)) {
         static char path[256];
-        strcpy(path, GetApplicationDirectory());
 
         ImGui::PushItemWidth(384.0f);
         ImGui::InputText(": Path", path, 255);
@@ -82,7 +75,7 @@ void IO::LoadProject(Project& project) {
         if(ImGui::Button(ICON_LC_IMAGE_DOWN " ")) {
             drawLoadProjectGuiPanel = false;
             drawIntroGuiPanel = false;
-            // DeserializeProject(project, path);
+            DeserializeProject(project, path);
 
             ImGui::End();
             return;
@@ -105,7 +98,6 @@ void IO::SaveProject(Project& project) {
     ImGui::SetNextWindowSize(ImVec2(512.0f, 128.0f));
     if(ImGui::Begin(ICON_LC_IMAGE_DOWN " Save project...", &drawSaveProjectGuiPanel, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize)) {
         static char path[256];
-        strcpy(path, GetApplicationDirectory());
 
         ImGui::PushItemWidth(384.0f);
         ImGui::InputText(": Path", path, 255);
@@ -136,7 +128,6 @@ void IO::ExportProject(Project& project, LayerSystem& layerSystem) {
     ImGui::SetNextWindowSize(ImVec2(512.0f, 128.0f));
     if(ImGui::Begin(ICON_LC_IMAGE_DOWN " Export image...", &drawExportProjectGuiPanel, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize)) {
         static char path[256];
-        strcpy(path, GetApplicationDirectory());
 
         ImGui::PushItemWidth(384.0f);
         ImGui::InputText(": Path", path, 255);
@@ -200,49 +191,9 @@ void IO::IOGuiMenuItem(const char* title, bool draw, Project& project) {
 void IO::SerializeProject(Project& project, const std::string& path) {
     nlohmann::json projectJsonFile;
 
-    // When we serialize the project, we only need to have the access to all the necessary data from the `project` object
-    // Those are:
-    // - camera;
-    // - canvas;
-    // - tool;
-    // - layer system and it's layers
-    // - project's name and path
+    project.IOSave(projectJsonFile);
 
-    Camera2D& camera = project.camera;
-    Canvas& canvas = *project.canvas;
-    Tool& tool = *project.tool;
-    LayerSystem& layerSystem = project.canvas->layerSystem;
-
-    projectJsonFile["cfpx_version"] = COLORFUL_PIXELS_VERSION;
-    projectJsonFile["cfpx_version_major"] = COLORFUL_PIXELS_VERSION_MAJOR;
-    projectJsonFile["cfpx_version_minor"] = COLORFUL_PIXELS_VERSION_MINOR;
-
-    projectJsonFile["cfpx_project_title"] = project.title;
-
-    projectJsonFile["cfpx_project_canvas_width"] = canvas.CELL_COUNT_X;
-    projectJsonFile["cfpx_project_canvas_height"] = canvas.CELL_COUNT_Y;
-    projectJsonFile["cfpx_project_canvas_scale"] = canvas.scale;
-
-    projectJsonFile["cfpx_project_layer_count"] = layerSystem.GetList().size();
-
-    for(int i = 0; i < layerSystem.GetList().size(); i++) {
-        projectJsonFile["cfpx_project_layers"][i]["cfpx_project_layer_id"] = layerSystem.GetLayer(i).GetID();
-        projectJsonFile["cfpx_project_layers"][i]["cfpx_project_layer_visible"] = layerSystem.GetLayer(i).layerVisible;
-        projectJsonFile["cfpx_project_layers"][i]["cfpx_project_layer_locked"] = layerSystem.GetLayer(i).layerLocked;
-
-        for(int j = 0; j < layerSystem.GetLayer(i).GetSizeX() * layerSystem.GetLayer(i).GetSizeX(); j++) {
-            projectJsonFile["cfpx_project_layers"][i]["cfpx_project_layer_data"][j] = ColorToInt(layerSystem.GetLayer(i).GetPixelColor(j));
-        }
-    }
-
-    projectJsonFile["cfpx_project_camera_target"] = { camera.target.x, camera.target.y };
-    projectJsonFile["cfpx_project_camera_offset"] = { camera.offset.x, camera.offset.y };
-    projectJsonFile["cfpx_project_camera_zoom"] = camera.zoom;
-
-    projectJsonFile["cfpx_project_current_tool_id"] = tool.ID;
-
-
-    std::ofstream projectFile(TextFormat("%s%s%s", path.c_str(), project.title.c_str(), ".json"));
+    std::ofstream projectFile(TextFormat("%s", path.c_str()));
     projectFile << std::setw(4) << projectJsonFile << std::endl;
     projectFile.close();
 }
@@ -250,15 +201,9 @@ void IO::SerializeProject(Project& project, const std::string& path) {
 void IO::DeserializeProject(Project& project, const std::string& path) {
     std::ifstream projectFile(path);
     nlohmann::json projectJsonFile = nlohmann::json::parse(projectFile);
-
-    // To deserialize the save file we can create all the necessary components here
-    // Those are:
-    // - std::unique_ptr<Canvas>;
-    // - std::unique_ptr<Tool>;
-    // - LayerSystem;
-    // - Camera2D;
-
     projectFile.close();
+
+    project.IOLoad(projectJsonFile);
 }
 
 void IO::ExportImageLogic(Project& project, LayerSystem& layerSystem, const std::string& path, const char* format) {

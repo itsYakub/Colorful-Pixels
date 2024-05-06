@@ -32,6 +32,7 @@ public:
         InitWindow(WIDTH, HEIGHT, TITLE.c_str());
 
         MaximizeWindow();
+        SetExitKey(0);
 
         colorfulPixels.Load();
 

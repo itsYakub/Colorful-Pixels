@@ -31,6 +31,10 @@ void Layer::Unload() {
     UnloadTexture(m_LayerTexture);
 }
 
+void Layer::UploadPixelData(PixelData& pixelData) {
+    this->m_LayerData = pixelData;
+}
+
 int Layer::GetSizeX() {
     return m_XSize;
 }
@@ -79,6 +83,10 @@ void Layer::SetPixelColor(int x, int y, Color color) {
     y = Clamp(y, 0, m_YSize - 1);
 
     m_LayerData[y * m_XSize + x] = color;
+}
+
+void Layer::SetPixelColor(int i, Color color) {
+    m_LayerData[i] = color;
 }
 
 void Layer::SetPixelColor(PixelData& pixelData, int x, int y, int w, int h, Color color) {
