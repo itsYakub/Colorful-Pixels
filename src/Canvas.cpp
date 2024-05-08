@@ -18,7 +18,7 @@ Canvas::Canvas(const int CELL_COUNT_X, const int CELL_COUNT_Y, const LayerSystem
     CELL_COUNT_Y(CELL_COUNT_Y),
     scale(1.0f),
     m_ReloadLayerTexture(false) {
-        Image canvasBackgroundImage = GenImageChecked(SIZE.x, SIZE.y, SIZE.x / 2.0f, SIZE.x / 2.0f, (Color) { 128, 128, 128, 255 }, (Color) { 192, 192, 192, 255 });
+        Image canvasBackgroundImage = GenImageChecked(SIZE.x, SIZE.y, 128, 128, (Color) { 128, 128, 128, 255 }, (Color) { 192, 192, 192, 255 });
         m_CanvasBackground = LoadTextureFromImage(canvasBackgroundImage);
         UnloadImage(canvasBackgroundImage);
 }
@@ -62,7 +62,7 @@ void Canvas::ToggleTextureReload() {
 }
 
 Vector2 Canvas::GetCanvasSize(const int COUNT_X, const int COUNT_Y) {
-    const float DEFAULT_SIZE = 512.0f;
+    const float DEFAULT_SIZE = 16.0f;
     Vector2 result = Vector2Zero();
 
     if(COUNT_X > COUNT_Y) {
@@ -82,9 +82,9 @@ Vector2 Canvas::GetCanvasSize(const int COUNT_X, const int COUNT_Y) {
         };
     }
 
-    TraceLog(LOG_INFO, TextFormat("Canvas size: %0.1f / %0.1f (%ix%i)", result.x, result.y, COUNT_X, COUNT_Y));
+    TraceLog(LOG_INFO, TextFormat("Canvas size: %0.1f / %0.1f (%ix%i)", result.x * COUNT_X, result.y * COUNT_Y, COUNT_X, COUNT_Y));
 
-    return result;
+    return { result.x * COUNT_X, result.y * COUNT_Y};
 }
 
 Vector2 Canvas::GetCellSize() {

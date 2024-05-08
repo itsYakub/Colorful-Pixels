@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <math.h>
 #include <memory>
 
 #include "LayerSystem.hpp"
@@ -15,16 +16,13 @@
 #include "ColorfulPixels.hpp"
 
 Project::Project(Viewport& viewport, ColorSystem& colorSystem, ToolSystem& toolSystem) :
-    title(),
     valid(false),
     modified(false),
     viewport(viewport),
     colorSystem(colorSystem),
     toolSystem(toolSystem) { }
 
-void Project::Load(std::string title, int width, int height) {
-    this->title = title;
-
+void Project::Create(int width, int height) {
     canvas = std::make_unique<Canvas>(width, height);
     tool = toolSystem.SetCurrentTool(ToolSystem::TOOL_BRUSH, *this);
 
@@ -35,12 +33,10 @@ void Project::Load(std::string title, int width, int height) {
     valid = canvas.get() && tool.get();
 }
 
-void Project::IOSave(nlohmann::json& json) {
+void Project::Serialize(nlohmann::json& json) {
     json["cfpx_version"] = COLORFUL_PIXELS_VERSION;
     json["cfpx_version_major"] = COLORFUL_PIXELS_VERSION_MAJOR;
     json["cfpx_version_minor"] = COLORFUL_PIXELS_VERSION_MINOR;
-
-    json["cfpx_project_title"] = this->title;
 
     json["cfpx_project_canvas_width"] = canvas->CELL_COUNT_X;
     json["cfpx_project_canvas_height"] = canvas->CELL_COUNT_Y;
@@ -70,9 +66,7 @@ void Project::IOSave(nlohmann::json& json) {
     this->modified = false;
 }
 
-void Project::IOLoad(nlohmann::json& json) {
-    this->title = json["cfpx_project_title"];
-
+void Project::Deserialize(nlohmann::json& json) {
     int cellCountX = json["cfpx_project_canvas_width"];
     int cellCountY = json["cfpx_project_canvas_height"];
 
@@ -200,6 +194,8 @@ void Project::Pan() {
     delta = Vector2Scale(delta, -1.0f / camera.zoom);
 
     camera.target = Vector2Add(camera.target, delta);
+    camera.target.x = round(camera.target.x);
+    camera.target.y = round(camera.target.y);
 }
 
 void Project::Zoom() {

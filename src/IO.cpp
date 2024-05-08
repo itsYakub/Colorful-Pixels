@@ -28,13 +28,10 @@ IO::IO() :
     drawExportProjectGuiPanel(false) { }
 
 void IO::NewProject(Project& project) {
-    ImGui::SetNextWindowSize(ImVec2(256.0f, 216.0f));
+    ImGui::SetNextWindowSize(ImVec2(256.0f, 192.0f));
     if(ImGui::Begin(ICON_LC_PLUS " Create new project...", &drawNewProjectGuiPanel, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize)) {
-        static char title[128] = "hello_world";
-        static int width = 32;
-        static int height = 32;
-
-        ImGui::InputText(":Title", title, 127);
+        static int width = 16;
+        static int height = 16;
 
         ImGui::InputInt(":Width", &width);
         ImGui::InputInt(":Height", &height);
@@ -42,7 +39,10 @@ void IO::NewProject(Project& project) {
         ImGui::SeparatorText("##separator");
 
         if(ImGui::Button(ICON_LC_FILE_PLUS_2 " Create") || ImGui::IsKeyReleased(ImGuiKey_Enter)) {
-            project.Load(title, width, height);
+            project.Create(width, height);
+
+            width = 16;
+            height = 16;
 
             drawNewProjectGuiPanel = false;
             drawIntroGuiPanel = false;
@@ -191,7 +191,7 @@ void IO::IOGuiMenuItem(const char* title, bool draw, Project& project) {
 void IO::SerializeProject(Project& project, const std::string& path) {
     nlohmann::json projectJsonFile;
 
-    project.IOSave(projectJsonFile);
+    project.Serialize(projectJsonFile);
 
     std::ofstream projectFile(TextFormat("%s", path.c_str()));
     projectFile << std::setw(4) << projectJsonFile << std::endl;
@@ -203,7 +203,7 @@ void IO::DeserializeProject(Project& project, const std::string& path) {
     nlohmann::json projectJsonFile = nlohmann::json::parse(projectFile);
     projectFile.close();
 
-    project.IOLoad(projectJsonFile);
+    project.Deserialize(projectJsonFile);
 }
 
 void IO::ExportImageLogic(Project& project, LayerSystem& layerSystem, const std::string& path, const char* format) {
@@ -247,7 +247,7 @@ void IO::ExportImageLogic(Project& project, LayerSystem& layerSystem, const std:
 
     ExportImage(
         resultImage, 
-        TextFormat("%s%s.%s", path.c_str(), project.title.c_str(), format)
+        TextFormat("%s", path.c_str())
     );
 
     UnloadImage(resultImage);

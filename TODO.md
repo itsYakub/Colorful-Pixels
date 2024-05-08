@@ -5,6 +5,7 @@
 </div>
 
 ### Version Alpha 1.0:
+- [ ] Add an icon;
 - [ ] Auto-Complete for project paths;
 - [ ] Fix: canvas isn't rendered in the WEB Version;
 

@@ -17,8 +17,6 @@ class ToolSystem;
 
 class Project {
 public:
-    std::string title;
-
     Viewport& viewport;
     ColorSystem& colorSystem;
     ToolSystem& toolSystem;
@@ -34,10 +32,10 @@ public:
 public:
     Project(Viewport& viewport, ColorSystem& colorSystem, ToolSystem& toolSystem);
 
-    void Load(std::string title, int width, int height);
+    void Create(int width, int height);
 
-    void IOSave(nlohmann::json& json);
-    void IOLoad(nlohmann::json& json);
+    void Serialize(nlohmann::json& json);
+    void Deserialize(nlohmann::json& json);
     
     void Unload();
     void Update();
