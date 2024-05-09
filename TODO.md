@@ -8,8 +8,8 @@
 - [ ] Add an icon;
 - [x] Auto-Complete for project paths;
 - [ ] Fix: canvas isn't rendered in the WEB Version;
+- [x] File browsing using an Explorer;
 
-### Version Aplpha 1.1:
+### Version Alpha 1.1:
 - [ ] Color Palette system;
-- [ ] File browsing using an Explorer;
 - [ ] Simple cache system;
