@@ -16,6 +16,10 @@ void EraserTool::OnButtonDown() {
     Viewport& viewport = m_Project->viewport;
     LayerSystem& layerSystem = canvas.layerSystem;
 
+    if(canvas.layerSystem.GetLayer().layerLocked) {
+        return;
+    }
+
     int ax = canvas.PositionAsCanvasIndex(canvas.PositionInWorldSpace(GetMousePosition(), viewport.GetPosition(), m_Project->camera)).x;
     int ay = canvas.PositionAsCanvasIndex(canvas.PositionInWorldSpace(GetMousePosition(), viewport.GetPosition(), m_Project->camera)).y;
 

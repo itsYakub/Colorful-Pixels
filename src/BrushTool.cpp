@@ -20,6 +20,10 @@ void BrushTool::OnButtonDown() {
     LayerSystem& layerSystem = canvas.layerSystem;
     ColorSystem& colorSystem = m_Project->colorSystem;
 
+    if(canvas.layerSystem.GetLayer().layerLocked) {
+        return;
+    }
+
     int ax = canvas.PositionAsCanvasIndex(canvas.PositionInWorldSpace(GetMousePosition(), viewport.GetPosition(), m_Project->camera)).x;
     int ay = canvas.PositionAsCanvasIndex(canvas.PositionInWorldSpace(GetMousePosition(), viewport.GetPosition(), m_Project->camera)).y;
 

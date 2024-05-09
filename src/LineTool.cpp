@@ -32,6 +32,10 @@ void LineTool::OnButtonRelease() {
     LayerSystem& layerSystem = canvas.layerSystem;
     ColorSystem& colorSystem = m_Project->colorSystem;
 
+    if(canvas.layerSystem.GetLayer().layerLocked) {
+        return;
+    }
+
     int ax = canvas.PositionAsCanvasIndex(m_PointA).x;
     int ay = canvas.PositionAsCanvasIndex(m_PointA).y;
 

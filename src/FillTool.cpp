@@ -16,6 +16,10 @@ void FillTool::OnButtonPress() {
     LayerSystem& layerSystem = canvas.layerSystem;
     ColorSystem& colorSystem = m_Project->colorSystem;
 
+    if(canvas.layerSystem.GetLayer().layerLocked) {
+        return;
+    }
+
     int x = canvas.PositionAsCanvasIndex(canvas.PositionInWorldSpace(GetMousePosition(), viewport.GetPosition(), m_Project->camera)).x;
     int y = canvas.PositionAsCanvasIndex(canvas.PositionInWorldSpace(GetMousePosition(), viewport.GetPosition(), m_Project->camera)).y;
 
