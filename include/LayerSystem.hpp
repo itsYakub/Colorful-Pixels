@@ -26,6 +26,7 @@ public:
     void Unload();
 
     void UpdateLayer();
+    void UpdateLayer(int index);
 
     LayerList& GetList();
     Layer& GetLayer();
@@ -35,6 +36,10 @@ public:
 
     void PushNewLayer(const int CELL_COUNT_X, const int CELL_COUNT_Y);
     void PushNewLayer(const int CELL_COUNT_X, const int CELL_COUNT_Y, int ID, bool visibility, bool lock);
+    void InsertNewLayer(const int CELL_COUNT_X, const int CELL_COUNT_Y);
+    void InsertNewLayer(int index, const int CELL_COUNT_X, const int CELL_COUNT_Y);
+    void InsertNewLayer(const int CELL_COUNT_X, const int CELL_COUNT_Y, int ID, bool visibility, bool lock);
+    void InsertNewLayer(int index, const int CELL_COUNT_X, const int CELL_COUNT_Y, int ID, bool visibility, bool lock);
     void PopLayer();
     void EraseLayer();
 

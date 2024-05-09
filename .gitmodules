@@ -13,3 +13,6 @@
 [submodule "lib/json"]
 	path = lib/json
 	url = https://github.com/nlohmann/json.git
+[submodule "lib/libtinyfiledialogs"]
+	path = lib/libtinyfiledialogs
+	url = https://github.com/native-toolkit/libtinyfiledialogs.git

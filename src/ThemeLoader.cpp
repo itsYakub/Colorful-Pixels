@@ -16,13 +16,13 @@ void ThemeLoader::Update() {
 	if(m_LoadTheme) {
 		switch (m_CurrentTheme) {
 			case THEME_DARK:
-				TraceLog(LOG_INFO, "Setting current theme to: DARK");
+				TraceLog(LOG_INFO, "THEME LOADER: Setting current theme to: DARK");
 				SetupImGuiStyleDark();
 
 				break;
 
 			case THEME_LIGHT:
-				TraceLog(LOG_INFO, "Setting current theme to: LIGHT");
+				TraceLog(LOG_INFO, "THEME LOADER: Setting current theme to: LIGHT");
 				SetupImGuiStyleLight();
 			
 				break;

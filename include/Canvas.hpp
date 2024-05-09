@@ -1,9 +1,11 @@
 #pragma once
 
+#include "ColorSystem.hpp"
 #include "raylib.h"
 
 #include "Viewport.hpp"
 #include "LayerSystem.hpp"
+#include "ColorSystem.hpp"
 #include "Cursor.hpp"
 
 class Canvas {
@@ -22,6 +24,7 @@ private:
     Texture2D m_CanvasBackground;
 
     bool m_ReloadLayerTexture;
+    bool m_ReloadCanvas;
 
 public:
     Canvas(const int CELL_COUNT_X, const int CELL_COUNT_Y, const LayerSystem& layerSystem);
@@ -33,9 +36,10 @@ public:
 
     void Unload();
     void Update(Camera2D& camera, Vector2 viewportPosition);
-    void Render(Camera2D& camera, Vector2 viewportPosition);
+    void Render(Camera2D& camera, Vector2 viewportPosition, ColorSystem& colorSystem);
 
-    void ToggleTextureReload();
+    void ToggleLayerReload();
+    void ToggleCanvasReload();
 
     Vector2 PositionInWorldSpace(Vector2 screenspacePosition, Vector2 viewportPosition, Camera2D& camera);
     Vector2 PositionAsCanvasCell(Vector2 worldspacePosition);
@@ -48,7 +52,7 @@ public:
     void DrawCell(float x, float y, Color color);
     void DrawCellLines(float x, float y, float thickness, Color color);
     void DrawCanvasGrid();
-    void DrawCanvasCursor(Camera2D& camera, Vector2 viewportPosition);
+    void DrawCanvasCursor(Camera2D& camera, Vector2 viewportPosition, ColorSystem& colorSystem);
     void DrawCanvasFrame();
 
     Vector2 GetCanvasSize(const int COUNT_X, const int COUNT_Y);

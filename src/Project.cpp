@@ -16,6 +16,7 @@
 #include "ColorfulPixels.hpp"
 
 Project::Project(Viewport& viewport, ColorSystem& colorSystem, ToolSystem& toolSystem) :
+    title(),
     valid(false),
     modified(false),
     viewport(viewport),
@@ -23,6 +24,8 @@ Project::Project(Viewport& viewport, ColorSystem& colorSystem, ToolSystem& toolS
     toolSystem(toolSystem) { }
 
 void Project::Create(int width, int height) {
+    title = "sprite01";
+
     canvas = std::make_unique<Canvas>(width, height);
     tool = toolSystem.SetCurrentTool(ToolSystem::TOOL_BRUSH, *this);
 
@@ -31,6 +34,7 @@ void Project::Create(int width, int height) {
     camera.zoom = canvas->scale;
 
     valid = canvas.get() && tool.get();
+    savedOnDisk = false;
 }
 
 void Project::Serialize(nlohmann::json& json) {
@@ -64,9 +68,15 @@ void Project::Serialize(nlohmann::json& json) {
     json["cfpx_project_current_tool_id"] = tool->ID;
 
     this->modified = false;
+    this->savedOnDisk = true;
 }
 
 void Project::Deserialize(nlohmann::json& json) {
+    std::string version = json["cfpx_version"];
+    strcmp(COLORFUL_PIXELS_VERSION, version.c_str()) == 0 ?
+        TraceLog(LOG_INFO, TextFormat("PROJECT: Loading the project for version: %s", version.c_str())) :
+        TraceLog(LOG_WARNING, TextFormat("PROJECT: Loading the project for an obsolete version of Colorful Pixels: %s (Current version: %s)", version.c_str(), COLORFUL_PIXELS_VERSION));
+
     int cellCountX = json["cfpx_project_canvas_width"];
     int cellCountY = json["cfpx_project_canvas_height"];
 
@@ -93,8 +103,6 @@ void Project::Deserialize(nlohmann::json& json) {
         }
     }
 
-    TraceLog(LOG_INFO, "Layer System deserialized successfully!");
-
     this->camera.offset = { 
         json["cfpx_project_camera_offset"][0],
         json["cfpx_project_camera_offset"][1]
@@ -107,10 +115,6 @@ void Project::Deserialize(nlohmann::json& json) {
 
     this->camera.zoom = json["cfpx_project_camera_zoom"];
 
-    TraceLog(LOG_INFO, "Camera2D deserialized successfully!");
-
-    TraceLog(LOG_INFO, "Color System deserialized successfully!");
-
     this->canvas = std::make_unique<Canvas>(
         cellCountX,
         cellCountY,
@@ -119,17 +123,14 @@ void Project::Deserialize(nlohmann::json& json) {
 
     this->canvas->scale = json["cfpx_project_canvas_scale"];
 
-    TraceLog(LOG_INFO, "Canvas deserialized successfully!");
-
     this->tool = toolSystem.SetCurrentTool(
         static_cast<ToolSystem::ToolList>(json["cfpx_project_current_tool_id"]), 
         *this
     );
 
-    TraceLog(LOG_INFO, "Current Tool deserialized successfully!");
-
+    this->canvas->ToggleCanvasReload();
     this->valid = canvas.get() && tool.get();
-    this->canvas->ToggleTextureReload();
+    this->savedOnDisk = true;
 }
 
 void Project::Unload() {
@@ -182,7 +183,7 @@ void Project::Render() {
     BeginMode2D(camera);
 
         if(valid) {
-            canvas->Render(camera, viewport.GetPosition());
+            canvas->Render(camera, viewport.GetPosition(), colorSystem);
             tool->Render();
         }
 

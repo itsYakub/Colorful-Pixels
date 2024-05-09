@@ -47,7 +47,7 @@ void RectTool::OnButtonRelease() {
     Algorithms::DigitalDifferentialAnalyzer(bx, ay, bx, by, colorSystem.GetColor(), layerSystem.GetLayer());
     Algorithms::DigitalDifferentialAnalyzer(ax, by, bx, by, colorSystem.GetColor(), layerSystem.GetLayer());
 
-    canvas.ToggleTextureReload();
+    canvas.ToggleLayerReload();
 
     m_PointA = Vector2Zero();
     m_PointB = Vector2Zero();
@@ -74,34 +74,34 @@ void RectTool::Render() {
         // Don't ask...
 
         DrawLine(
-            (canvas.PositionAsCanvasCell(m_PointA).x + canvas.GetCellSize().x / 2.0f) * canvas.scale,
-            (canvas.PositionAsCanvasCell(m_PointA).y + canvas.GetCellSize().y / 2.0f) * canvas.scale,
-            (canvas.PositionAsCanvasCell(m_PointA).x + canvas.GetCellSize().x / 2.0f) * canvas.scale,
-            (canvas.PositionAsCanvasCell(m_PointB).y + canvas.GetCellSize().y / 2.0f) * canvas.scale,
+            (canvas.PositionAsCanvasCell(m_PointA).x + canvas.GetCellSize().x / 2.0f / canvas.scale) * canvas.scale,
+            (canvas.PositionAsCanvasCell(m_PointA).y + canvas.GetCellSize().y / 2.0f / canvas.scale) * canvas.scale,
+            (canvas.PositionAsCanvasCell(m_PointA).x + canvas.GetCellSize().x / 2.0f / canvas.scale) * canvas.scale,
+            (canvas.PositionAsCanvasCell(m_PointB).y + canvas.GetCellSize().y / 2.0f / canvas.scale) * canvas.scale,
             RED
         );
 
         DrawLine(
-            (canvas.PositionAsCanvasCell(m_PointA).x + canvas.GetCellSize().x / 2.0f) * canvas.scale,
-            (canvas.PositionAsCanvasCell(m_PointA).y + canvas.GetCellSize().y / 2.0f) * canvas.scale,
-            (canvas.PositionAsCanvasCell(m_PointB).x + canvas.GetCellSize().x / 2.0f) * canvas.scale,
-            (canvas.PositionAsCanvasCell(m_PointA).y + canvas.GetCellSize().y / 2.0f) * canvas.scale,
+            (canvas.PositionAsCanvasCell(m_PointA).x + canvas.GetCellSize().x / 2.0f / canvas.scale) * canvas.scale,
+            (canvas.PositionAsCanvasCell(m_PointA).y + canvas.GetCellSize().y / 2.0f / canvas.scale) * canvas.scale,
+            (canvas.PositionAsCanvasCell(m_PointB).x + canvas.GetCellSize().x / 2.0f / canvas.scale) * canvas.scale,
+            (canvas.PositionAsCanvasCell(m_PointA).y + canvas.GetCellSize().y / 2.0f / canvas.scale) * canvas.scale,
             RED
         );
 
         DrawLine(
-            (canvas.PositionAsCanvasCell(m_PointB).x + canvas.GetCellSize().x / 2.0f) * canvas.scale,
-            (canvas.PositionAsCanvasCell(m_PointA).y + canvas.GetCellSize().y / 2.0f) * canvas.scale,
-            (canvas.PositionAsCanvasCell(m_PointB).x + canvas.GetCellSize().x / 2.0f) * canvas.scale,
-            (canvas.PositionAsCanvasCell(m_PointB).y + canvas.GetCellSize().y / 2.0f) * canvas.scale,
+            (canvas.PositionAsCanvasCell(m_PointB).x + canvas.GetCellSize().x / 2.0f / canvas.scale) * canvas.scale,
+            (canvas.PositionAsCanvasCell(m_PointA).y + canvas.GetCellSize().y / 2.0f / canvas.scale) * canvas.scale,
+            (canvas.PositionAsCanvasCell(m_PointB).x + canvas.GetCellSize().x / 2.0f / canvas.scale) * canvas.scale,
+            (canvas.PositionAsCanvasCell(m_PointB).y + canvas.GetCellSize().y / 2.0f / canvas.scale) * canvas.scale,
             RED
         );
 
         DrawLine(
-            (canvas.PositionAsCanvasCell(m_PointA).x + canvas.GetCellSize().x / 2.0f) * canvas.scale,
-            (canvas.PositionAsCanvasCell(m_PointB).y + canvas.GetCellSize().y / 2.0f) * canvas.scale,
-            (canvas.PositionAsCanvasCell(m_PointB).x + canvas.GetCellSize().x / 2.0f) * canvas.scale,
-            (canvas.PositionAsCanvasCell(m_PointB).y + canvas.GetCellSize().y / 2.0f) * canvas.scale,
+            (canvas.PositionAsCanvasCell(m_PointA).x + canvas.GetCellSize().x / 2.0f / canvas.scale) * canvas.scale,
+            (canvas.PositionAsCanvasCell(m_PointB).y + canvas.GetCellSize().y / 2.0f / canvas.scale) * canvas.scale,
+            (canvas.PositionAsCanvasCell(m_PointB).x + canvas.GetCellSize().x / 2.0f / canvas.scale) * canvas.scale,
+            (canvas.PositionAsCanvasCell(m_PointB).y + canvas.GetCellSize().y / 2.0f / canvas.scale) * canvas.scale,
             RED
         );
     }

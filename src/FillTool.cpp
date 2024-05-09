@@ -25,7 +25,7 @@ void FillTool::OnButtonPress() {
 
     Algorithms::FloodFillAlgorithm(x, y, layerSystem.GetLayer().GetPixelColor(x, y), colorSystem.GetColor(), layerSystem.GetLayer());
 
-    canvas.ToggleTextureReload();
+    canvas.ToggleLayerReload();
 }
 
 void FillTool::OnButtonDown() { }

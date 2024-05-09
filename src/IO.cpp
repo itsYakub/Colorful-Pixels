@@ -5,19 +5,22 @@
 #include <fstream>
 #include <iomanip>
 #include <memory>
+#include <string>
+
+#include "imgui.h"
+#include "raylib.h"
+#include "raymath.h"
+#include "nlohmann/json.hpp"
+#include "tinyfiledialogs.h"
 
 #include "ColorSystem.hpp"
 #include "LayerSystem.hpp"
 #include "Project.hpp"
 #include "ToolSystem.hpp"
-#include "imgui.h"
-#include "raylib.h"
-#include "raymath.h"
-#include "nlohmann/json.hpp"
-
 #include "Canvas.hpp"
 #include "Layer.hpp"
 #include "ColorfulPixels.hpp"
+
 #include "IconsLucide.h"
 
 IO::IO() :
@@ -28,7 +31,7 @@ IO::IO() :
     drawExportProjectGuiPanel(false) { }
 
 void IO::NewProject(Project& project) {
-    ImGui::SetNextWindowSize(ImVec2(256.0f, 192.0f));
+    ImGui::SetNextWindowSize(ImVec2(256.0f, 180.0f));
     if(ImGui::Begin(ICON_LC_PLUS " Create new project...", &drawNewProjectGuiPanel, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize)) {
         static int width = 16;
         static int height = 16;
@@ -64,64 +67,65 @@ void IO::NewProject(Project& project) {
 }
 
 void IO::LoadProject(Project& project) {
-    ImGui::SetNextWindowSize(ImVec2(512.0f, 128.0f));
-    if(ImGui::Begin(ICON_LC_IMAGE_DOWN " Load project...", &drawLoadProjectGuiPanel, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize)) {
-        static char path[256];
+    tinyfd_forceConsole = 0;
 
-        ImGui::PushItemWidth(384.0f);
-        ImGui::InputText(": Path", path, 255);
-        ImGui::PopItemWidth();
+    const char* path;
+    const char* filterPatterns[] = { "*.cfpx", "*.json" };
 
-        if(ImGui::Button(ICON_LC_IMAGE_DOWN " ")) {
-            drawLoadProjectGuiPanel = false;
-            drawIntroGuiPanel = false;
-            DeserializeProject(project, path);
+    path = tinyfd_openFileDialog(
+        "Open a project file.",
+        GetApplicationDirectory(),
+        1,
+        filterPatterns,
+        nullptr,
+        0
+    );
 
-            ImGui::End();
-            return;
-        }
+    if(!path) {
+        drawLoadProjectGuiPanel = false;
+        return;
+    } else {
+        drawLoadProjectGuiPanel = false;
 
-        ImGui::SameLine();
-
-        if(ImGui::Button(ICON_LC_CIRCLE_X " Cancel") || ImGui::IsKeyReleased(ImGuiKey_Escape)) {
-            drawLoadProjectGuiPanel = false;
-            ImGui::End();
-            return;
-
-        }
-
-        ImGui::End();
+        const std::string resultPath = path;
+        DeserializeProject(project, resultPath);
     }
 }
 
 void IO::SaveProject(Project& project) {
-    ImGui::SetNextWindowSize(ImVec2(512.0f, 128.0f));
-    if(ImGui::Begin(ICON_LC_IMAGE_DOWN " Save project...", &drawSaveProjectGuiPanel, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize)) {
-        static char path[256];
-
-        ImGui::PushItemWidth(384.0f);
-        ImGui::InputText(": Path", path, 255);
-        ImGui::PopItemWidth();
-
-        if(ImGui::Button(ICON_LC_IMAGE_DOWN " ")) {
-            drawSaveProjectGuiPanel = false;
-            SerializeProject(project, path);
-
-            ImGui::End();
-            return;
-        }
-
-        ImGui::SameLine();
-
-        if(ImGui::Button(ICON_LC_CIRCLE_X " Cancel") || ImGui::IsKeyReleased(ImGuiKey_Escape)) {
-            drawSaveProjectGuiPanel = false;
-            ImGui::End();
-            return;
-
-        }
-
-        ImGui::End();
+    if(!project.savedOnDisk) {
+        drawSaveProjectGuiPanel = false;
+        SaveAsProject(project);  
+    } else {
+        drawSaveProjectGuiPanel = false;
+        project.savedOnDisk = true;
+        SerializeProject(project, project.path);
     }
+}
+
+void IO::SaveAsProject(Project& project) {
+    tinyfd_forceConsole = 0;
+
+    const char* path;
+    const char* filterPatterns[] = { "*.cfpx", "*.json" };
+
+    path = tinyfd_saveFileDialog(
+        "Save the project file.",
+        TextFormat("%s.cfpx", project.title.c_str()),
+        1,
+        filterPatterns,
+        NULL
+    );
+
+    if(!path) {
+        drawSaveAsProjectGuiPanel = false;
+        return;
+    } else {
+        drawSaveAsProjectGuiPanel = false;
+
+        const std::string resultPath = path;
+        SerializeProject(project, resultPath);
+    }   
 }
 
 void IO::ExportProject(Project& project, LayerSystem& layerSystem) {
@@ -157,30 +161,39 @@ void IO::ExportProject(Project& project, LayerSystem& layerSystem) {
 void IO::IOGuiMenuItem(const char* title, bool draw, Project& project) {
     if(ImGui::BeginMenu(title, draw)) {
         if(ImGui::MenuItem(ICON_LC_FILE_PLUS " New...")) {
-            TraceLog(LOG_INFO, "Menu option: New");
+            TraceLog(LOG_INFO, "IO: Menu option: New");
             drawNewProjectGuiPanel = true;
         }
 
         if(ImGui::MenuItem(ICON_LC_FILE_UP " Load...")) {
-            TraceLog(LOG_INFO, "Menu option: Load");
+            TraceLog(LOG_INFO, "IO: Menu option: Load");
             drawLoadProjectGuiPanel = true;
         }
 
         if(ImGui::MenuItem(ICON_LC_SAVE " Save...")) {
             if(project.valid) {
-                TraceLog(LOG_INFO, "Menu option: Save");
+                TraceLog(LOG_INFO, "IO: Menu option: Save");
                 drawSaveProjectGuiPanel = true;
             } else {
-                TraceLog(LOG_WARNING, "There isn't any valid project opened!");
+                TraceLog(LOG_WARNING, "IO: There isn't any valid project opened!");
+            }
+        }
+
+        if(ImGui::MenuItem(ICON_LC_SAVE " Save As...")) {
+            if(project.valid) {
+                TraceLog(LOG_INFO, "IO: Menu option: Save As");
+                drawSaveAsProjectGuiPanel = true;
+            } else {
+                TraceLog(LOG_WARNING, "IO: There isn't any valid project opened!");
             }
         }
 
         if(ImGui::MenuItem(ICON_LC_IMAGE_DOWN " Export...")) {
             if(project.valid) {
-                TraceLog(LOG_INFO, "Menu option: Export");
+                TraceLog(LOG_INFO, "IO: Menu option: Export");
                 drawExportProjectGuiPanel = true;
             } else {
-                TraceLog(LOG_WARNING, "There isn't any valid project opened!");
+                TraceLog(LOG_WARNING, "IO: There isn't any valid project opened!");
             }
         }
 
@@ -203,6 +216,8 @@ void IO::DeserializeProject(Project& project, const std::string& path) {
     nlohmann::json projectJsonFile = nlohmann::json::parse(projectFile);
     projectFile.close();
 
+    project.title = GetFileNameWithoutExt(path.c_str());
+    project.path = path;
     project.Deserialize(projectJsonFile);
 }
 

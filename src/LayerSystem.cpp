@@ -32,6 +32,10 @@ void LayerSystem::UpdateLayer() {
     m_LayerList.at(m_CurrentLayerID).UpdateLayer();
 }
 
+void LayerSystem::UpdateLayer(int index) {
+    m_LayerList.at(index).UpdateLayer();
+}
+
 LayerList& LayerSystem::GetList() {
     return m_LayerList;
 }
@@ -57,7 +61,7 @@ void LayerSystem::PushNewLayer(const int CELL_COUNT_X, const int CELL_COUNT_Y) {
         m_CurrentLayerID++;
     }
 
-    TraceLog(LOG_INFO, TextFormat("Inserted the layer no. %i", m_LayerCountTotal));
+    TraceLog(LOG_INFO, TextFormat("LAYER SYSTEM: Inserted the layer no. %i", m_LayerCountTotal));
 }
 
 void LayerSystem::PushNewLayer(const int CELL_COUNT_X, const int CELL_COUNT_Y, int ID, bool visibility, bool lock) {
@@ -71,7 +75,63 @@ void LayerSystem::PushNewLayer(const int CELL_COUNT_X, const int CELL_COUNT_Y, i
         m_CurrentLayerID++;
     }
 
-    TraceLog(LOG_INFO, TextFormat("Inserted the layer no. %i", m_LayerCountTotal));
+    TraceLog(LOG_INFO, TextFormat("LAYER SYSTEM: Inserted the layer no. %i", m_LayerCountTotal));
+}
+
+void LayerSystem::InsertNewLayer(const int CELL_COUNT_X, const int CELL_COUNT_Y) {
+    Layer instance = Layer(CELL_COUNT_X, CELL_COUNT_Y, m_LayerCountTotal, true, false);
+    m_LayerList.insert(m_LayerList.begin() + m_CurrentLayerID, instance);
+    
+    m_LayerCount++;
+    m_LayerCountTotal++;
+
+    if(m_CurrentLayerID < m_LayerList.size() - 1) {
+        m_CurrentLayerID++;
+    }
+
+    TraceLog(LOG_INFO, TextFormat("LAYER SYSTEM: Inserted the layer no. %i", m_LayerCountTotal));
+}
+
+void LayerSystem::InsertNewLayer(int index, const int CELL_COUNT_X, const int CELL_COUNT_Y) {
+    Layer instance = Layer(CELL_COUNT_X, CELL_COUNT_Y, m_LayerCountTotal, true, false);
+    m_LayerList.insert(m_LayerList.begin() + index, instance);
+    
+    m_LayerCount++;
+    m_LayerCountTotal++;
+
+    if(m_CurrentLayerID < m_LayerList.size() - 1) {
+        m_CurrentLayerID++;
+    }
+
+    TraceLog(LOG_INFO, TextFormat("LAYER SYSTEM: Inserted the layer no. %i", m_LayerCountTotal));
+}
+
+void LayerSystem::InsertNewLayer(const int CELL_COUNT_X, const int CELL_COUNT_Y, int ID, bool visibility, bool lock) {
+    Layer instance = Layer(CELL_COUNT_X, CELL_COUNT_Y, ID, visibility, lock);
+    m_LayerList.insert(m_LayerList.begin() + m_CurrentLayerID, instance);
+    
+    m_LayerCount++;
+    m_LayerCountTotal++;
+
+    if(m_CurrentLayerID < m_LayerList.size() - 1) {
+        m_CurrentLayerID++;
+    }
+
+    TraceLog(LOG_INFO, TextFormat("LAYER SYSTEM: Inserted the layer no. %i", m_LayerCountTotal));
+}
+
+void LayerSystem::InsertNewLayer(int index, const int CELL_COUNT_X, const int CELL_COUNT_Y, int ID, bool visibility, bool lock) {
+    Layer instance = Layer(CELL_COUNT_X, CELL_COUNT_Y, ID, visibility, lock);
+    m_LayerList.insert(m_LayerList.begin() + index, instance);
+    
+    m_LayerCount++;
+    m_LayerCountTotal++;
+
+    if(m_CurrentLayerID < m_LayerList.size() - 1) {
+        m_CurrentLayerID++;
+    }
+
+    TraceLog(LOG_INFO, TextFormat("LAYER SYSTEM: Inserted the layer no. %i", m_LayerCountTotal));
 }
 
 
@@ -103,7 +163,7 @@ void LayerSystem::LayersGuiPanel(const char* name, bool draw) {
 
     if(ImGui::Begin(name, nullptr)) {
         if(ImGui::Button("Add layer")) {
-            PushNewLayer(CELL_COUNT_X, CELL_COUNT_Y);
+            InsertNewLayer(CELL_COUNT_X, CELL_COUNT_Y);
         }
 
         ImGui::SameLine();

@@ -87,6 +87,7 @@ void ColorfulPixels::RenderGUI() {
         if(m_IO.drawIntroGuiPanel) IntroGuiPanel("Panel: Introduction", m_IO.drawIntroGuiPanel);
         if(m_IO.drawNewProjectGuiPanel) m_IO.NewProject(m_Project);
         if(m_IO.drawSaveProjectGuiPanel) m_IO.SaveProject(m_Project);
+        if(m_IO.drawSaveAsProjectGuiPanel) m_IO.SaveAsProject(m_Project);
         if(m_IO.drawLoadProjectGuiPanel) m_IO.LoadProject(m_Project);
         if(m_IO.drawExportProjectGuiPanel) m_IO.ExportProject(m_Project, m_Project.canvas->layerSystem);
 

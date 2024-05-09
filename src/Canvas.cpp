@@ -43,9 +43,17 @@ void Canvas::Update(Camera2D& camera, Vector2 viewportPosition) {
         layerSystem.UpdateLayer();
         m_ReloadLayerTexture = false;
     }
+
+    if(m_ReloadCanvas) {
+        for(int i = 0; i < layerSystem.GetCount(); i++) {
+            layerSystem.UpdateLayer(i);
+        }
+
+        m_ReloadCanvas = false;
+    }
 }
 
-void Canvas::Render(Camera2D& camera, Vector2 viewportPosition) {    
+void Canvas::Render(Camera2D& camera, Vector2 viewportPosition, ColorSystem& colorSystem) {    
     DrawBackground();
 
     for(int i = layerSystem.GetCount() - 1; i >= 0; i--) {
@@ -53,13 +61,20 @@ void Canvas::Render(Camera2D& camera, Vector2 viewportPosition) {
     }
 
     // DrawCanvasGrid();
-    DrawCanvasCursor(camera, viewportPosition);
+    DrawCanvasCursor(camera, viewportPosition, colorSystem);
     DrawCanvasFrame();
 }
 
-void Canvas::ToggleTextureReload() {
+void Canvas::ToggleLayerReload() {
     m_ReloadLayerTexture = true;
+    m_ReloadCanvas = false;
 }
+
+void Canvas::ToggleCanvasReload() {
+    m_ReloadCanvas = true;
+    m_ReloadLayerTexture = false;
+}
+
 
 Vector2 Canvas::GetCanvasSize(const int COUNT_X, const int COUNT_Y) {
     const float DEFAULT_SIZE = 16.0f;
@@ -82,7 +97,7 @@ Vector2 Canvas::GetCanvasSize(const int COUNT_X, const int COUNT_Y) {
         };
     }
 
-    TraceLog(LOG_INFO, TextFormat("Canvas size: %0.1f / %0.1f (%ix%i)", result.x * COUNT_X, result.y * COUNT_Y, COUNT_X, COUNT_Y));
+    TraceLog(LOG_INFO, TextFormat("CANVAS: Canvas size: %0.1f / %0.1f (%ix%i)", result.x * COUNT_X, result.y * COUNT_Y, COUNT_X, COUNT_Y));
 
     return { result.x * COUNT_X, result.y * COUNT_Y};
 }
@@ -204,21 +219,21 @@ void Canvas::DrawCanvasGrid() {
     }        
 }
 
-void Canvas::DrawCanvasCursor(Camera2D& camera, Vector2 viewportPosition) {
+void Canvas::DrawCanvasCursor(Camera2D& camera, Vector2 viewportPosition, ColorSystem& colorSystem) {
     Vector2 positionAsCanvasIndex = PositionAsCanvasIndex(PositionInWorldSpace(GetMousePosition(), viewportPosition, camera));
 
     if((positionAsCanvasIndex.x >= 0 && positionAsCanvasIndex.x < CELL_COUNT_X) && (positionAsCanvasIndex.y >= 0 && positionAsCanvasIndex.y < CELL_COUNT_Y)) {
         DrawCell(
-            PositionAsCanvasCell(PositionInWorldSpace(GetMousePosition(), viewportPosition, camera)).x * scale, 
-            PositionAsCanvasCell(PositionInWorldSpace(GetMousePosition(), viewportPosition, camera)).y * scale, 
-            WHITE
+            static_cast<int>(PositionAsCanvasCell(PositionInWorldSpace(GetMousePosition(), viewportPosition, camera)).x * scale),
+            static_cast<int>(PositionAsCanvasCell(PositionInWorldSpace(GetMousePosition(), viewportPosition, camera)).y * scale),
+            colorSystem.GetColor()
         );
     } else {
         DrawCellLines(
-            PositionAsCanvasCell(PositionInWorldSpace(GetMousePosition(), viewportPosition, camera)).x * scale, 
-            PositionAsCanvasCell(PositionInWorldSpace(GetMousePosition(), viewportPosition, camera)).y * scale, 
+            static_cast<int>(PositionAsCanvasCell(PositionInWorldSpace(GetMousePosition(), viewportPosition, camera)).x * scale),
+            static_cast<int>(PositionAsCanvasCell(PositionInWorldSpace(GetMousePosition(), viewportPosition, camera)).y * scale),
             2.0f / scale, 
-            WHITE
+            colorSystem.GetColor()
         );
     }
 

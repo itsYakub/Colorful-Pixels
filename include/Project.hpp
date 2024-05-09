@@ -21,12 +21,16 @@ public:
     ColorSystem& colorSystem;
     ToolSystem& toolSystem;
 
+    std::string title;
+    std::string path;
+
     std::unique_ptr<Canvas> canvas;
     std::unique_ptr<Tool> tool;
     
     Camera2D camera;
 
     bool valid;
+    bool savedOnDisk;
     bool modified;
     
 public:

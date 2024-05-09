@@ -10,6 +10,7 @@ public:
     bool drawIntroGuiPanel;
     bool drawNewProjectGuiPanel;
     bool drawSaveProjectGuiPanel;
+    bool drawSaveAsProjectGuiPanel;
     bool drawLoadProjectGuiPanel;
     bool drawExportProjectGuiPanel;
 
@@ -19,6 +20,7 @@ public:
     void NewProject(Project& project);
     void LoadProject(Project& project);
     void SaveProject(Project& project);
+    void SaveAsProject(Project& project);
     void ExportProject(Project& project, LayerSystem& layerSystem);
 
     void IOGuiMenuItem(const char* title, bool draw, Project& project);

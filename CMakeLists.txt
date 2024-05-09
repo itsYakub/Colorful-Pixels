@@ -6,13 +6,13 @@ cmake_minimum_required(VERSION 3.14)
 project(
     colorful_pixels 
     VERSION 1.0
-    DESCRIPTION "A simple and easy-to-use pixel-art editor for simplicity enjoyers." 
+    DESCRIPTION "A simple and easy-to-use pixel-art editor." 
     HOMEPAGE_URL "https://github.com/itsYakub/pixelart-editor"
     LANGUAGES CXX C
 )
-
-# Generate compile_commands.json
+    
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(raylib_VERBOSE 1)
 
 # Dependencies
 set(RAYLIB_VERSION 5.0)
@@ -44,6 +44,7 @@ file(
     ${CMAKE_SOURCE_DIR}/src/*.cpp
     ${CMAKE_SOURCE_DIR}/lib/rlImGui/*.cpp
     ${CMAKE_SOURCE_DIR}/lib/imgui/*.cpp
+    ${CMAKE_SOURCE_DIR}/lib/libtinyfiledialogs/*.c
 )
 
 # Project's include directories:
@@ -56,11 +57,11 @@ set(
     ${CMAKE_SOURCE_DIR}/lib/imgui # ocornut/imgui
     ${CMAKE_SOURCE_DIR}/lib/rlImGui # raylib-extras/rlImGui
     ${CMAKE_SOURCE_DIR}/lib/json/single_include # nlohmann/json
+    ${CMAKE_SOURCE_DIR}/lib/libtinyfiledialogs # native-toolkit/libtinyfiledialogs
     ${CMAKE_SOURCE_DIR}/vendor # vendor files
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
-#set(raylib_VERBOSE 1)
 target_link_libraries(${PROJECT_NAME} raylib)
 target_include_directories(${PROJECT_NAME} PUBLIC ${INCLUDE_DIRECTORIES})
 

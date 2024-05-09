@@ -32,7 +32,7 @@ std::unique_ptr<Tool> ToolSystem::SetCurrentTool(ToolList list, Project& project
         default: result = new BrushTool(static_cast<int>(TOOL_BRUSH), &project); break;
     }
 
-    TraceLog(LOG_INFO, TextFormat("Current tool: %s", typeid(*result).name()));
+    TraceLog(LOG_INFO, TextFormat("TOOL SYSTEM: Current tool: %s", typeid(*result).name()));
     return std::unique_ptr<Tool>(result);
 }
 
