@@ -165,6 +165,8 @@ void IO::IOGuiMenuItem(const char* title, bool draw, Project& project) {
             drawNewProjectGuiPanel = true;
         }
 
+#ifndef PLATFORM_WEB
+
         if(ImGui::MenuItem(ICON_LC_FILE_UP " Load...")) {
             TraceLog(LOG_INFO, "IO: Menu option: Load");
             drawLoadProjectGuiPanel = true;
@@ -196,6 +198,8 @@ void IO::IOGuiMenuItem(const char* title, bool draw, Project& project) {
                 TraceLog(LOG_WARNING, "IO: There isn't any valid project opened!");
             }
         }
+
+#endif
 
         ImGui::EndMenu();
     }

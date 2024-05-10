@@ -21,6 +21,8 @@ Canvas::Canvas(const int CELL_COUNT_X, const int CELL_COUNT_Y, const LayerSystem
         Image canvasBackgroundImage = GenImageChecked(SIZE.x, SIZE.y, 128, 128, (Color) { 128, 128, 128, 255 }, (Color) { 192, 192, 192, 255 });
         m_CanvasBackground = LoadTextureFromImage(canvasBackgroundImage);
         UnloadImage(canvasBackgroundImage);
+
+        TraceLog(LOG_INFO, "CANVAS: Canvas created successfully.");
 }
 
 Canvas::Canvas(const int CELL_COUNT_X, const int CELL_COUNT_Y) : Canvas(CELL_COUNT_X, CELL_COUNT_Y, LayerSystem(CELL_COUNT_X, CELL_COUNT_Y, true)) { }
@@ -34,6 +36,8 @@ Canvas::Canvas() : Canvas(32, 32, LayerSystem(32, 32, true)) { }
 void Canvas::Unload() {
     layerSystem.Unload();
     UnloadTexture(m_CanvasBackground);
+
+    TraceLog(LOG_INFO, "CANVAS: Canvas unloaded successfully.");
 }
 
 void Canvas::Update(Camera2D& camera, Vector2 viewportPosition) {

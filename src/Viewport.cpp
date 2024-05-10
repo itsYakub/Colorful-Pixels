@@ -4,6 +4,7 @@
 #include "imgui_internal.h"
 #include "raylib.h"
 #include "raymath.h"
+#include "rlgl.h"
 #include "rlImGui.h"
 
 Viewport::Viewport() :
@@ -11,10 +12,28 @@ Viewport::Viewport() :
 
 void Viewport::Load() {
     m_RenderTexture = LoadRenderTexture(1600, 1080);
+
+    if(IsRenderTextureReady(m_RenderTexture)) {
+        TraceLog(
+            LOG_INFO, 
+            "VIEWPORT: Created a render texture (%ix%i | %s | %i mipmaps).", 
+            m_RenderTexture.texture.width, 
+            m_RenderTexture.texture.height, 
+            rlGetPixelFormatName(m_RenderTexture.texture.format), 
+            m_RenderTexture.texture.mipmaps
+        );
+    } else {
+        TraceLog(
+            LOG_ERROR, 
+            "VIEWPORT: Couldn't create a render texture."
+        );
+    }
 }
 
 void Viewport::Unload() {
     UnloadRenderTexture(m_RenderTexture);
+
+    TraceLog(LOG_INFO, "VIEWPORT: Render texture unloaded successfully.");
 }
 
 void Viewport::ViewportGuiPanel(const char* name, bool draw) {
