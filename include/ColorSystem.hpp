@@ -18,7 +18,7 @@ public:
 
     Color& GetColor();
     void SetColor(Color newColor);
-    void SetColor(float newColor[4]);
+    void SetColor(float newColor[3]);
 
     void ColorGuiPanel(const char* name, bool draw);
 };

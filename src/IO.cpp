@@ -112,7 +112,7 @@ void IO::SaveAsProject(Project& project) {
     path = tinyfd_saveFileDialog(
         "Save the project file.",
         TextFormat("%s.cfpx", project.title.c_str()),
-        1,
+        2,
         filterPatterns,
         NULL
     );
@@ -129,33 +129,28 @@ void IO::SaveAsProject(Project& project) {
 }
 
 void IO::ExportProject(Project& project, LayerSystem& layerSystem) {
-    ImGui::SetNextWindowSize(ImVec2(512.0f, 128.0f));
-    if(ImGui::Begin(ICON_LC_IMAGE_DOWN " Export image...", &drawExportProjectGuiPanel, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize)) {
-        static char path[256];
+    tinyfd_forceConsole = 0;
 
-        ImGui::PushItemWidth(384.0f);
-        ImGui::InputText(": Path", path, 255);
-        ImGui::PopItemWidth();
+    const char* path;
+    const char* filterPatterns[] = { "*.png" };
 
-        if(ImGui::Button(ICON_LC_IMAGE_DOWN " Export to PNG")) {
-            ExportImageLogic(project, layerSystem, path, "png");
+    path = tinyfd_saveFileDialog(
+        "Export project.",
+        TextFormat("%s.png", project.title.c_str()),
+        1,
+        filterPatterns,
+        NULL
+    );
 
-            drawExportProjectGuiPanel = false;
-            ImGui::End();
-            return;
-        }
+    if(!path) {
+        drawExportProjectGuiPanel = false;
+        return;
+    } else {
+        drawExportProjectGuiPanel = false;
 
-        ImGui::SameLine();
-
-        if(ImGui::Button(ICON_LC_CIRCLE_X " Cancel") || ImGui::IsKeyReleased(ImGuiKey_Escape)) {
-            drawExportProjectGuiPanel = false;
-            ImGui::End();
-            return;
-
-        }
-
-        ImGui::End();
-    }
+        const std::string resultPath = path;
+        ExportImageLogic(project, layerSystem, path, "png");
+    }  
 }
 
 void IO::IOGuiMenuItem(const char* title, bool draw, Project& project) {

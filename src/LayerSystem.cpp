@@ -172,84 +172,76 @@ void LayerSystem::LayersGuiPanel(const char* name, bool draw) {
             EraseLayer();
         }
 
-        ImGui::SameLine();
-
-        if(ImGui::Button("Pop layer") && m_LayerList.size() > 1) {
-            PopLayer();
-        }
-
         ImGui::SeparatorText("##text");
 
         for(int i = 0; i < m_LayerCount; i++) {
             ImGui::PushID(i);
-                if(ImGui::Button(m_CurrentLayerID == i ? 
-                    TextFormat("Layer %i. (Current)", m_LayerList.at(i).GetID()) : 
-                    TextFormat("Layer %i.", m_LayerList.at(i).GetID()), 
-                    ImVec2(256.0f, 38.0f))) {
-                    m_CurrentLayerID = i;
-                }
 
-            ImGui::SameLine();
-
-                if(rlImGuiImageButtonSize("##layer_preview", &GetLayer(i).GetTexture(), ImVec2(32, 32))) {
+                if(rlImGuiImageButtonSize("##layer_preview", &GetLayer(i).GetTexture(), ImVec2(64, 64))) {
                     m_CurrentLayerID = i;
                 }
                 
             ImGui::PopID();
             
             ImGui::SameLine();
-            ImGui::PushID(i);
 
-                if(ImGui::Button(GetLayer().layerVisible ? 
-                    ICON_LC_EYE : 
-                    ICON_LC_EYE_OFF, 
-                    ImVec2(38, 38))) {
-                    m_LayerList.at(i).layerVisible = !m_LayerList.at(i).layerVisible;
-                }
+            ImGui::BeginGroup();
+                ImGui::PushID(i);
 
-            ImGui::PopID();
+                    if(ImGui::Button(GetLayer().layerVisible ? 
+                        ICON_LC_EYE : 
+                        ICON_LC_EYE_OFF, 
+                        ImVec2(32, 32))) {
+                        m_LayerList.at(i).layerVisible = !m_LayerList.at(i).layerVisible;
+                    }
+
+                ImGui::PopID();
+
+                ImGui::PushID(i);
+
+                    if(ImGui::Button(GetLayer().layerLocked ? 
+                        ICON_LC_LOCK : 
+                        ICON_LC_LOCK_OPEN, 
+                        ImVec2(32, 32))) {
+                        m_LayerList.at(i).layerLocked = !m_LayerList.at(i).layerLocked;
+                    }
+
+                ImGui::PopID();
+
+            ImGui::EndGroup();
 
             ImGui::SameLine();
-            ImGui::PushID(i);
 
-                if(ImGui::Button(GetLayer().layerLocked ? 
-                    ICON_LC_LOCK : 
-                    ICON_LC_LOCK_OPEN, 
-                    ImVec2(38, 38))) {
-                    m_LayerList.at(i).layerLocked = !m_LayerList.at(i).layerLocked;
-                }
+            ImGui::BeginGroup();
+                ImGui::PushID(i);
 
-            ImGui::PopID();
+                    if(ImGui::Button(ICON_LC_SQUARE_CHEVRON_UP, ImVec2(32, 32))) {
+                        if(i - 1 >= 0) {
+                            std::swap(m_LayerList.at(i), m_LayerList.at(i - 1));
 
-            ImGui::SameLine();
-            ImGui::PushID(i);
-
-                if(ImGui::Button(ICON_LC_SQUARE_CHEVRON_UP, ImVec2(38, 38))) {
-                    if(i - 1 >= 0) {
-                        std::swap(m_LayerList.at(i), m_LayerList.at(i - 1));
-
-                        if(m_CurrentLayerID == i) {
-                            m_CurrentLayerID--;
+                            if(m_CurrentLayerID == i) {
+                                m_CurrentLayerID--;
+                            }
                         }
                     }
-                }
 
-            ImGui::PopID();
+                ImGui::PopID();
 
-            ImGui::SameLine();
-            ImGui::PushID(i);
-            
-                if(ImGui::Button(ICON_LC_SQUARE_CHEVRON_DOWN, ImVec2(38, 38))) {
-                    if(i + 1 < m_LayerList.size()) {
-                        std::swap(m_LayerList.at(i), m_LayerList.at(i + 1));
+                ImGui::PushID(i);
+                
+                    if(ImGui::Button(ICON_LC_SQUARE_CHEVRON_DOWN, ImVec2(32, 32))) {
+                        if(i + 1 < m_LayerList.size()) {
+                            std::swap(m_LayerList.at(i), m_LayerList.at(i + 1));
 
-                        if(m_CurrentLayerID == i) {
-                            m_CurrentLayerID++;
+                            if(m_CurrentLayerID == i) {
+                                m_CurrentLayerID++;
+                            }
                         }
                     }
-                }
 
-            ImGui::PopID();
+                ImGui::PopID();
+
+            ImGui::EndGroup();
         }
 
         ImGui::End();

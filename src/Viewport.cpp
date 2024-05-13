@@ -43,23 +43,24 @@ void Viewport::ViewportGuiPanel(const char* name, bool draw) {
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 
-    ImGui::Begin(
-        name, 
-        nullptr,
-        ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse
-    );
+    if(ImGui::Begin(name, nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
+        m_Position.x = ImGui::GetWindowPos().x;
+        m_Position.y = ImGui::GetWindowPos().y;
 
-    m_Position.x = ImGui::GetWindowPos().x;
-    m_Position.y = ImGui::GetWindowPos().y;
+        m_Size.x = ImGui::GetWindowSize().x;
+        m_Size.y = ImGui::GetWindowSize().y;
 
-    m_Size.x = ImGui::GetWindowSize().x;
-    m_Size.y = ImGui::GetWindowSize().y;
+        ImGui::Image(
+            static_cast<ImTextureID>(&m_RenderTexture.texture), 
+            ImVec2(m_RenderTexture.texture.width, m_RenderTexture.texture.height),
+            ImVec2(0.0f, 1.0f),
+            ImVec2(1.0f, 0.0f)
+        );
 
-    rlImGuiImageRenderTexture(&m_RenderTexture);
+        ImGui::End();
+    }
 
     ImGui::PopStyleVar(1);
-
-    ImGui::End();
 }
 
 void Viewport::Begin() {

@@ -27,12 +27,12 @@ void ColorSystem::SetColor(Color newColor) {
     m_CurrentColor = newColor;
 }
 
-void ColorSystem::SetColor(float newColor[4]) {
+void ColorSystem::SetColor(float newColor[3]) {
     m_CurrentColor = {
         static_cast<unsigned char>(newColor[0] * 255),
         static_cast<unsigned char>(newColor[1] * 255),
         static_cast<unsigned char>(newColor[2] * 255),
-        static_cast<unsigned char>(newColor[3] * 255),
+        255,
     };
 }
 
@@ -44,15 +44,16 @@ void ColorSystem::ColorGuiPanel(const char* name, bool draw) {
     if(ImGui::Begin(name, nullptr)) {
         ImVec2 size = ImGui::GetWindowSize();
 
-        float colorArray[4] = { m_CurrentColor.r / 255.0f, m_CurrentColor.g / 255.0f, m_CurrentColor.b / 255.0f, m_CurrentColor.a / 255.0f };
+        float colorArray[3] = { m_CurrentColor.r / 255.0f, m_CurrentColor.g / 255.0f, m_CurrentColor.b / 255.0f };
 
         ImGui::SeparatorText(ICON_LC_SQUARE_MOUSE_POINTER " Color Picker");
 
         ImGui::PushItemWidth(size.x - 16.0f);
-        ImGui::ColorPicker4(
+
+        ImGui::ColorPicker3(
             "Color Picker", 
             colorArray, 
-            ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoInputs
+            ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_HDR
         );
 
         SetColor(colorArray);

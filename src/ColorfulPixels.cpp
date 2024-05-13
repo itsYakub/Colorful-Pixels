@@ -8,6 +8,8 @@
 #include "raylib.h"
 #include "rlImGui.h"
 
+#include "Project.hpp"
+
 #include "IconsLucide.h"
 
 ColorfulPixels::ColorfulPixels() :
@@ -17,10 +19,11 @@ ColorfulPixels::ColorfulPixels() :
     m_Viewport(),
     m_ColorSystem(),
     m_ToolSystem(),
-    m_Project(m_Viewport, m_ColorSystem, m_ToolSystem),
     
     m_LoadIniFile(true),
-    m_IntroPanelImage() { }
+    m_IntroPanelImage() { 
+        m_Project = std::make_unique<Project>(m_Viewport, m_ColorSystem, m_ToolSystem);
+    }
 
 void ColorfulPixels::Load() {
     LoadImGui();
@@ -40,7 +43,7 @@ void ColorfulPixels::LoadImGui() {
 }
 
 void ColorfulPixels::Unload() {
-    m_Project.Unload();
+    m_Project->Unload();
 
     UnloadTexture(m_IntroPanelImage);
 
@@ -52,7 +55,7 @@ void ColorfulPixels::UnloadImGui() {
 }
 
 void ColorfulPixels::Update() {    
-    m_Project.Update();
+    m_Project->Update();
     m_ThemeLoader.Update();
 }
 
@@ -60,7 +63,7 @@ void ColorfulPixels::Render() {
     m_Viewport.Begin();
     m_Viewport.Clear(BLANK);
 
-        m_Project.Render();
+        m_Project->Render();
 
     m_Viewport.End();
 }
@@ -77,19 +80,19 @@ void ColorfulPixels::RenderGUI() {
 
     BeginDockingSpace("Docking Space");
 
-        if(m_Project.valid) {
+        if(m_Project->valid) {
             m_Viewport.ViewportGuiPanel("Panel: Viewport", true);
             m_ColorSystem.ColorGuiPanel("Panel: Colors", true);
-            m_Project.canvas->layerSystem.LayersGuiPanel("Panel: Layers", true);
-            m_ToolSystem.ToolsGuiPanel("Panel: Tools", true, m_Project.tool, m_Project);
+            m_Project->canvas->layerSystem.LayersGuiPanel("Panel: Layers", true);
+            m_ToolSystem.ToolsGuiPanel("Panel: Tools", true, m_Project->tool, *m_Project);
         } 
 
         if(m_IO.drawIntroGuiPanel) IntroGuiPanel("Panel: Introduction", m_IO.drawIntroGuiPanel);
-        if(m_IO.drawNewProjectGuiPanel) m_IO.NewProject(m_Project);
-        if(m_IO.drawSaveProjectGuiPanel) m_IO.SaveProject(m_Project);
-        if(m_IO.drawSaveAsProjectGuiPanel) m_IO.SaveAsProject(m_Project);
-        if(m_IO.drawLoadProjectGuiPanel) m_IO.LoadProject(m_Project);
-        if(m_IO.drawExportProjectGuiPanel) m_IO.ExportProject(m_Project, m_Project.canvas->layerSystem);
+        if(m_IO.drawNewProjectGuiPanel) m_IO.NewProject(*m_Project);
+        if(m_IO.drawSaveProjectGuiPanel) m_IO.SaveProject(*m_Project);
+        if(m_IO.drawSaveAsProjectGuiPanel) m_IO.SaveAsProject(*m_Project);
+        if(m_IO.drawLoadProjectGuiPanel) m_IO.LoadProject(*m_Project);
+        if(m_IO.drawExportProjectGuiPanel) m_IO.ExportProject(*m_Project, m_Project->canvas->layerSystem);
 
     EndDockingSpace();
     rlImGuiEnd();    
@@ -101,7 +104,7 @@ void ColorfulPixels::MenuBarGuiPanel(const char* name, bool draw) {
     }
 
     if(ImGui::BeginMenuBar()) {
-        m_IO.IOGuiMenuItem(ICON_LC_FILE_PLUS " File", true, m_Project);
+        m_IO.IOGuiMenuItem(ICON_LC_FILE_PLUS " File", true, *m_Project);
         
         if(ImGui::BeginMenu(ICON_LC_APP_WINDOW " Window")) {
             m_ThemeLoader.ThemeMenu("Theme", true);
@@ -157,6 +160,7 @@ void ColorfulPixels::IntroGuiPanel(const char* name, bool& draw) {
 
         ImGui::SameLine();
 
+#ifndef PLATFORM_WEB
         
         if(ImGui::Button(ICON_LC_FILE_UP " Load")) {
             m_IO.drawLoadProjectGuiPanel = true;
@@ -167,6 +171,8 @@ void ColorfulPixels::IntroGuiPanel(const char* name, bool& draw) {
         }
 
         ImGui::SameLine();
+
+#endif
 
         
         if(ImGui::Button(ICON_LC_CIRCLE_X " Cancel")) {

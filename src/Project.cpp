@@ -32,8 +32,9 @@ void Project::Create(int width, int height) {
     camera.target = Vector2Zero();
     camera.offset = { 512.0f, 128.0f };
     camera.zoom = canvas->scale;
+    camera.rotation = 0.0f;
 
-    valid = canvas.get() && tool.get();
+    valid = true;
     savedOnDisk = false;
 }
 
@@ -114,6 +115,7 @@ void Project::Deserialize(nlohmann::json& json) {
     };
 
     this->camera.zoom = json["cfpx_project_camera_zoom"];
+    this->camera.rotation = 0.0f;
 
     this->canvas = std::make_unique<Canvas>(
         cellCountX,
@@ -129,7 +131,7 @@ void Project::Deserialize(nlohmann::json& json) {
     );
 
     this->canvas->ToggleCanvasReload();
-    this->valid = canvas.get() && tool.get();
+    this->valid = true;
     this->savedOnDisk = true;
 }
 

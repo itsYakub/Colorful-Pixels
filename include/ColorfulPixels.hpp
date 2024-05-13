@@ -30,14 +30,14 @@
 
 class ColorfulPixels {
 private:
+    std::unique_ptr<Project> m_Project;
+
     ThemeLoader m_ThemeLoader;
     IO m_IO;
 
     Viewport m_Viewport;
     ColorSystem m_ColorSystem;
     ToolSystem m_ToolSystem;
-
-    Project m_Project;
 
     bool m_LoadIniFile;
 
