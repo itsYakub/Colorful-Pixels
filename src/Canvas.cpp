@@ -191,17 +191,21 @@ void Canvas::DrawCanvasGrid() {
 
 void Canvas::DrawCanvasCursor(Camera2D& camera, Vector2 viewportPosition, ColorSystem& colorSystem) {
     Vector2 positionAsCanvasIndex = PositionAsCanvasIndex(PositionInWorldSpace(GetMousePosition(), viewportPosition, camera));
+    Vector2 curosrPosition = {
+        round(PositionAsCanvasCell(PositionInWorldSpace(GetMousePosition(), viewportPosition, camera)).x * scale),
+        round(PositionAsCanvasCell(PositionInWorldSpace(GetMousePosition(), viewportPosition, camera)).y * scale)
+    };
 
     if((positionAsCanvasIndex.x >= 0 && positionAsCanvasIndex.x < CELL_COUNT_X) && (positionAsCanvasIndex.y >= 0 && positionAsCanvasIndex.y < CELL_COUNT_Y)) {
         DrawCell(
-            static_cast<int>(PositionAsCanvasCell(PositionInWorldSpace(GetMousePosition(), viewportPosition, camera)).x * scale),
-            static_cast<int>(PositionAsCanvasCell(PositionInWorldSpace(GetMousePosition(), viewportPosition, camera)).y * scale),
+            curosrPosition.x,
+            curosrPosition.y,
             colorSystem.GetColor()
         );
     } else {
         DrawCellLines(
-            static_cast<int>(PositionAsCanvasCell(PositionInWorldSpace(GetMousePosition(), viewportPosition, camera)).x * scale),
-            static_cast<int>(PositionAsCanvasCell(PositionInWorldSpace(GetMousePosition(), viewportPosition, camera)).y * scale),
+            curosrPosition.x,
+            curosrPosition.y,
             2.0f / scale, 
             colorSystem.GetColor()
         );

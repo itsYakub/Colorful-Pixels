@@ -23,7 +23,41 @@ Software supports all range of useful features, designed to make your life easy 
 - Layer system with options to preview, lock, enable visibility and move every layer up and down.
 - Versatile color manipulation.
 
-## Licence
+## Installation:
+### 0. Prerequesites:
+- **[Git;](https://git-scm.com/)**
+- **[CMake;](https://cmake.org/)**
+- **[Build system of your choosing;](https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html#id7)**
+### 1. Manual setup:
+- Clone this repository:
+```console
+$ git clone https://github.com/itsYakub/Colorful-Pixels.git --depth=1 --branch=alpha1.0
+$ cd Colorful-Pixels
+```
+- Create a binary folder:
+```console
+$ mkdir bin/
+$ cd bin/
+```
+- Create the generator file and build the final executable:
+```console
+cmake .. -DPLATFORM=Desktop
+cmake --build .
+```
+- Run the executable:
+```console
+./colorful_pixels
+```
+
+## Credits:
+- **[Emscripten.](https://github.com/emscripten-core/emsdk.git)**
+- **[raylib.](https://github.com/raysan5/raylib.git)**
+- **[rlImGui.](https://github.com/raylib-extras/rlImGui.git)**
+- **[imgui.](https://github.com/ocornut/imgui.git)**
+- **[tinyfiledialogs.](https://github.com/native-toolkit/libtinyfiledialogs.git)**
+- **[json.](https://github.com/nlohmann/json.git)**
+
+## Licence:
 This template is under the **[MIT Licence](https://github.com/itsYakub/Colorful-Pixels/blob/main/LICENCE)**.
 
 <!-- Badges: https://github.com/Ileriayo/markdown-badges -->

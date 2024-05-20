@@ -155,19 +155,23 @@ void IO::ExportProject(Project& project, LayerSystem& layerSystem) {
 
 void IO::IOGuiMenuItem(const char* title, bool draw, Project& project) {
     if(ImGui::BeginMenu(title, draw)) {
-        if(ImGui::MenuItem(ICON_LC_FILE_PLUS " New...")) {
+        if(ImGui::MenuItem(ICON_LC_FILE_PLUS " New project...")) {
             TraceLog(LOG_INFO, "IO: Menu option: New");
             drawNewProjectGuiPanel = true;
         }
 
+        ImGui::Separator();
+
 #ifndef PLATFORM_WEB
 
-        if(ImGui::MenuItem(ICON_LC_FILE_UP " Load...")) {
+        if(ImGui::MenuItem(ICON_LC_FILE_UP " Load")) {
             TraceLog(LOG_INFO, "IO: Menu option: Load");
             drawLoadProjectGuiPanel = true;
         }
 
-        if(ImGui::MenuItem(ICON_LC_SAVE " Save...")) {
+        ImGui::Separator();
+
+        if(ImGui::MenuItem(ICON_LC_SAVE " Save")) {
             if(project.valid) {
                 TraceLog(LOG_INFO, "IO: Menu option: Save");
                 drawSaveProjectGuiPanel = true;
@@ -185,7 +189,9 @@ void IO::IOGuiMenuItem(const char* title, bool draw, Project& project) {
             }
         }
 
-        if(ImGui::MenuItem(ICON_LC_IMAGE_DOWN " Export...")) {
+        ImGui::Separator();
+
+        if(ImGui::MenuItem(ICON_LC_IMAGE_DOWN " Export as .png")) {
             if(project.valid) {
                 TraceLog(LOG_INFO, "IO: Menu option: Export");
                 drawExportProjectGuiPanel = true;
